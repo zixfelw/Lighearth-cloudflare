@@ -1,57 +1,56 @@
 # LightEarth Cloudflare v13291
 
-## 📱 Web Dashboard + Telegram Bot
+## 📱 Telegram Settings trên Web
 
-### Tính năng mới (v1.4.0):
-- ✅ **Web Telegram Settings** - Cài đặt thông báo trực tiếp trên web
-- ✅ **Weather Fallback** - Open-Meteo → wttr.in (không giới hạn)
-- ✅ **Báo cáo thời tiết đầy đủ** - Nhiệt độ, độ ẩm, gió, mưa, UV
+Phiên bản này có tích hợp cài đặt Telegram ngay trên trang web chính.
+
+### Tính năng mới:
+- ✅ Section "Thông Báo Telegram" sau "Tổng Quát Dự Án Solar"
+- ✅ Checkbox cài đặt loại thông báo
+- ✅ Dropdown chọn vùng thời tiết
+- ✅ Nút "Lưu cài đặt" và "Mở Telegram Bot"
+
+### Worker Bot v1.4.0:
+- ✅ Weather fallback: Open-Meteo → wttr.in
+- ✅ API endpoints: `/api/device-settings`, `/api/update-settings`
+- ✅ Báo cáo giờ có đầy đủ thông tin thời tiết
 
 ---
 
-## 📥 Download
+## 📁 Cấu trúc file
 
-- **Web Pages**: `lightearth-v13291-final.zip` (4.0 MB)
-- **Worker Bot**: `worker/worker.js` (61 KB)
+```
+├── index.html          # Trang chính (có Telegram Settings)
+├── js/index.js         # JavaScript
+├── css/index.css       # Styles
+├── worker/
+│   └── worker-bot-v1.4.0.js   # Cloudflare Worker Bot
+├── lightearth-v13291-final.zip # ZIP để upload Cloudflare Pages
+└── ...
+```
 
 ---
 
 ## 🚀 Deploy
 
-### 1. Cloudflare Pages (Web Dashboard)
-1. Download `lightearth-v13291-final.zip`
-2. Cloudflare Dashboard → Pages → Create Project
-3. Upload ZIP → Deploy
+### 1. Cloudflare Pages (Web)
+- Upload file `lightearth-v13291-final.zip` 
+- Hoặc kết nối repo này trực tiếp
 
-### 2. Cloudflare Workers (Telegram Bot)
-1. Cloudflare Dashboard → Workers → Create Worker
-2. Copy nội dung từ `worker/worker.js`
-3. Save and Deploy
-4. Cài đặt:
-   - Environment Variables: `PI_URL`, `PI_TOKEN`
-   - KV Namespace: `BOT_KV`
-   - Cron Trigger: `*/5 * * * *`
+### 2. Cloudflare Workers (Bot)
+- Copy nội dung `worker/worker-bot-v1.4.0.js`
+- Paste vào Cloudflare Dashboard → Workers
+- Save & Deploy
 
----
-
-## 📂 Cấu trúc
-
-```
-├── index.html          # Trang chính
-├── calculator.html     # Tính toán điện
-├── css/                # Styles
-├── js/                 # Scripts
-├── icons/              # Icons
-├── images/             # Images
-├── worker/
-│   └── worker.js       # Telegram Bot Worker v1.4.0
-└── lightearth-v13291-final.zip  # Package đầy đủ
-```
+### 3. Cấu hình Worker
+- Environment Variables: `PI_URL`, `PI_TOKEN`
+- KV Namespace: `BOT_KV`
+- Cron Trigger: every 5 minutes
 
 ---
 
-## 🔧 Version
+## 📅 Version History
 
-- **Web**: v13291
-- **Worker Bot**: v1.4.0 - Web Settings API
-- **Date**: 30/12/2025
+- **v13291** (30/12/2025): Thêm Telegram Settings trên Web
+- **v1.4.0** Worker: Web Settings API + Weather fallback
+

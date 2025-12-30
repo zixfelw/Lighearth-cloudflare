@@ -2670,8 +2670,14 @@
         
         // Show telegram section when device is selected
         window.initTelegramSettings = async function() {
-            const deviceId = localStorage.getItem('selectedDevice');
+            // Priority: URL params > localStorage
+            const urlParams = new URLSearchParams(window.location.search);
+            let deviceId = urlParams.get('deviceId') || localStorage.getItem('selectedDevice');
+            if (deviceId) deviceId = deviceId.toUpperCase();
             if (!deviceId) return;
+            
+            // Save to localStorage for future use
+            localStorage.setItem('selectedDevice', deviceId);
             
             const section = document.getElementById('telegramSettingsSection');
             if (!section) return;
@@ -2709,7 +2715,10 @@
         
         // Save settings
         document.getElementById('saveTelegramSettings')?.addEventListener('click', async function() {
-            const deviceId = localStorage.getItem('selectedDevice');
+            // Priority: URL params > localStorage
+            const urlParams = new URLSearchParams(window.location.search);
+            let deviceId = urlParams.get('deviceId') || localStorage.getItem('selectedDevice');
+            if (deviceId) deviceId = deviceId.toUpperCase();
             if (!deviceId) {
                 alert('Vui lòng chọn thiết bị trước!');
                 return;

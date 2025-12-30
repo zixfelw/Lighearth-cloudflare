@@ -1,78 +1,153 @@
-# LightEarth Cloudflare v13291
+# LightEarth Cloudflare v13292
+
+## 🔧 Latest Update: Telegram Settings Fix
+
+### v13292 (30/12/2024)
+- ✅ **Fixed**: Telegram Settings section now visible when accessing via URL parameter
+- ✅ **Fixed**: Device ID correctly read from `?deviceId=P250801055` URL parameter
+- ✅ **Added**: JSON config files for easy reference
+- ✅ **Updated**: ZIP package with all fixes
+
+---
 
 ## 📱 Telegram Settings trên Web
 
 Phiên bản này có tích hợp cài đặt Telegram ngay trên trang web chính.
 
-### Tính năng mới:
-- ✅ Section "Thông Báo Telegram" sau "Tổng Quát Dự Án Solar"
-- ✅ Checkbox cài đặt loại thông báo
+### Tính năng:
+- ✅ Section "Thông Báo Telegram" hiển thị tự động khi có deviceId
+- ✅ Hỗ trợ URL parameter: `?deviceId=P250801055`
+- ✅ Checkbox cài đặt loại thông báo (Chào buổi sáng, Mất điện, Pin yếu, v.v.)
 - ✅ Dropdown chọn vùng thời tiết
 - ✅ Nút "Lưu cài đặt" và "Mở Telegram Bot"
+
+### Test URL:
+```
+https://lumentree.pages.dev/?deviceId=P250801055
+```
 
 ---
 
 ## 📁 Cấu trúc file
 
 ```
-├── index.html          # Trang chính (có Telegram Settings)
-├── js/index.js         # JavaScript
-├── css/index.css       # Styles
+├── index.html                              # Trang chính (có Telegram Settings)
+├── calculator.html                         # Calculator chi tiết
+├── control-voanhphong.html                 # Control panel
+├── private.html                            # Private page
+├── config/
+│   ├── api-versions.json                   # API versions & changelog
+│   └── device-config.json                  # Device config & whitelist
 ├── worker/
-│   └── worker-bot-v1.4.0.js   # Cloudflare Worker Bot (Telegram)
+│   └── worker-bot-v1.4.0.js                # Cloudflare Worker Bot (Telegram)
 ├── workers/
-│   ├── lightearth-api-gateway-v3.9.js    # Main API Gateway
-│   ├── temperature-soc-power-v3.0.js     # History/Stats Worker
-│   └── full-device-v4.0.js               # Full Device Dashboard Worker
-├── lightearth-v13291-final.zip # ZIP để upload Cloudflare Pages
-└── ...
+│   ├── lightearth-api-gateway-v3.9.js      # Main API Gateway
+│   ├── temperature-soc-power-v3.0.js       # History/Stats Worker
+│   └── full-device-v4.0.js                 # Full Device Dashboard Worker
+├── lightearth-v13292-telegram-fix.zip      # ZIP để upload Cloudflare Pages
+└── README.md
 ```
+
+---
+
+## 📋 JSON Config Files
+
+### config/api-versions.json
+Chứa thông tin về:
+- Tất cả Workers với version, endpoint, file path
+- Changelog chi tiết cho từng version
+- Deployment links và constants
+
+### config/device-config.json
+Chứa thông tin về:
+- Whitelist devices
+- Rate limiting settings
+- Geo restriction config
+- API endpoints
+- Security config
 
 ---
 
 ## 🚀 Deploy
 
 ### 1. Cloudflare Pages (Web)
-- Upload file `lightearth-v13291-final.zip` 
+- Upload file `lightearth-v13292-telegram-fix.zip` 
 - Hoặc kết nối repo này trực tiếp
 
 ### 2. Cloudflare Workers
 Có 4 Workers cần deploy:
 
-#### 2.1 Telegram Bot Worker (worker-bot-v1.4.0.js)
-- URL: `https://telegram-bot.applike098.workers.dev`
-- Chức năng: Telegram Bot để nhận thông báo
-- Cấu hình: 
-  - `BOT_TOKEN`, `CHAT_ID`, `PI_URL`, `PI_TOKEN`
-  - KV Namespace: `BOT_KV`
-  - Cron Trigger: every 5 minutes
+| Worker | Version | File | URL |
+|--------|---------|------|-----|
+| Telegram Bot | v1.4.0 | `worker/worker-bot-v1.4.0.js` | `https://lightearth-telegram-bot.applike098.workers.dev` |
+| API Gateway | v3.9 | `workers/lightearth-api-gateway-v3.9.js` | `https://lightearth.applike098.workers.dev` |
+| Temp-SOC-Power | v3.0 | `workers/temperature-soc-power-v3.0.js` | `https://temperature-soc-power.applike098.workers.dev` |
+| Full Device | v4.0 | `workers/full-device-v4.0.js` | `https://full-device.applike098.workers.dev` |
 
-#### 2.2 LightEarth API Gateway v3.9 (lightearth-api-gateway-v3.9.js)
-- URL: `https://lightearth.applike098.workers.dev`
-- Chức năng: Main API cho realtime data, device info
-- Tính năng:
-  - Battery Cell Info (16 cells)
-  - Rate limiting per device
-  - Direct HA access
-- Cấu hình: `PI_URL`, `PI_TOKEN`
+---
 
-#### 2.3 Temperature-SOC-Power Worker v3.0 (temperature-soc-power-v3.0.js)
-- URL: `https://temperature-soc-power.applike098.workers.dev`
-- Chức năng: History data, statistics, solar dashboard
-- Tính năng:
-  - Power History (288 points/day từ sensor attributes)
-  - SOC/Temperature History
-  - Yearly Statistics
-  - Solar Savings Calculator
-- Cấu hình: `HA_URL`, `HA_TOKEN`
+## 📅 Version History
 
-#### 2.4 Full Device Dashboard Worker v4.0 (full-device-v4.0.js)
-- URL: `https://full-device.applike098.workers.dev`
-- Chức năng: Multi-device dashboard (Private)
-- Tính năng:
-  - `/api/cloud/devices-full` - All devices realtime
-  - Summary với totalPvPower, totalLoadPower, etc
-- Cấu hình: `PI_URL`, `PI_TOKEN`
+### Web Dashboard
+| Version | Date | Changes |
+|---------|------|---------|
+| v13292 | 30/12/2024 | Fix Telegram Settings visibility, add JSON configs |
+| v13291 | 30/12/2024 | Add Telegram Settings section |
+
+### API Gateway Changelog
+
+#### v3.9 (Latest)
+- Battery cell info (16 cells) trong realtime API
+- Thêm batteryCells với num, avg, min, max, diff, cells
+- Cập nhật rate/geo-restriction và whitelist P250801055
+- Cache realtime 3 giây
+- Giới hạn 50 req/phút/device (không áp dụng cho whitelist)
+- Giới hạn 150 req/phút/IP
+
+#### v3.8
+- Thêm Cloudflare Pages origins
+- Triển khai serverless 100%
+- Bỏ Railway
+
+#### v3.7
+- Rate limiting theo Device ID
+- Whitelist P250801055
+- 50 req/phút, 5 phút block
+
+#### v3.6
+- /api/realtime/device/{deviceId} cho Direct HA
+- Cache realtime 3 giây
+
+---
+
+## 🔧 Constants & Config
+
+```javascript
+VN_OFFSET_HOURS = 7
+REALTIME_CACHE_TTL = 3  // seconds
+WHITELIST_DEVICE_IDS = ['P250801055']
+DEVICE_RATE_LIMIT = { maxRequests: 50, windowMs: 60000, blockDurationMs: 300000 }
+IP_RATE_LIMIT = { maxRequests: 150, windowMs: 60000 }
+```
+
+---
+
+## 🔗 Quick Links
+
+| Resource | URL |
+|----------|-----|
+| Main Dashboard | https://lumentree.pages.dev/?deviceId=P250801055 |
+| API Gateway | https://lightearth.applike098.workers.dev |
+| Temp-SOC-Power | https://temperature-soc-power.applike098.workers.dev |
+| Full Device | https://full-device.applike098.workers.dev |
+| Telegram Bot | https://t.me/LightearthBot |
+| GitHub Repo | https://github.com/zixfelw/Lighearth-cloudflare |
+
+---
+
+## 📥 Download
+
+**Latest ZIP**: [lightearth-v13292-telegram-fix.zip](lightearth-v13292-telegram-fix.zip)
 
 ---
 
@@ -89,51 +164,3 @@ Telegram Bot cần thêm:
 BOT_TOKEN = Telegram Bot Token
 CHAT_ID   = Telegram Chat ID
 ```
-
----
-
-## 📅 Version History
-
-### Web
-- **v13291** (30/12/2025): Thêm Telegram Settings trên Web
-
-### Workers
-- **v1.4.0** Worker Bot: Web Settings API + Weather fallback
-- **v3.9** API Gateway: Battery Cell Info (16 cells)
-- **v3.0** Temperature-SOC-Power: Sensor attributes cho full 24h data
-- **v4.0** Full Device: Multi-device realtime dashboard
-
----
-
-## 🔗 API Endpoints Reference
-
-### LightEarth API Gateway v3.9
-```
-GET /                                     # Health check
-GET /api/realtime/device/{deviceId}       # Realtime device data
-GET /api/realtime/daily-energy/{deviceId} # Daily energy stats
-GET /api/cloud/devices                    # List all devices
-GET /api/cloud/monthly/{deviceId}         # Monthly energy
-GET /api/cloud/power-history/{deviceId}/{date}
-GET /api/cloud/soc-history/{deviceId}/{date}
-GET /api/cloud/temperature/{deviceId}/{date}
-```
-
-### Temperature-SOC-Power Worker v3.0
-```
-GET /api/solar/dashboard/{deviceId}       # Solar savings dashboard
-GET /api/ha/statistics/{deviceId}/year?year=2025  # Yearly stats
-GET /api/realtime/power-history/{deviceId}?date=2025-12-30
-GET /api/realtime/power-peak/{deviceId}?date=2025-12-30
-GET /api/realtime/soc-history/{deviceId}?date=2025-12-30
-GET /api/realtime/daily-energy/{deviceId}
-GET /api/cloud/temperature/{deviceId}/{date}
-```
-
-### Full Device Dashboard v4.0
-```
-GET /api/cloud/devices-full               # All devices with realtime
-GET /api/cloud/devices                    # Same as above
-GET /api/realtime/device/{deviceId}       # Single device realtime
-```
-

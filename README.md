@@ -1,8 +1,15 @@
-# LightEarth Cloudflare v13292
+# LightEarth Cloudflare v2.0
 
-## 🔧 Latest Update: Telegram Bot v1.9.0 - Short Deep Link
+## 🔧 Latest Update: Telegram Bot v2.0 - Voltage Alerts
 
-### v1.9.0 (31/12/2024) ⚡ LATEST
+### v2.0 (31/12/2024) ⚡ LATEST
+- ✅ **Voltage Alerts**: Cảnh báo điện áp cao (quá áp) và thấp (thấp áp)
+- ✅ **7 Threshold Alerts**: Pin đầy, Pin thấp, PV, EVN, Tiêu thụ, Điện áp cao, Điện áp thấp
+- ✅ **Alert Once**: Chỉ báo 1 lần/ngày/ngưỡng, reset 00:00 VN
+- ✅ **Deep Link v2.0**: Format mới hỗ trợ voltage thresholds (≤64 chars)
+- ✅ **UI Update**: Thêm input cài đặt ngưỡng Điện áp cao/thấp
+
+### v1.9.0 (31/12/2024)
 - ✅ **Short Deep Link**: Giảm từ 75 → 44 chars (fix START_PARAM_TOO_LONG)
 - ✅ **Weather Forecast**: Dự báo thời tiết 63 tỉnh/thành
 - ✅ **Web UI Sync**: Đồng bộ cài đặt qua Deep Link
@@ -44,10 +51,15 @@ https://lumentree.pages.dev/?deviceId=P250801055
 │   ├── api-versions.json                   # API versions & changelog
 │   └── device-config.json                  # Device config & whitelist
 ├── worker/
-│   ├── worker-bot-v1.9.0.js                # ⚡ Latest - Short Deep Link
+│   ├── worker-bot-v2.0.js                  # ⚡ Latest - Voltage Alerts
+│   ├── worker-bot-v1.9.0.js                # Short Deep Link
 │   ├── worker-bot-v1.8.0.js                # Smart Thresholds
 │   ├── worker-bot-v1.6.0.js                # Weather Forecast
 │   └── worker-bot-v1.4.0.js                # Legacy
+├── output/
+│   ├── LightEarth-Bot-v2.0.html            # Deploy HTML với nút Copy
+│   ├── LightEarth-Bot-v2.0.txt             # Worker code only
+│   └── LightEarth-Bot-v1.9.0-Full.html     # Previous version
 ├── output/
 │   └── LightEarth-Bot-v1.9.0-Full.html     # Deploy page with Copy button
 ├── workers/

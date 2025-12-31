@@ -2454,13 +2454,25 @@
                             class="w-20 text-sm px-2 py-1.5 rounded-lg border-2 border-orange-300 dark:border-slate-500 bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-orange-500 font-medium text-center">
                     </div>
                     <!-- Load Daily Alert -->
-                    <div class="flex items-center gap-2 bg-white/50 dark:bg-slate-700/50 rounded-lg p-2 sm:col-span-2">
-                        <span class="text-sm text-gray-700 dark:text-gray-200 flex-1">🏠 Tiêu thụ trong ngày (kWh)</span>
+                    <div class="flex items-center gap-2 bg-white/50 dark:bg-slate-700/50 rounded-lg p-2">
+                        <span class="text-sm text-gray-700 dark:text-gray-200 flex-1">🏠 Tiêu thụ/ngày (kWh)</span>
                         <input type="number" id="thLoadDaily" min="0" max="200" value="" step="0.5" placeholder="" 
                             class="w-20 text-sm px-2 py-1.5 rounded-lg border-2 border-orange-300 dark:border-slate-500 bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-orange-500 font-medium text-center">
                     </div>
+                    <!-- Voltage High Alert -->
+                    <div class="flex items-center gap-2 bg-white/50 dark:bg-slate-700/50 rounded-lg p-2">
+                        <span class="text-sm text-gray-700 dark:text-gray-200 flex-1">🔌 Điện áp cao (V)</span>
+                        <input type="number" id="thVoltageHigh" min="0" max="300" value="" step="1" placeholder="260" 
+                            class="w-20 text-sm px-2 py-1.5 rounded-lg border-2 border-red-300 dark:border-slate-500 bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-red-500 font-medium text-center">
+                    </div>
+                    <!-- Voltage Low Alert -->
+                    <div class="flex items-center gap-2 bg-white/50 dark:bg-slate-700/50 rounded-lg p-2">
+                        <span class="text-sm text-gray-700 dark:text-gray-200 flex-1">🔌 Điện áp thấp (V)</span>
+                        <input type="number" id="thVoltageLow" min="0" max="250" value="" step="1" placeholder="180" 
+                            class="w-20 text-sm px-2 py-1.5 rounded-lg border-2 border-yellow-300 dark:border-slate-500 bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-yellow-500 font-medium text-center">
+                    </div>
                 </div>
-                <p class="text-xs text-orange-600 dark:text-orange-400 mt-2">💡 Đặt = 0 để tắt cảnh báo. Pin đầy = 100 để tắt.</p>
+                <p class="text-xs text-orange-600 dark:text-orange-400 mt-2">💡 Đặt = 0 để tắt cảnh báo. Pin đầy = 100 để tắt. Điện áp VD: Cao 260V, Thấp 180V.</p>
             </div>
             
             <!-- Location Setting -->
@@ -2921,8 +2933,8 @@
             ].join('');
         }
         
-        // Build SHORT deep link (max 64 chars) - v1.9.0 format
-        // Format: add_DEVICEID_NNNNNN_bf_bl_pv_gr_ld_loc
+        // Build SHORT deep link (max 64 chars) - v2.0 format with voltage
+        // Format: add_DEVICEID_NNNNNN_bf_bl_pv_gr_ld_vh_vl_loc
         function buildShortDeepLink(deviceId, thresholds, location) {
             const notifBits = getNotificationBits();
             const locCode = LOCATION_CODES[location] || 'hcm';
@@ -2931,9 +2943,11 @@
             const pv = Math.round(thresholds.pvDaily);
             const gr = Math.round(thresholds.gridUsage);
             const ld = Math.round(thresholds.loadDaily);
+            const vh = Math.round(thresholds.voltageHigh || 0);
+            const vl = Math.round(thresholds.voltageLow || 0);
             
-            const payload = `add_${deviceId}_${notifBits}_${bf}_${bl}_${pv}_${gr}_${ld}_${locCode}`;
-            console.log('Short Deep Link v1.9.0:', payload, `(${payload.length} chars)`);
+            const payload = `add_${deviceId}_${notifBits}_${bf}_${bl}_${pv}_${gr}_${ld}_${vh}_${vl}_${locCode}`;
+            console.log('Short Deep Link v2.0:', payload, `(${payload.length} chars)`);
             return payload;
         }
         
@@ -2990,6 +3004,12 @@
                         }
                         if (th.loadDaily !== undefined && th.loadDaily !== 0) {
                             document.getElementById('thLoadDaily').value = th.loadDaily;
+                        }
+                        if (th.voltageHigh !== undefined && th.voltageHigh !== 0) {
+                            document.getElementById('thVoltageHigh').value = th.voltageHigh;
+                        }
+                        if (th.voltageLow !== undefined && th.voltageLow !== 0) {
+                            document.getElementById('thVoltageLow').value = th.voltageLow;
                         }
                     }
                     
@@ -3061,7 +3081,9 @@
                 batteryLow: getThresholdValue('thBatteryLow', 20),
                 pvDaily: getThresholdValue('thPvDaily', 0),
                 gridUsage: getThresholdValue('thGridUsage', 0),
-                loadDaily: getThresholdValue('thLoadDaily', 0)
+                loadDaily: getThresholdValue('thLoadDaily', 0),
+                voltageHigh: getThresholdValue('thVoltageHigh', 0),
+                voltageLow: getThresholdValue('thVoltageLow', 0)
             };
             
             // Save thresholds via API (for existing devices)
@@ -3129,7 +3151,9 @@
                 batteryLow: getThresholdValue('thBatteryLow', 20),
                 pvDaily: getThresholdValue('thPvDaily', 0),
                 gridUsage: getThresholdValue('thGridUsage', 0),
-                loadDaily: getThresholdValue('thLoadDaily', 0)
+                loadDaily: getThresholdValue('thLoadDaily', 0),
+                voltageHigh: getThresholdValue('thVoltageHigh', 0),
+                voltageLow: getThresholdValue('thVoltageLow', 0)
             };
             
             // Save thresholds via API (for existing devices)

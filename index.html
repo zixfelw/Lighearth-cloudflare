@@ -204,6 +204,110 @@
         
         /* Modal styles removed - calculator now uses direct navigation */
         
+        /* Telegram Checkbox Styles - Enhanced for Dark Mode */
+        .tg-checkbox {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 22px !important;
+            height: 22px !important;
+            min-width: 22px;
+            border: 2px solid #9ca3af;
+            border-radius: 6px;
+            background-color: #ffffff;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+        
+        .dark .tg-checkbox {
+            background-color: #374151;
+            border-color: #6b7280;
+        }
+        
+        .tg-checkbox:checked {
+            background-color: #10b981;
+            border-color: #10b981;
+        }
+        
+        .dark .tg-checkbox:checked {
+            background-color: #10b981;
+            border-color: #10b981;
+        }
+        
+        .tg-checkbox:checked::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 7px;
+            width: 6px;
+            height: 11px;
+            border: solid white;
+            border-width: 0 2.5px 2.5px 0;
+            transform: rotate(45deg);
+        }
+        
+        .tg-checkbox:not(:checked) {
+            background-color: #f3f4f6;
+            border-color: #d1d5db;
+        }
+        
+        .dark .tg-checkbox:not(:checked) {
+            background-color: #1f2937;
+            border-color: #4b5563;
+        }
+        
+        .tg-checkbox:hover {
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+        }
+        
+        .tg-checkbox-label:has(.tg-checkbox:checked) {
+            background-color: rgba(16, 185, 129, 0.1);
+        }
+        
+        .dark .tg-checkbox-label:has(.tg-checkbox:checked) {
+            background-color: rgba(16, 185, 129, 0.15);
+        }
+        
+        /* Telegram Success Modal */
+        .tg-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .tg-modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .tg-modal-content {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 1px solid #334155;
+            border-radius: 20px;
+            padding: 24px;
+            max-width: 400px;
+            width: 90%;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        
+        .tg-modal-overlay.active .tg-modal-content {
+            transform: scale(1);
+        }
+        
         /* Header scroll hide/show */
         #mainHeader.header-hidden {
             transform: translateY(-100%);
@@ -2291,40 +2395,78 @@
         <!-- Settings Grid -->
         <div class="space-y-3">
             <!-- Notification Types -->
-            <div class="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-xl p-3 border border-blue-200 dark:border-blue-700">
-                <div class="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-2">🔔 Loại thông báo:</div>
-                <div class="grid grid-cols-2 gap-2 text-xs">
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" id="tgMorningGreeting" checked class="rounded text-blue-500 focus:ring-blue-500">
-                        <span class="text-gray-700 dark:text-gray-300">🌅 Chào buổi sáng</span>
+            <div class="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-800/80 dark:to-slate-700/80 rounded-xl p-4 border border-blue-200 dark:border-slate-600">
+                <div class="text-sm font-semibold text-blue-700 dark:text-blue-300 mb-3">🔔 Loại thông báo:</div>
+                <div class="grid grid-cols-2 gap-3">
+                    <label class="tg-checkbox-label flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-blue-100 dark:hover:bg-slate-600/50 transition-colors">
+                        <input type="checkbox" id="tgMorningGreeting" checked class="tg-checkbox w-5 h-5 rounded border-2 border-gray-300 dark:border-slate-500 text-emerald-500 focus:ring-emerald-500 focus:ring-2 bg-white dark:bg-slate-700 cursor-pointer">
+                        <span class="text-sm text-gray-700 dark:text-gray-200 font-medium">🌅 Chào buổi sáng</span>
                     </label>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" id="tgPowerOutage" checked class="rounded text-blue-500 focus:ring-blue-500">
-                        <span class="text-gray-700 dark:text-gray-300">⚡ Mất điện EVN</span>
+                    <label class="tg-checkbox-label flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-blue-100 dark:hover:bg-slate-600/50 transition-colors">
+                        <input type="checkbox" id="tgPowerOutage" checked class="tg-checkbox w-5 h-5 rounded border-2 border-gray-300 dark:border-slate-500 text-emerald-500 focus:ring-emerald-500 focus:ring-2 bg-white dark:bg-slate-700 cursor-pointer">
+                        <span class="text-sm text-gray-700 dark:text-gray-200 font-medium">⚡ Mất điện EVN</span>
                     </label>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" id="tgPowerRestored" checked class="rounded text-blue-500 focus:ring-blue-500">
-                        <span class="text-gray-700 dark:text-gray-300">✅ Có điện lại</span>
+                    <label class="tg-checkbox-label flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-blue-100 dark:hover:bg-slate-600/50 transition-colors">
+                        <input type="checkbox" id="tgPowerRestored" checked class="tg-checkbox w-5 h-5 rounded border-2 border-gray-300 dark:border-slate-500 text-emerald-500 focus:ring-emerald-500 focus:ring-2 bg-white dark:bg-slate-700 cursor-pointer">
+                        <span class="text-sm text-gray-700 dark:text-gray-200 font-medium">✅ Có điện lại</span>
                     </label>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" id="tgLowBattery" checked class="rounded text-blue-500 focus:ring-blue-500">
-                        <span class="text-gray-700 dark:text-gray-300">🔋 Pin yếu (&lt;20%)</span>
+                    <label class="tg-checkbox-label flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-blue-100 dark:hover:bg-slate-600/50 transition-colors">
+                        <input type="checkbox" id="tgLowBattery" checked class="tg-checkbox w-5 h-5 rounded border-2 border-gray-300 dark:border-slate-500 text-emerald-500 focus:ring-emerald-500 focus:ring-2 bg-white dark:bg-slate-700 cursor-pointer">
+                        <span class="text-sm text-gray-700 dark:text-gray-200 font-medium">🔋 Pin yếu (&lt;20%)</span>
                     </label>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" id="tgPvEnded" checked class="rounded text-blue-500 focus:ring-blue-500">
-                        <span class="text-gray-700 dark:text-gray-300">🌇 Hết nắng</span>
+                    <label class="tg-checkbox-label flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-blue-100 dark:hover:bg-slate-600/50 transition-colors">
+                        <input type="checkbox" id="tgPvEnded" checked class="tg-checkbox w-5 h-5 rounded border-2 border-gray-300 dark:border-slate-500 text-emerald-500 focus:ring-emerald-500 focus:ring-2 bg-white dark:bg-slate-700 cursor-pointer">
+                        <span class="text-sm text-gray-700 dark:text-gray-200 font-medium">🌇 Hết nắng</span>
                     </label>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" id="tgHourlyStatus" class="rounded text-blue-500 focus:ring-blue-500">
-                        <span class="text-gray-700 dark:text-gray-300">⏰ Báo cáo mỗi giờ</span>
+                    <label class="tg-checkbox-label flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-blue-100 dark:hover:bg-slate-600/50 transition-colors">
+                        <input type="checkbox" id="tgHourlyStatus" class="tg-checkbox w-5 h-5 rounded border-2 border-gray-300 dark:border-slate-500 text-emerald-500 focus:ring-emerald-500 focus:ring-2 bg-white dark:bg-slate-700 cursor-pointer">
+                        <span class="text-sm text-gray-700 dark:text-gray-200 font-medium">⏰ Báo cáo mỗi giờ</span>
                     </label>
                 </div>
             </div>
             
+            <!-- Custom Threshold Alerts -->
+            <div class="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-slate-800/80 dark:to-slate-700/80 rounded-xl p-4 border border-orange-200 dark:border-slate-600">
+                <div class="text-sm font-semibold text-orange-700 dark:text-orange-300 mb-3">⚡ Ngưỡng cảnh báo tùy chỉnh:</div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <!-- Battery Full Alert -->
+                    <div class="flex items-center gap-2 bg-white/50 dark:bg-slate-700/50 rounded-lg p-2">
+                        <span class="text-sm text-gray-700 dark:text-gray-200 flex-1">🔋 Pin đầy (%)</span>
+                        <input type="number" id="thBatteryFull" min="80" max="100" value="" placeholder="100" 
+                            class="w-20 text-sm px-2 py-1.5 rounded-lg border-2 border-orange-300 dark:border-slate-500 bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-orange-500 font-medium text-center">
+                    </div>
+                    <!-- Battery Low Alert -->
+                    <div class="flex items-center gap-2 bg-white/50 dark:bg-slate-700/50 rounded-lg p-2">
+                        <span class="text-sm text-gray-700 dark:text-gray-200 flex-1">🪫 Pin thấp (%)</span>
+                        <input type="number" id="thBatteryLow" min="5" max="50" value="" placeholder="20" 
+                            class="w-20 text-sm px-2 py-1.5 rounded-lg border-2 border-orange-300 dark:border-slate-500 bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-orange-500 font-medium text-center">
+                    </div>
+                    <!-- PV Daily Alert -->
+                    <div class="flex items-center gap-2 bg-white/50 dark:bg-slate-700/50 rounded-lg p-2">
+                        <span class="text-sm text-gray-700 dark:text-gray-200 flex-1">☀️ Sản lượng PV (kWh)</span>
+                        <input type="number" id="thPvDaily" min="0" max="100" value="" step="0.5" placeholder="" 
+                            class="w-20 text-sm px-2 py-1.5 rounded-lg border-2 border-orange-300 dark:border-slate-500 bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-orange-500 font-medium text-center">
+                    </div>
+                    <!-- Grid Usage Alert -->
+                    <div class="flex items-center gap-2 bg-white/50 dark:bg-slate-700/50 rounded-lg p-2">
+                        <span class="text-sm text-gray-700 dark:text-gray-200 flex-1">⚡ Điện EVN (kWh)</span>
+                        <input type="number" id="thGridUsage" min="0" max="100" value="" step="0.5" placeholder="" 
+                            class="w-20 text-sm px-2 py-1.5 rounded-lg border-2 border-orange-300 dark:border-slate-500 bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-orange-500 font-medium text-center">
+                    </div>
+                    <!-- Load Daily Alert -->
+                    <div class="flex items-center gap-2 bg-white/50 dark:bg-slate-700/50 rounded-lg p-2 sm:col-span-2">
+                        <span class="text-sm text-gray-700 dark:text-gray-200 flex-1">🏠 Tiêu thụ trong ngày (kWh)</span>
+                        <input type="number" id="thLoadDaily" min="0" max="200" value="" step="0.5" placeholder="" 
+                            class="w-20 text-sm px-2 py-1.5 rounded-lg border-2 border-orange-300 dark:border-slate-500 bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-orange-500 font-medium text-center">
+                    </div>
+                </div>
+                <p class="text-xs text-orange-600 dark:text-orange-400 mt-2">💡 Đặt = 0 để tắt cảnh báo. Pin đầy = 100 để tắt.</p>
+            </div>
+            
             <!-- Location Setting -->
-            <div class="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-xl p-3 border border-blue-200 dark:border-blue-700">
-                <div class="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-2">📍 Vùng thời tiết:</div>
-                <select id="tgLocation" class="w-full text-xs sm:text-sm px-3 py-2 rounded-lg border border-blue-300 dark:border-blue-600 bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500">
+            <div class="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-800/80 dark:to-slate-700/80 rounded-xl p-4 border border-blue-200 dark:border-slate-600">
+                <div class="text-sm font-semibold text-blue-700 dark:text-blue-300 mb-3">📍 Vùng thời tiết:</div>
+                <select id="tgLocation" class="w-full text-sm px-4 py-3 rounded-lg border-2 border-blue-300 dark:border-slate-500 bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium">
                     <option value="TP. Ho Chi Minh">TP. Hồ Chí Minh</option>
                     <option value="Ha Noi">Hà Nội</option>
                     <option value="Da Nang">Đà Nẵng</option>
@@ -2376,7 +2518,7 @@
                 </svg>
                 <span>Lưu cài đặt</span>
             </button>
-            <a id="openTelegramBot" href="https://t.me/LightearthBot" target="_blank"
+            <a id="openTelegramBot" href="https://t.me/lightearth_bot" target="_blank"
                class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-sky-500 to-blue-500 hover:from-sky-600 hover:to-blue-600 
                       text-white text-sm font-semibold rounded-lg shadow-md hover:shadow-lg transition-all no-underline">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
@@ -2388,7 +2530,48 @@
         
         <!-- Help text -->
         <div class="mt-3 text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 text-center">
-            💡 Mở Bot Telegram → Gửi <code class="bg-gray-200 dark:bg-gray-700 px-1 rounded">/start</code> → Thêm thiết bị với <code class="bg-gray-200 dark:bg-gray-700 px-1 rounded">/add [Device ID]</code>
+            💡 Ấn <strong>"Mở Telegram Bot"</strong> để lưu cài đặt vào Bot
+        </div>
+    </div>
+</div>
+
+<!-- Telegram Success Modal -->
+<div id="tgSuccessModal" class="tg-modal-overlay">
+    <div class="tg-modal-content">
+        <div class="text-center">
+            <!-- Success Icon -->
+            <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-emerald-400 to-green-500 rounded-full flex items-center justify-center">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                </svg>
+            </div>
+            
+            <!-- Title -->
+            <h3 class="text-xl font-bold text-white mb-2">Đã lưu cài đặt!</h3>
+            
+            <!-- Message -->
+            <p class="text-gray-300 text-sm mb-4">
+                Cài đặt đã được lưu tạm thời. Để đồng bộ vào Telegram Bot, vui lòng ấn nút bên dưới.
+            </p>
+            
+            <!-- Device Info -->
+            <div class="bg-slate-700/50 rounded-lg p-3 mb-4">
+                <div class="text-xs text-gray-400 mb-1">Thiết bị</div>
+                <div id="tgModalDeviceId" class="text-lg font-bold text-emerald-400">P250801055</div>
+            </div>
+            
+            <!-- Buttons -->
+            <div class="flex flex-col gap-2">
+                <button id="tgModalOpenBot" class="w-full py-3 px-4 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition-all">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.161c-.18 1.897-.962 6.502-1.359 8.627-.168.9-.5 1.201-.82 1.23-.697.064-1.226-.461-1.901-.903-1.056-.692-1.653-1.123-2.678-1.799-1.185-.781-.417-1.21.258-1.911.177-.184 3.247-2.977 3.307-3.23.007-.032.015-.15-.056-.212s-.174-.041-.248-.024c-.106.024-1.793 1.139-5.062 3.345-.479.329-.913.489-1.302.481-.428-.009-1.252-.242-1.865-.442-.751-.244-1.349-.374-1.297-.789.027-.216.324-.437.893-.663 3.498-1.524 5.831-2.529 6.998-3.015 3.333-1.386 4.025-1.627 4.477-1.635.099-.002.321.023.465.141.121.1.154.234.169.332.016.098.035.32.019.493z"/>
+                    </svg>
+                    Mở Telegram Bot để lưu
+                </button>
+                <button id="tgModalClose" class="w-full py-2.5 px-4 bg-slate-600 hover:bg-slate-500 text-gray-300 font-medium rounded-xl transition-all">
+                    Để sau
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -2668,6 +2851,54 @@
         // ========================================
         const TELEGRAM_BOT_API = 'https://lightearth-telegram-bot.applike098.workers.dev';
         
+        // SHORT LOCATION CODES for Deep Link v1.9.0
+        const LOCATION_CODES = {
+            'TP. Ho Chi Minh': 'hcm', 'Ha Noi': 'hn', 'Da Nang': 'dng', 'Can Tho': 'ct',
+            'Binh Duong': 'bd', 'Tay Ninh': 'tn', 'Dong Nai': 'dn', 'Lam Dong': 'dl',
+            'Long An': 'la', 'Tien Giang': 'tg', 'Ben Tre': 'bt', 'Vinh Long': 'vl',
+            'Tra Vinh': 'tv', 'Dong Thap': 'dt', 'An Giang': 'ag', 'Kien Giang': 'kg',
+            'Hau Giang': 'hg', 'Soc Trang': 'st', 'Bac Lieu': 'bl', 'Ca Mau': 'cm',
+            'Ba Ria - Vung Tau': 'brvt', 'Binh Phuoc': 'bp', 'Thua Thien Hue': 'tth',
+            'Quang Nam': 'qna', 'Quang Ngai': 'qng', 'Binh Dinh': 'bdi', 'Phu Yen': 'py',
+            'Khanh Hoa': 'kh', 'Ninh Thuan': 'nt', 'Binh Thuan': 'bth', 'Quang Binh': 'qb',
+            'Quang Tri': 'qt', 'Ha Tinh': 'hti', 'Nghe An': 'na', 'Thanh Hoa': 'th',
+            'Kon Tum': 'kt', 'Gia Lai': 'gl', 'Dak Lak': 'dlk', 'Dak Nong': 'dno',
+            'Hai Phong': 'hp', 'Quang Ninh': 'qni', 'Bac Giang': 'bg', 'Bac Ninh': 'bn',
+            'Hai Duong': 'hdu', 'Hung Yen': 'hy', 'Thai Binh': 'tb', 'Nam Dinh': 'nd',
+            'Ninh Binh': 'nb', 'Ha Nam': 'hna', 'Vinh Phuc': 'vp', 'Phu Tho': 'pt',
+            'Thai Nguyen': 'tnu', 'Bac Kan': 'bk', 'Cao Bang': 'cb', 'Lang Son': 'ls',
+            'Tuyen Quang': 'tqu', 'Ha Giang': 'hgi', 'Yen Bai': 'yb', 'Lao Cai': 'lc',
+            'Lai Chau': 'lch', 'Dien Bien': 'db', 'Son La': 'sla', 'Hoa Binh': 'hbi'
+        };
+        
+        // Convert notification settings to 6-bit string
+        function getNotificationBits() {
+            return [
+                document.getElementById('tgMorningGreeting').checked ? '1' : '0',
+                document.getElementById('tgPowerOutage').checked ? '1' : '0',
+                document.getElementById('tgPowerRestored').checked ? '1' : '0',
+                document.getElementById('tgLowBattery').checked ? '1' : '0',
+                document.getElementById('tgPvEnded').checked ? '1' : '0',
+                document.getElementById('tgHourlyStatus').checked ? '1' : '0'
+            ].join('');
+        }
+        
+        // Build SHORT deep link (max 64 chars) - v1.9.0 format
+        // Format: add_DEVICEID_NNNNNN_bf_bl_pv_gr_ld_loc
+        function buildShortDeepLink(deviceId, thresholds, location) {
+            const notifBits = getNotificationBits();
+            const locCode = LOCATION_CODES[location] || 'hcm';
+            const bf = Math.round(thresholds.batteryFull);
+            const bl = Math.round(thresholds.batteryLow);
+            const pv = Math.round(thresholds.pvDaily);
+            const gr = Math.round(thresholds.gridUsage);
+            const ld = Math.round(thresholds.loadDaily);
+            
+            const payload = `add_${deviceId}_${notifBits}_${bf}_${bl}_${pv}_${gr}_${ld}_${locCode}`;
+            console.log('Short Deep Link v1.9.0:', payload, `(${payload.length} chars)`);
+            return payload;
+        }
+        
         // Show telegram section when device is selected
         window.initTelegramSettings = async function() {
             // Priority: URL params > localStorage
@@ -2703,6 +2934,27 @@
                         document.getElementById('tgLocation').value = result.location;
                     }
                     
+                    // Load thresholds - only show if device has custom thresholds
+                    if (result.thresholds) {
+                        const th = result.thresholds;
+                        // Only show non-default values to encourage user to set their own
+                        if (th.batteryFull !== undefined && th.batteryFull !== 100) {
+                            document.getElementById('thBatteryFull').value = th.batteryFull;
+                        }
+                        if (th.batteryLow !== undefined && th.batteryLow !== 20) {
+                            document.getElementById('thBatteryLow').value = th.batteryLow;
+                        }
+                        if (th.pvDaily !== undefined && th.pvDaily !== 0) {
+                            document.getElementById('thPvDaily').value = th.pvDaily;
+                        }
+                        if (th.gridUsage !== undefined && th.gridUsage !== 0) {
+                            document.getElementById('thGridUsage').value = th.gridUsage;
+                        }
+                        if (th.loadDaily !== undefined && th.loadDaily !== 0) {
+                            document.getElementById('thLoadDaily').value = th.loadDaily;
+                        }
+                    }
+                    
                     // Update status
                     const statusEl = document.getElementById('telegramStatus');
                     statusEl.textContent = '✅ Đã kết nối';
@@ -2713,7 +2965,7 @@
             }
         };
         
-        // Save settings
+        // Save settings - Show modal to open Telegram Bot
         document.getElementById('saveTelegramSettings')?.addEventListener('click', async function() {
             // Priority: URL params > localStorage
             const urlParams = new URLSearchParams(window.location.search);
@@ -2724,53 +2976,143 @@
                 return;
             }
             
-            const settings = {
-                deviceId: deviceId,
-                notifications: {
-                    morningGreeting: document.getElementById('tgMorningGreeting').checked,
-                    powerOutage: document.getElementById('tgPowerOutage').checked,
-                    powerRestored: document.getElementById('tgPowerRestored').checked,
-                    lowBattery: document.getElementById('tgLowBattery').checked,
-                    pvEnded: document.getElementById('tgPvEnded').checked,
-                    hourlyStatus: document.getElementById('tgHourlyStatus').checked
-                },
-                location: document.getElementById('tgLocation').value
+            // Show success modal and prompt to open Telegram
+            const modal = document.getElementById('tgSuccessModal');
+            document.getElementById('tgModalDeviceId').textContent = deviceId;
+            modal.classList.add('active');
+            
+            // Change button state
+            const btn = this;
+            btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Đã lưu!';
+            btn.className = btn.className.replace('from-blue-500 to-indigo-500', 'from-green-500 to-emerald-500');
+            
+            setTimeout(() => {
+                btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Lưu cài đặt';
+                btn.className = btn.className.replace('from-green-500 to-emerald-500', 'from-blue-500 to-indigo-500');
+            }, 2000);
+        });
+        
+        // Modal: Open Telegram Bot button
+        document.getElementById('tgModalOpenBot')?.addEventListener('click', async function() {
+            // Get device ID
+            const urlParams = new URLSearchParams(window.location.search);
+            let deviceId = urlParams.get('deviceId') || localStorage.getItem('selectedDevice');
+            if (deviceId) deviceId = deviceId.toUpperCase();
+            
+            // Get current settings
+            const settings = [];
+            if (document.getElementById('tgMorningGreeting').checked) settings.push('mg');
+            if (document.getElementById('tgPowerOutage').checked) settings.push('po');
+            if (document.getElementById('tgPowerRestored').checked) settings.push('pr');
+            if (document.getElementById('tgLowBattery').checked) settings.push('lb');
+            if (document.getElementById('tgPvEnded').checked) settings.push('pe');
+            if (document.getElementById('tgHourlyStatus').checked) settings.push('hs');
+            
+            // Get location and thresholds
+            // Helper function to properly parse threshold values
+            // Returns the value if valid number (including 0), otherwise returns default
+            function getThresholdValue(elementId, defaultValue) {
+                const el = document.getElementById(elementId);
+                const val = el ? parseFloat(el.value) : NaN;
+                return !isNaN(val) ? val : defaultValue;
+            }
+            
+            const location = document.getElementById('tgLocation').value;
+            const thresholds = {
+                batteryFull: getThresholdValue('thBatteryFull', 100),
+                batteryLow: getThresholdValue('thBatteryLow', 20),
+                pvDaily: getThresholdValue('thPvDaily', 0),
+                gridUsage: getThresholdValue('thGridUsage', 0),
+                loadDaily: getThresholdValue('thLoadDaily', 0)
             };
             
+            // Save thresholds via API (for existing devices)
             try {
-                const btn = this;
-                btn.disabled = true;
-                btn.innerHTML = '<svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Đang lưu...';
-                
-                const response = await fetch(`${TELEGRAM_BOT_API}/api/update-settings`, {
+                await fetch(`${TELEGRAM_BOT_API}/api/update-settings`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(settings)
+                    body: JSON.stringify({ deviceId, thresholds })
                 });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Đã lưu!';
-                    btn.className = btn.className.replace('from-blue-500 to-indigo-500', 'from-green-500 to-emerald-500');
-                    
-                    setTimeout(() => {
-                        btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Lưu cài đặt';
-                        btn.className = btn.className.replace('from-green-500 to-emerald-500', 'from-blue-500 to-indigo-500');
-                        btn.disabled = false;
-                    }, 2000);
-                } else {
-                    throw new Error(result.error || 'Failed to save');
-                }
             } catch (e) {
-                alert('Lỗi khi lưu: ' + e.message + '\n\nHãy mở Telegram Bot và thêm thiết bị trước với lệnh /add ' + deviceId);
-                this.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Lưu cài đặt';
-                this.disabled = false;
+                console.log('Thresholds will be saved when device is added via Telegram');
+            }
+            
+            // Build SHORT deep link v1.9.0 (max 64 chars)
+            // Format: add_DEVICEID_NNNNNN_bf_bl_pv_gr_ld_loc
+            const payload = buildShortDeepLink(deviceId, thresholds, location);
+            const telegramUrl = `https://t.me/lightearth_bot?start=${encodeURIComponent(payload)}`;
+            
+            // Close modal and open Telegram
+            document.getElementById('tgSuccessModal').classList.remove('active');
+            window.open(telegramUrl, '_blank');
+        });
+        
+        // Modal: Close button
+        document.getElementById('tgModalClose')?.addEventListener('click', function() {
+            document.getElementById('tgSuccessModal').classList.remove('active');
+        });
+        
+        // Close modal when clicking overlay
+        document.getElementById('tgSuccessModal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('active');
             }
         });
         
         // Initialize telegram settings on load
         window.initTelegramSettings();
+        
+        // Update Telegram Bot link with device ID and settings
+        document.getElementById('openTelegramBot')?.addEventListener('click', async function(e) {
+            e.preventDefault();
+            
+            // Get device ID
+            const urlParams = new URLSearchParams(window.location.search);
+            let deviceId = urlParams.get('deviceId') || localStorage.getItem('selectedDevice');
+            if (deviceId) deviceId = deviceId.toUpperCase();
+            
+            if (!deviceId) {
+                alert('Vui lòng chọn thiết bị trước!');
+                return;
+            }
+            
+            // Get location and thresholds
+            // Helper function to properly parse threshold values
+            // Returns the value if valid number (including 0), otherwise returns default
+            function getThresholdValue(elementId, defaultValue) {
+                const el = document.getElementById(elementId);
+                const val = el ? parseFloat(el.value) : NaN;
+                return !isNaN(val) ? val : defaultValue;
+            }
+            
+            const location = document.getElementById('tgLocation').value;
+            const thresholds = {
+                batteryFull: getThresholdValue('thBatteryFull', 100),
+                batteryLow: getThresholdValue('thBatteryLow', 20),
+                pvDaily: getThresholdValue('thPvDaily', 0),
+                gridUsage: getThresholdValue('thGridUsage', 0),
+                loadDaily: getThresholdValue('thLoadDaily', 0)
+            };
+            
+            // Save thresholds via API (for existing devices)
+            try {
+                await fetch(`${TELEGRAM_BOT_API}/api/update-settings`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ deviceId, thresholds })
+                });
+            } catch (e) {
+                console.log('Thresholds will be saved when device is added via Telegram');
+            }
+            
+            // Build SHORT deep link v1.9.0 (max 64 chars)
+            // Format: add_DEVICEID_NNNNNN_bf_bl_pv_gr_ld_loc
+            const payload = buildShortDeepLink(deviceId, thresholds, location);
+            const telegramUrl = `https://t.me/lightearth_bot?start=${encodeURIComponent(payload)}`;
+            
+            // Open Telegram
+            window.open(telegramUrl, '_blank');
+        });
         
         // ========================================
         // HEADER SCROLL HIDE - Always hide when scrolled

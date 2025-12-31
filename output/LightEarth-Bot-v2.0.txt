@@ -2,15 +2,15 @@
 // Version: 2.0 - VOLTAGE ALERTS + ULTRA SHORT DEEP LINK
 // 
 // NEW IN v2.0:
-// - ⚡ Voltage Alerts: voltageHigh (quá áp) and voltageLow (thấp áp)
+// - 🔋 Battery Voltage Alerts: batteryVoltHigh (cell pin cao) and batteryVoltLow (cell pin thấp)
 // - 🔔 Alert Once: chỉ báo 1 lần/ngày/ngưỡng, reset lúc 00:00 VN
-// - 🔗 Extended Deep Link: add_DEVICEID_NNNNNN_bf_bl_pv_gr_ld_vh_vl_loc
+// - 🔗 Extended Deep Link: add_DEVICEID_NNNNNN_bf_bl_pv_gr_ld_bvh_bvl_loc
 //
 // FIXED: Telegram start_param max 64 chars
 // OLD: add_P250802210_mg_po_pr_lb_pe_hs_loc_TP_Ho_Chi_Minh_bf100_bl20_pv0_gr0_ld0 (75 chars) ❌
 // NEW: add_P250802210_111110_95_20_10_5_15_260_180_hcm (52 chars) ✅
 //
-// SHORT FORMAT: add_DEVICEID_NNNNNN_bf_bl_pv_gr_ld_vh_vl_loc
+// SHORT FORMAT: add_DEVICEID_NNNNNN_bf_bl_pv_gr_ld_bvh_bvl_loc
 // - NNNNNN: 6 bits for notifications (1=on, 0=off)
 //   - Bit 1: morningGreeting (mg)
 //   - Bit 2: powerOutage (po)
@@ -18,14 +18,14 @@
 //   - Bit 4: lowBattery (lb)
 //   - Bit 5: pvEnded (pe)
 //   - Bit 6: hourlyStatus (hs)
-// - bf_bl_pv_gr_ld_vh_vl: compact threshold numbers
+// - bf_bl_pv_gr_ld_bvh_bvl: compact threshold numbers
 //   - bf: batteryFull (%)
 //   - bl: batteryLow (%)
 //   - pv: pvDaily (kWh)
 //   - gr: gridUsage (kWh)
 //   - ld: loadDaily (kWh)
-//   - vh: voltageHigh (V) - 0 = TẮT
-//   - vl: voltageLow (V) - 0 = TẮT
+//   - bvh: batteryVoltHigh (V) - Điện áp cell pin cao, 0 = TẮT
+//   - bvl: batteryVoltLow (V) - Điện áp cell pin thấp, 0 = TẮT
 // - loc: 2-4 char location code (hcm, hn, dng, tn, etc.)
 //
 // IMPORTANT: Set up in Cloudflare Dashboard:
@@ -62,8 +62,8 @@ const DEFAULT_THRESHOLDS = {
   pvDaily: 0,
   gridUsage: 0,
   loadDaily: 0,
-  voltageHigh: 0,  // 0 = TẮT, VD: 260V
-  voltageLow: 0    // 0 = TẮT, VD: 180V
+  batteryVoltHigh: 0,  // 0 = TẮT, VD: 55V (pin 48V)
+  batteryVoltLow: 0    // 0 = TẮT, VD: 45V (pin 48V)
 };
 
 const DEFAULT_DEVICES_DATA = [
@@ -124,7 +124,7 @@ async function clearThresholdAlertKey(env, type, chatId, deviceId) {
 }
 
 async function clearAllThresholdAlerts(env, chatId, deviceId) {
-  const types = ['full', 'low', 'pv', 'grid', 'load', 'vhigh', 'vlow'];
+  const types = ['full', 'low', 'pv', 'grid', 'load', 'bvhigh', 'bvlow'];
   for (const type of types) { await clearThresholdAlertKey(env, type, chatId, deviceId); }
 }
 
@@ -449,6 +449,8 @@ async function fetchAllDevicesFromHA(env) {
       const hasGridPower = gridPower > 50 || acInputVoltage > 100;
       const gridToday = Math.round(parseNum(getValue('grid_today')) * 100) / 100;
       
+      const batteryVoltage = Math.round(parseNum(getValue('battery_voltage')) * 10) / 10;
+      
       devices.push({ 
         deviceId, isOnline, hasGridPower, 
         realtime: { 
@@ -456,7 +458,7 @@ async function fetchAllDevicesFromHA(env) {
           pvPower: Math.round(parseNum(getValue('pv_power'))), 
           batteryPower: Math.round(parseNum(getValue('battery_power'))), 
           loadPower: Math.round(parseNum(getValue('total_load_power')) || parseNum(getValue('load_power'))), 
-          gridPower, acInputVoltage, 
+          gridPower, acInputVoltage, batteryVoltage,
           temperature: Math.round(parseNum(getValue('device_temperature')) * 10) / 10 
         }, 
         dailyEnergy: { 
@@ -712,25 +714,23 @@ async function processNotifications(env) {
       }
     }
     
-    // ⚡🔴 ĐIỆN ÁP CAO (QUÁ ÁP) - v2.0
-    if (thresholds.voltageHigh > 0 && rt.acInputVoltage >= thresholds.voltageHigh) {
-      const alertedValue = await getThresholdAlertKey(env, 'vhigh', chatId, deviceId);
-      if (alertedValue !== String(thresholds.voltageHigh)) {
-        const riskLevel = rt.acInputVoltage >= 270 ? '🔴 NGUY HIỂM!' : (rt.acInputVoltage >= 260 ? '🟠 Cao' : '🟡 Hơi cao');
-        const tip = rt.acInputVoltage >= 270 ? '\n\n⚠️ _Cảnh báo: Điện áp quá cao có thể gây hỏng thiết bị!_' : '\n\n💡 _Theo dõi và hạn chế sử dụng thiết bị nhạy cảm._';
-        notifications.push({ chatId, message: `⚡🔴 *ĐIỆN ÁP CAO*\n📱 \`${deviceId}\`\n\n🔌 Điện áp: *${rt.acInputVoltage}V* ${riskLevel}\n🎯 Ngưỡng: ${thresholds.voltageHigh}V\n\n${getBatteryIcon(rt.batterySoc)} Pin: *${rt.batterySoc}%*\n🏠 Load: *${rt.loadPower}W*\n⚡ Grid: *${rt.gridPower}W* ${getGridIcon(haDevice.hasGridPower)}${tip}\n\n🕐 ${getVietnamTime()}` });
-        await setThresholdAlertKey(env, 'vhigh', chatId, deviceId, thresholds.voltageHigh);
+    // 🔋🔴 ĐIỆN ÁP CELL PIN CAO - v2.0
+    if (thresholds.batteryVoltHigh > 0 && rt.batteryVoltage >= thresholds.batteryVoltHigh) {
+      const alertedValue = await getThresholdAlertKey(env, 'bvhigh', chatId, deviceId);
+      if (alertedValue !== String(thresholds.batteryVoltHigh)) {
+        const tip = '\n\n⚠️ _Cảnh báo: Điện áp pin cao, kiểm tra hệ thống sạc!_';
+        notifications.push({ chatId, message: `🔋🔴 *ĐIỆN ÁP PIN CAO*\n📱 \`${deviceId}\`\n\n🔌 Điện áp pin: *${rt.batteryVoltage}V*\n🎯 Ngưỡng: ${thresholds.batteryVoltHigh}V\n\n${getBatteryIcon(rt.batterySoc)} Pin: *${rt.batterySoc}%*\n☀️ PV: *${rt.pvPower}W*\n🏠 Load: *${rt.loadPower}W*${tip}\n\n🕐 ${getVietnamTime()}` });
+        await setThresholdAlertKey(env, 'bvhigh', chatId, deviceId, thresholds.batteryVoltHigh);
       }
     }
     
-    // ⚡🟡 ĐIỆN ÁP THẤP (THẤP ÁP) - v2.0
-    if (thresholds.voltageLow > 0 && rt.acInputVoltage > 0 && rt.acInputVoltage <= thresholds.voltageLow) {
-      const alertedValue = await getThresholdAlertKey(env, 'vlow', chatId, deviceId);
-      if (alertedValue !== String(thresholds.voltageLow)) {
-        const riskLevel = rt.acInputVoltage <= 170 ? '🔴 NGUY HIỂM!' : (rt.acInputVoltage <= 180 ? '🟠 Thấp' : '🟡 Hơi thấp');
-        const tip = rt.acInputVoltage <= 170 ? '\n\n⚠️ _Cảnh báo: Điện áp quá thấp có thể gây hỏng máy nén, động cơ!_' : '\n\n💡 _Hạn chế sử dụng điều hòa, tủ lạnh khi điện yếu._';
-        notifications.push({ chatId, message: `⚡🟡 *ĐIỆN ÁP THẤP*\n📱 \`${deviceId}\`\n\n🔌 Điện áp: *${rt.acInputVoltage}V* ${riskLevel}\n🎯 Ngưỡng: ${thresholds.voltageLow}V\n\n${getBatteryIcon(rt.batterySoc)} Pin: *${rt.batterySoc}%*\n🏠 Load: *${rt.loadPower}W*\n⚡ Grid: *${rt.gridPower}W* ${getGridIcon(haDevice.hasGridPower)}${tip}\n\n🕐 ${getVietnamTime()}` });
-        await setThresholdAlertKey(env, 'vlow', chatId, deviceId, thresholds.voltageLow);
+    // 🔋🟡 ĐIỆN ÁP CELL PIN THẤP - v2.0
+    if (thresholds.batteryVoltLow > 0 && rt.batteryVoltage > 0 && rt.batteryVoltage <= thresholds.batteryVoltLow) {
+      const alertedValue = await getThresholdAlertKey(env, 'bvlow', chatId, deviceId);
+      if (alertedValue !== String(thresholds.batteryVoltLow)) {
+        const tip = '\n\n⚠️ _Cảnh báo: Điện áp pin thấp, cần sạc ngay!_';
+        notifications.push({ chatId, message: `🔋🟡 *ĐIỆN ÁP PIN THẤP*\n📱 \`${deviceId}\`\n\n🔌 Điện áp pin: *${rt.batteryVoltage}V*\n🎯 Ngưỡng: ${thresholds.batteryVoltLow}V\n\n${getBatteryIcon(rt.batterySoc)} Pin: *${rt.batterySoc}%*\n☀️ PV: *${rt.pvPower}W*\n⚡ Grid: *${rt.gridPower}W* ${getGridIcon(haDevice.hasGridPower)}${tip}\n\n🕐 ${getVietnamTime()}` });
+        await setThresholdAlertKey(env, 'bvlow', chatId, deviceId, thresholds.batteryVoltLow);
       }
     }
 
@@ -752,7 +752,7 @@ async function handleHelp(chatId, devicesData) {
   
   if (userDevices.length > 0) {
     const th = userDevices[0].thresholds || DEFAULT_THRESHOLDS;
-    thresholdsInfo = `\n\n⚙️ *Ngưỡng cảnh báo:*\n🔋 Pin đầy: ${th.batteryFull}%${th.batteryFull >= 100 ? ' ❌' : ' ✅'}\n🪫 Pin thấp: ${th.batteryLow}%\n☀️ PV/ngày: ${th.pvDaily} kWh${th.pvDaily <= 0 ? ' ❌' : ' ✅'}\n⚡ EVN/ngày: ${th.gridUsage} kWh${th.gridUsage <= 0 ? ' ❌' : ' ✅'}\n🏠 Tiêu thụ/ngày: ${th.loadDaily} kWh${th.loadDaily <= 0 ? ' ❌' : ' ✅'}\n🔌 Điện áp cao: ${th.voltageHigh || 0}V${(th.voltageHigh || 0) <= 0 ? ' ❌' : ' ✅'}\n🔌 Điện áp thấp: ${th.voltageLow || 0}V${(th.voltageLow || 0) <= 0 ? ' ❌' : ' ✅'}`;
+    thresholdsInfo = `\n\n⚙️ *Ngưỡng cảnh báo:*\n🔋 Pin đầy: ${th.batteryFull}%${th.batteryFull >= 100 ? ' ❌' : ' ✅'}\n🪫 Pin thấp: ${th.batteryLow}%\n☀️ PV/ngày: ${th.pvDaily} kWh${th.pvDaily <= 0 ? ' ❌' : ' ✅'}\n⚡ EVN/ngày: ${th.gridUsage} kWh${th.gridUsage <= 0 ? ' ❌' : ' ✅'}\n🏠 Tiêu thụ/ngày: ${th.loadDaily} kWh${th.loadDaily <= 0 ? ' ❌' : ' ✅'}\n🔌 Điện áp pin cao: ${th.batteryVoltHigh || 0}V${(th.batteryVoltHigh || 0) <= 0 ? ' ❌' : ' ✅'}\n🔌 Điện áp pin thấp: ${th.batteryVoltLow || 0}V${(th.batteryVoltLow || 0) <= 0 ? ' ❌' : ' ✅'}`;
   }
   
   await sendTelegram(chatId, `🤖 *LightEarth Bot v2.0*\n━━━━━━━━━━━━━━━━━\n\n📱 *Quản lý thiết bị:*\n/add <ID> - ➕ Thêm thiết bị\n/remove <ID> - ➖ Xóa thiết bị\n/list - 📋 Danh sách thiết bị\n\n📊 *Trạng thái:*\n/status - 📈 Trạng thái tất cả\n/check <ID> - 🔍 Kiểm tra 1 thiết bị\n\n⚙️ *Cài đặt:*\n/settings - 🔔 Loại thông báo\n/thresholds - 🎯 Ngưỡng cảnh báo\n/location - 📍 Vùng thời tiết\n\n🔔 *Thông báo tự động:*\n🌅 Chào buổi sáng + Thời tiết\n⚡ Mất điện lưới EVN\n✅ Có điện lại\n🪫 Pin yếu (<20%)\n🌇 Kết thúc ngày nắng\n⏰ Báo cáo mỗi giờ (6h-21h)${thresholdsInfo}`);
@@ -777,7 +777,7 @@ async function handleThresholds(chatId, args, devicesData) {
   
   const th = device.thresholds || DEFAULT_THRESHOLDS;
   userStates.set(chatId, { waiting: 'thresholds_select', deviceId: device.deviceId });
-  await sendTelegram(chatId, `🎯 *Ngưỡng cảnh báo*\n📱 \`${device.deviceId}\`\n\n1️⃣ 🔋 Pin đầy: *${th.batteryFull}%* ${th.batteryFull >= 100 ? '❌ TẮT' : '✅'}\n2️⃣ 🪫 Pin thấp: *${th.batteryLow}%*\n3️⃣ ☀️ PV/ngày: *${th.pvDaily} kWh* ${th.pvDaily <= 0 ? '❌ TẮT' : '✅'}\n4️⃣ ⚡ EVN/ngày: *${th.gridUsage} kWh* ${th.gridUsage <= 0 ? '❌ TẮT' : '✅'}\n5️⃣ 🏠 Tiêu thụ/ngày: *${th.loadDaily} kWh* ${th.loadDaily <= 0 ? '❌ TẮT' : '✅'}\n6️⃣ 🔌 Điện áp cao: *${th.voltageHigh || 0}V* ${(th.voltageHigh || 0) <= 0 ? '❌ TẮT' : '✅'}\n7️⃣ 🔌 Điện áp thấp: *${th.voltageLow || 0}V* ${(th.voltageLow || 0) <= 0 ? '❌ TẮT' : '✅'}\n\n📝 Nhập số (1-7) để thay đổi:\n🚪 Nhập \`0\` để thoát`);
+  await sendTelegram(chatId, `🎯 *Ngưỡng cảnh báo*\n📱 \`${device.deviceId}\`\n\n1️⃣ 🔋 Pin đầy: *${th.batteryFull}%* ${th.batteryFull >= 100 ? '❌ TẮT' : '✅'}\n2️⃣ 🪫 Pin thấp: *${th.batteryLow}%*\n3️⃣ ☀️ PV/ngày: *${th.pvDaily} kWh* ${th.pvDaily <= 0 ? '❌ TẮT' : '✅'}\n4️⃣ ⚡ EVN/ngày: *${th.gridUsage} kWh* ${th.gridUsage <= 0 ? '❌ TẮT' : '✅'}\n5️⃣ 🏠 Tiêu thụ/ngày: *${th.loadDaily} kWh* ${th.loadDaily <= 0 ? '❌ TẮT' : '✅'}\n6️⃣ 🔌 Điện áp pin cao: *${th.batteryVoltHigh || 0}V* ${(th.batteryVoltHigh || 0) <= 0 ? '❌ TẮT' : '✅'}\n7️⃣ 🔌 Điện áp pin thấp: *${th.batteryVoltLow || 0}V* ${(th.batteryVoltLow || 0) <= 0 ? '❌ TẮT' : '✅'}\n\n📝 Nhập số (1-7) để thay đổi:\n🚪 Nhập \`0\` để thoát`);
 }
 
 async function handleAdd(chatId, args, env, devicesData) {
@@ -863,9 +863,9 @@ async function handleLocation(chatId, args, devicesData) {
 // OLD v1.9.0: add_P250802210_111110_95_20_10_5_15_hcm (44 chars)
 // NEW v2.0: add_P250802210_111110_95_20_10_5_15_260_180_hcm (52 chars) ✅
 //
-// Format: add_DEVICEID_NNNNNN_bf_bl_pv_gr_ld_vh_vl_loc
+// Format: add_DEVICEID_NNNNNN_bf_bl_pv_gr_ld_bvh_bvl_loc
 // - NNNNNN: 6 bits for notifications
-// - bf_bl_pv_gr_ld_vh_vl: compact threshold numbers (with voltage)
+// - bf_bl_pv_gr_ld_bvh_bvl: compact threshold numbers (with voltage)
 // - loc: 2-4 char location code
 
 async function handleStart(chatId, text, env, devicesData) {
@@ -878,7 +878,7 @@ async function handleStart(chatId, text, env, devicesData) {
   const payload = payloadMatch[1].trim();
   
   // ============================================
-  // NEW v2.0 FORMAT: add_DEVICEID_NNNNNN_bf_bl_pv_gr_ld_vh_vl_loc
+  // NEW v2.0 FORMAT: add_DEVICEID_NNNNNN_bf_bl_pv_gr_ld_bvh_bvl_loc
   // Example: add_P250802210_111110_95_20_10_5_15_260_180_hcm
   // ============================================
   const shortMatchV2 = payload.match(/^add_([HP]\d+)_(\d{6})_(\d+)_(\d+)_(\d+)_(\d+)_(\d+)_(\d+)_(\d+)_([a-z]+)$/i);
@@ -894,8 +894,8 @@ async function handleStart(chatId, text, env, devicesData) {
       pvDaily: parseInt(pv),
       gridUsage: parseInt(gr),
       loadDaily: parseInt(ld),
-      voltageHigh: parseInt(vh),
-      voltageLow: parseInt(vl)
+      batteryVoltHigh: parseInt(vh),
+      batteryVoltLow: parseInt(vl)
     };
     
     // Check if device exists in HA
@@ -927,8 +927,8 @@ async function handleStart(chatId, text, env, devicesData) {
       `☀️ PV/ngày: ${thresholds.pvDaily} kWh ${thresholds.pvDaily <= 0 ? '❌' : '✅'}`,
       `⚡ EVN/ngày: ${thresholds.gridUsage} kWh ${thresholds.gridUsage <= 0 ? '❌' : '✅'}`,
       `🏠 Tiêu thụ/ngày: ${thresholds.loadDaily} kWh ${thresholds.loadDaily <= 0 ? '❌' : '✅'}`,
-      `🔌 Điện áp cao: ${thresholds.voltageHigh}V ${thresholds.voltageHigh <= 0 ? '❌' : '✅'}`,
-      `🔌 Điện áp thấp: ${thresholds.voltageLow}V ${thresholds.voltageLow <= 0 ? '❌' : '✅'}`
+      `🔌 Điện áp pin cao: ${thresholds.batteryVoltHigh}V ${thresholds.batteryVoltHigh <= 0 ? '❌' : '✅'}`,
+      `🔌 Điện áp pin thấp: ${thresholds.batteryVoltLow}V ${thresholds.batteryVoltLow <= 0 ? '❌' : '✅'}`
     ].join('\n');
     
     const action = result.isNew ? '✅ *ĐÃ THÊM THIẾT BỊ*' : '✅ *ĐÃ CẬP NHẬT THIẾT BỊ*';
@@ -955,8 +955,8 @@ async function handleStart(chatId, text, env, devicesData) {
       pvDaily: parseInt(pv),
       gridUsage: parseInt(gr),
       loadDaily: parseInt(ld),
-      voltageHigh: 0,
-      voltageLow: 0
+      batteryVoltHigh: 0,
+      batteryVoltLow: 0
     };
     
     // Check if device exists in HA
@@ -1164,8 +1164,8 @@ async function handleConversation(chatId, text, env, devicesData) {
       if (text === '0') { await sendTelegram(chatId, `🚪 Đã thoát cài đặt ngưỡng.`); return { handled: true, devicesData }; }
       const thNum = parseInt(text);
       if (thNum >= 1 && thNum <= 7) {
-        const thNames = { 1: 'batteryFull', 2: 'batteryLow', 3: 'pvDaily', 4: 'gridUsage', 5: 'loadDaily', 6: 'voltageHigh', 7: 'voltageLow' };
-        const thLabels = { 1: '🔋 Pin đầy (%)', 2: '🪫 Pin thấp (%)', 3: '☀️ PV/ngày (kWh)', 4: '⚡ EVN/ngày (kWh)', 5: '🏠 Tiêu thụ/ngày (kWh)', 6: '🔌 Điện áp cao (V)', 7: '🔌 Điện áp thấp (V)' };
+        const thNames = { 1: 'batteryFull', 2: 'batteryLow', 3: 'pvDaily', 4: 'gridUsage', 5: 'loadDaily', 6: 'batteryVoltHigh', 7: 'batteryVoltLow' };
+        const thLabels = { 1: '🔋 Pin đầy (%)', 2: '🪫 Pin thấp (%)', 3: '☀️ PV/ngày (kWh)', 4: '⚡ EVN/ngày (kWh)', 5: '🏠 Tiêu thụ/ngày (kWh)', 6: '🔌 Điện áp pin cao (V)', 7: '🔌 Điện áp pin thấp (V)' };
         const thHints = { 1: '💡 Nhập 100 để TẮT. VD: 95', 2: '💡 VD: 20 hoặc 30', 3: '💡 Nhập 0 để TẮT. VD: 10', 4: '💡 Nhập 0 để TẮT. VD: 5', 5: '💡 Nhập 0 để TẮT. VD: 15', 6: '💡 Nhập 0 để TẮT. VD: 250 hoặc 260', 7: '💡 Nhập 0 để TẮT. VD: 180 hoặc 190' };
         userStates.set(chatId, { waiting: 'thresholds_input', deviceId: state.deviceId, thresholdKey: thNames[thNum] });
         await sendTelegram(chatId, `*${thLabels[thNum]}*\n\n${thHints[thNum]}\n\n📝 Nhập giá trị mới:`);
@@ -1184,8 +1184,8 @@ async function handleConversation(chatId, text, env, devicesData) {
       }
       const newTh = { [state.thresholdKey]: value };
       await updateDeviceThresholds(env, devicesData, chatId, state.deviceId, newTh);
-      const thLabelMap = { batteryFull: '🔋 Pin đầy', batteryLow: '🪫 Pin thấp', pvDaily: '☀️ PV/ngày', gridUsage: '⚡ EVN/ngày', loadDaily: '🏠 Tiêu thụ/ngày', voltageHigh: '🔌 Điện áp cao', voltageLow: '🔌 Điện áp thấp' };
-      const unitMap = { batteryFull: '%', batteryLow: '%', pvDaily: ' kWh', gridUsage: ' kWh', loadDaily: ' kWh', voltageHigh: 'V', voltageLow: 'V' };
+      const thLabelMap = { batteryFull: '🔋 Pin đầy', batteryLow: '🪫 Pin thấp', pvDaily: '☀️ PV/ngày', gridUsage: '⚡ EVN/ngày', loadDaily: '🏠 Tiêu thụ/ngày', batteryVoltHigh: '🔌 Điện áp pin cao', batteryVoltLow: '🔌 Điện áp pin thấp' };
+      const unitMap = { batteryFull: '%', batteryLow: '%', pvDaily: ' kWh', gridUsage: ' kWh', loadDaily: ' kWh', batteryVoltHigh: 'V', batteryVoltLow: 'V' };
       await sendTelegram(chatId, `✅ *Đã cập nhật!*\n\n${thLabelMap[state.thresholdKey]}: *${value}${unitMap[state.thresholdKey]}*\n\n🔄 _Ngưỡng đã reset - sẽ báo khi đạt ngưỡng mới!_\n\n⚙️ Gõ /thresholds để tiếp tục chỉnh ngưỡng khác.`);
       return { handled: true, devicesData };
     
@@ -1377,7 +1377,7 @@ export default {
     }
     
     // Default HTML page
-    return corsResponse(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>LightEarth Bot v2.0</title><style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;max-width:700px;margin:50px auto;padding:20px;background:#0f172a;color:#e2e8f0}h1{color:#22d3ee}h2{color:#a78bfa;border-bottom:1px solid #334155;padding-bottom:10px}ul{list-style:none;padding-left:0}li{padding:8px 0;border-bottom:1px solid #1e293b}a{color:#22d3ee;text-decoration:none}a:hover{text-decoration:underline}.badge{background:#059669;color:white;padding:3px 8px;border-radius:4px;font-size:12px;margin-right:5px}.new{background:#dc2626}.code{background:#1e293b;padding:8px 12px;border-radius:4px;font-family:monospace;font-size:13px;display:block;margin:10px 0;overflow-x:auto}</style></head><body><h1>🤖 LightEarth Bot v2.0</h1><p><span class="badge new">⚡ VOLTAGE ALERTS</span><span class="badge">🔗 Deep Link ≤64 chars</span></p><h2>🔗 Deep Link Format v2.0:</h2><p>NEW v2.0 (52 chars):</p><code class="code">add_P250802210_111110_95_20_10_5_15_260_180_hcm</code><p>v1.9.0 format (44 chars) - backward compatible:</p><code class="code">add_P250802210_111110_95_20_10_5_15_hcm</code><h2>📋 Format: add_DEVICEID_NNNNNN_bf_bl_pv_gr_ld_vh_vl_loc</h2><ul><li><strong>NNNNNN</strong>: 6 bits thông báo (1=bật, 0=tắt)</li><li>Bit 1: morningGreeting | Bit 2: powerOutage | Bit 3: powerRestored</li><li>Bit 4: lowBattery | Bit 5: pvEnded | Bit 6: hourlyStatus</li><li><strong>bf_bl_pv_gr_ld</strong>: ngưỡng (batteryFull, batteryLow, pvDaily, gridUsage, loadDaily)</li><li><strong>vh_vl</strong>: voltageHigh, voltageLow (V) - 0 = TẮT</li><li><strong>loc</strong>: mã vùng 2-4 ký tự (hcm, hn, dng, tn, bd, dn, la...)</li></ul><h2>⚡ Voltage Alerts:</h2><ul><li>🔌 Điện áp cao (quá áp): Cảnh báo khi >= ngưỡng (VD: 260V)</li><li>🔌 Điện áp thấp (thấp áp): Cảnh báo khi <= ngưỡng (VD: 180V)</li></ul><h2>📱 Commands:</h2><ul><li>/start - 🚀 Bắt đầu + Deep Link</li><li>/help - 📋 Hướng dẫn</li><li>/add, /remove, /list - 📱 Quản lý thiết bị</li><li>/status, /check - 📊 Trạng thái</li><li>/settings - 🔔 Cài đặt thông báo</li><li>/thresholds - 🎯 Ngưỡng cảnh báo</li><li>/location - 📍 Vùng thời tiết</li></ul><h2>🔧 API & Debug:</h2><ul><li><a href="/health">/health</a> - Trạng thái hệ thống</li><li><a href="/kv-status">/kv-status</a> - Trạng thái KV</li><li><a href="/api/generate-deeplink?deviceId=P250802210&notifications=111110&bf=95&bl=20&pv=10&gr=5&ld=15&loc=hcm">/api/generate-deeplink</a> - Tạo short link</li><li><a href="/trigger-notifications">/trigger-notifications</a> - Test gửi thông báo</li></ul></body></html>`, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+    return corsResponse(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>LightEarth Bot v2.0</title><style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;max-width:700px;margin:50px auto;padding:20px;background:#0f172a;color:#e2e8f0}h1{color:#22d3ee}h2{color:#a78bfa;border-bottom:1px solid #334155;padding-bottom:10px}ul{list-style:none;padding-left:0}li{padding:8px 0;border-bottom:1px solid #1e293b}a{color:#22d3ee;text-decoration:none}a:hover{text-decoration:underline}.badge{background:#059669;color:white;padding:3px 8px;border-radius:4px;font-size:12px;margin-right:5px}.new{background:#dc2626}.code{background:#1e293b;padding:8px 12px;border-radius:4px;font-family:monospace;font-size:13px;display:block;margin:10px 0;overflow-x:auto}</style></head><body><h1>🤖 LightEarth Bot v2.0</h1><p><span class="badge new">⚡ VOLTAGE ALERTS</span><span class="badge">🔗 Deep Link ≤64 chars</span></p><h2>🔗 Deep Link Format v2.0:</h2><p>NEW v2.0 (52 chars):</p><code class="code">add_P250802210_111110_95_20_10_5_15_260_180_hcm</code><p>v1.9.0 format (44 chars) - backward compatible:</p><code class="code">add_P250802210_111110_95_20_10_5_15_hcm</code><h2>📋 Format: add_DEVICEID_NNNNNN_bf_bl_pv_gr_ld_bvh_bvl_loc</h2><ul><li><strong>NNNNNN</strong>: 6 bits thông báo (1=bật, 0=tắt)</li><li>Bit 1: morningGreeting | Bit 2: powerOutage | Bit 3: powerRestored</li><li>Bit 4: lowBattery | Bit 5: pvEnded | Bit 6: hourlyStatus</li><li><strong>bf_bl_pv_gr_ld</strong>: ngưỡng (batteryFull, batteryLow, pvDaily, gridUsage, loadDaily)</li><li><strong>bvh_bvl</strong>: batteryVoltHigh, batteryVoltLow (V) - 0 = TẮT</li><li><strong>loc</strong>: mã vùng 2-4 ký tự (hcm, hn, dng, tn, bd, dn, la...)</li></ul><h2>⚡ Voltage Alerts:</h2><ul><li>🔌 Điện áp pin cao (quá áp): Cảnh báo khi >= ngưỡng (VD: 260V)</li><li>🔌 Điện áp pin thấp (thấp áp): Cảnh báo khi <= ngưỡng (VD: 180V)</li></ul><h2>📱 Commands:</h2><ul><li>/start - 🚀 Bắt đầu + Deep Link</li><li>/help - 📋 Hướng dẫn</li><li>/add, /remove, /list - 📱 Quản lý thiết bị</li><li>/status, /check - 📊 Trạng thái</li><li>/settings - 🔔 Cài đặt thông báo</li><li>/thresholds - 🎯 Ngưỡng cảnh báo</li><li>/location - 📍 Vùng thời tiết</li></ul><h2>🔧 API & Debug:</h2><ul><li><a href="/health">/health</a> - Trạng thái hệ thống</li><li><a href="/kv-status">/kv-status</a> - Trạng thái KV</li><li><a href="/api/generate-deeplink?deviceId=P250802210&notifications=111110&bf=95&bl=20&pv=10&gr=5&ld=15&loc=hcm">/api/generate-deeplink</a> - Tạo short link</li><li><a href="/trigger-notifications">/trigger-notifications</a> - Test gửi thông báo</li></ul></body></html>`, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
   },
   async scheduled(event, env, ctx) { ctx.waitUntil(processNotifications(env)); }
 };

@@ -2428,51 +2428,51 @@
             <!-- Custom Threshold Alerts -->
             <div class="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-slate-800/80 dark:to-slate-700/80 rounded-xl p-4 border border-orange-200 dark:border-slate-600">
                 <div class="text-sm font-semibold text-orange-700 dark:text-orange-300 mb-3">⚡ Ngưỡng cảnh báo tùy chỉnh:</div>
-                <div class="grid grid-cols-2 gap-2 sm:gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <!-- Battery Full Alert -->
-                    <div class="flex items-center gap-1 sm:gap-2 bg-white/50 dark:bg-slate-700/50 rounded-lg p-2">
-                        <span class="text-xs sm:text-sm text-gray-700 dark:text-gray-200 flex-1">🔋 Pin đầy (%)</span>
+                    <div class="flex items-center gap-2 bg-white/50 dark:bg-slate-700/50 rounded-lg p-2">
+                        <span class="text-sm text-gray-700 dark:text-gray-200 flex-1">🔋 Pin đầy (%)</span>
                         <input type="number" id="thBatteryFull" min="80" max="100" value="" placeholder="100" 
-                            class="w-16 sm:w-20 text-xs sm:text-sm px-1 sm:px-2 py-1 sm:py-1.5 rounded-lg border-2 border-orange-300 dark:border-slate-500 bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-orange-500 font-medium text-center">
+                            class="w-20 text-sm px-2 py-1.5 rounded-lg border-2 border-orange-300 dark:border-slate-500 bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-orange-500 font-medium text-center">
                     </div>
                     <!-- Battery Low Alert -->
-                    <div class="flex items-center gap-1 sm:gap-2 bg-white/50 dark:bg-slate-700/50 rounded-lg p-2">
-                        <span class="text-xs sm:text-sm text-gray-700 dark:text-gray-200 flex-1">🪫 Pin thấp (%)</span>
+                    <div class="flex items-center gap-2 bg-white/50 dark:bg-slate-700/50 rounded-lg p-2">
+                        <span class="text-sm text-gray-700 dark:text-gray-200 flex-1">🪫 Pin thấp (%)</span>
                         <input type="number" id="thBatteryLow" min="5" max="50" value="" placeholder="20" 
-                            class="w-16 sm:w-20 text-xs sm:text-sm px-1 sm:px-2 py-1 sm:py-1.5 rounded-lg border-2 border-orange-300 dark:border-slate-500 bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-orange-500 font-medium text-center">
+                            class="w-20 text-sm px-2 py-1.5 rounded-lg border-2 border-orange-300 dark:border-slate-500 bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-orange-500 font-medium text-center">
                     </div>
                     <!-- Voltage High Alert - ngay dưới Pin thấp -->
-                    <div class="flex items-center gap-1 sm:gap-2 bg-white/50 dark:bg-slate-700/50 rounded-lg p-2">
-                        <span class="text-xs sm:text-sm text-gray-700 dark:text-gray-200 flex-1">⚡ V Pin cao</span>
+                    <div class="flex items-center gap-2 bg-white/50 dark:bg-slate-700/50 rounded-lg p-2">
+                        <span class="text-sm text-gray-700 dark:text-gray-200 flex-1">🔋 Điện áp pin cao (V)</span>
                         <input type="number" id="thBatteryVoltHigh" min="0" max="300" value="" step="1" placeholder="55" 
-                            class="w-16 sm:w-20 text-xs sm:text-sm px-1 sm:px-2 py-1 sm:py-1.5 rounded-lg border-2 border-red-300 dark:border-slate-500 bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-red-500 font-medium text-center">
+                            class="w-20 text-sm px-2 py-1.5 rounded-lg border-2 border-red-300 dark:border-slate-500 bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-red-500 font-medium text-center">
                     </div>
                     <!-- Voltage Low Alert - ngay dưới Pin thấp -->
-                    <div class="flex items-center gap-1 sm:gap-2 bg-white/50 dark:bg-slate-700/50 rounded-lg p-2">
-                        <span class="text-xs sm:text-sm text-gray-700 dark:text-gray-200 flex-1">⚡ V Pin thấp</span>
+                    <div class="flex items-center gap-2 bg-white/50 dark:bg-slate-700/50 rounded-lg p-2">
+                        <span class="text-sm text-gray-700 dark:text-gray-200 flex-1">🔋 Điện áp pin thấp (V)</span>
                         <input type="number" id="thBatteryVoltLow" min="0" max="250" value="" step="1" placeholder="45" 
-                            class="w-16 sm:w-20 text-xs sm:text-sm px-1 sm:px-2 py-1 sm:py-1.5 rounded-lg border-2 border-yellow-300 dark:border-slate-500 bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-yellow-500 font-medium text-center">
+                            class="w-20 text-sm px-2 py-1.5 rounded-lg border-2 border-yellow-300 dark:border-slate-500 bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-yellow-500 font-medium text-center">
                     </div>
                     <!-- PV Daily Alert -->
-                    <div class="flex items-center gap-1 sm:gap-2 bg-white/50 dark:bg-slate-700/50 rounded-lg p-2">
-                        <span class="text-xs sm:text-sm text-gray-700 dark:text-gray-200 flex-1">☀️ PV (kWh)</span>
+                    <div class="flex items-center gap-2 bg-white/50 dark:bg-slate-700/50 rounded-lg p-2">
+                        <span class="text-sm text-gray-700 dark:text-gray-200 flex-1">☀️ Sản lượng PV (kWh)</span>
                         <input type="number" id="thPvDaily" min="0" max="100" value="" step="0.5" placeholder="" 
-                            class="w-16 sm:w-20 text-xs sm:text-sm px-1 sm:px-2 py-1 sm:py-1.5 rounded-lg border-2 border-orange-300 dark:border-slate-500 bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-orange-500 font-medium text-center">
+                            class="w-20 text-sm px-2 py-1.5 rounded-lg border-2 border-orange-300 dark:border-slate-500 bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-orange-500 font-medium text-center">
                     </div>
                     <!-- Grid Usage Alert -->
-                    <div class="flex items-center gap-1 sm:gap-2 bg-white/50 dark:bg-slate-700/50 rounded-lg p-2">
-                        <span class="text-xs sm:text-sm text-gray-700 dark:text-gray-200 flex-1">⚡ EVN (kWh)</span>
+                    <div class="flex items-center gap-2 bg-white/50 dark:bg-slate-700/50 rounded-lg p-2">
+                        <span class="text-sm text-gray-700 dark:text-gray-200 flex-1">⚡ Điện EVN (kWh)</span>
                         <input type="number" id="thGridUsage" min="0" max="100" value="" step="0.5" placeholder="" 
-                            class="w-16 sm:w-20 text-xs sm:text-sm px-1 sm:px-2 py-1 sm:py-1.5 rounded-lg border-2 border-orange-300 dark:border-slate-500 bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-orange-500 font-medium text-center">
+                            class="w-20 text-sm px-2 py-1.5 rounded-lg border-2 border-orange-300 dark:border-slate-500 bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-orange-500 font-medium text-center">
                     </div>
                     <!-- Load Daily Alert -->
-                    <div class="flex items-center gap-1 sm:gap-2 bg-white/50 dark:bg-slate-700/50 rounded-lg p-2 col-span-2">
-                        <span class="text-xs sm:text-sm text-gray-700 dark:text-gray-200 flex-1">🏠 Tiêu thụ/ngày (kWh)</span>
+                    <div class="flex items-center gap-2 bg-white/50 dark:bg-slate-700/50 rounded-lg p-2 sm:col-span-2">
+                        <span class="text-sm text-gray-700 dark:text-gray-200 flex-1">🏠 Tiêu thụ trong ngày (kWh)</span>
                         <input type="number" id="thLoadDaily" min="0" max="200" value="" step="0.5" placeholder="" 
-                            class="w-16 sm:w-20 text-xs sm:text-sm px-1 sm:px-2 py-1 sm:py-1.5 rounded-lg border-2 border-orange-300 dark:border-slate-500 bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-orange-500 font-medium text-center">
+                            class="w-20 text-sm px-2 py-1.5 rounded-lg border-2 border-orange-300 dark:border-slate-500 bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-orange-500 font-medium text-center">
                     </div>
                 </div>
-                <p class="text-xs text-orange-600 dark:text-orange-400 mt-2">💡 Đặt = 0 để tắt. Pin đầy = 100 để tắt. V Pin VD: 55V cao, 45V thấp (48V pack).</p>
+                <p class="text-xs text-orange-600 dark:text-orange-400 mt-2">💡 Đặt = 0 để tắt cảnh báo. Pin đầy = 100 để tắt. Điện áp pin VD: Cao 55V, Thấp 45V (pin 48V).</p>
             </div>
             
             <!-- Location Setting -->

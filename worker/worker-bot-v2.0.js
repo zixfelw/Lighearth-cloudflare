@@ -752,7 +752,7 @@ async function handleHelp(chatId, devicesData) {
   
   if (userDevices.length > 0) {
     const th = userDevices[0].thresholds || DEFAULT_THRESHOLDS;
-    thresholdsInfo = `\n\n⚙️ *Ngưỡng cảnh báo:*\n🔋 Pin đầy: ${th.batteryFull}%${th.batteryFull >= 100 ? ' ❌' : ' ✅'}\n🪫 Pin thấp: ${th.batteryLow}%\n☀️ PV/ngày: ${th.pvDaily} kWh${th.pvDaily <= 0 ? ' ❌' : ' ✅'}\n⚡ EVN/ngày: ${th.gridUsage} kWh${th.gridUsage <= 0 ? ' ❌' : ' ✅'}\n🏠 Tiêu thụ/ngày: ${th.loadDaily} kWh${th.loadDaily <= 0 ? ' ❌' : ' ✅'}\n🔌 Điện áp pin cao: ${th.batteryVoltHigh || 0}V${(th.batteryVoltHigh || 0) <= 0 ? ' ❌' : ' ✅'}\n🔌 Điện áp pin thấp: ${th.batteryVoltLow || 0}V${(th.batteryVoltLow || 0) <= 0 ? ' ❌' : ' ✅'}`;
+    thresholdsInfo = `\n\n⚙️ *Ngưỡng cảnh báo:*\n🔋 Pin đầy: ${th.batteryFull}%${th.batteryFull >= 100 ? ' ❌' : ' ✅'}\n🪫 Pin thấp: ${th.batteryLow}%\n🔌 Điện áp pin cao: ${th.batteryVoltHigh || 0}V${(th.batteryVoltHigh || 0) <= 0 ? ' ❌' : ' ✅'}\n🔌 Điện áp pin thấp: ${th.batteryVoltLow || 0}V${(th.batteryVoltLow || 0) <= 0 ? ' ❌' : ' ✅'}\n☀️ PV/ngày: ${th.pvDaily} kWh${th.pvDaily <= 0 ? ' ❌' : ' ✅'}\n⚡ EVN/ngày: ${th.gridUsage} kWh${th.gridUsage <= 0 ? ' ❌' : ' ✅'}\n🏠 Tiêu thụ/ngày: ${th.loadDaily} kWh${th.loadDaily <= 0 ? ' ❌' : ' ✅'}`;
   }
   
   await sendTelegram(chatId, `🤖 *LightEarth Bot v2.0*\n━━━━━━━━━━━━━━━━━\n\n📱 *Quản lý thiết bị:*\n/add <ID> - ➕ Thêm thiết bị\n/remove <ID> - ➖ Xóa thiết bị\n/list - 📋 Danh sách thiết bị\n\n📊 *Trạng thái:*\n/status - 📈 Trạng thái tất cả\n/check <ID> - 🔍 Kiểm tra 1 thiết bị\n\n⚙️ *Cài đặt:*\n/settings - 🔔 Loại thông báo\n/thresholds - 🎯 Ngưỡng cảnh báo\n/location - 📍 Vùng thời tiết\n\n🔔 *Thông báo tự động:*\n🌅 Chào buổi sáng + Thời tiết\n⚡ Mất điện lưới EVN\n✅ Có điện lại\n🪫 Pin yếu (<20%)\n🌇 Kết thúc ngày nắng\n⏰ Báo cáo mỗi giờ (6h-21h)${thresholdsInfo}`);
@@ -777,7 +777,7 @@ async function handleThresholds(chatId, args, devicesData) {
   
   const th = device.thresholds || DEFAULT_THRESHOLDS;
   userStates.set(chatId, { waiting: 'thresholds_select', deviceId: device.deviceId });
-  await sendTelegram(chatId, `🎯 *Ngưỡng cảnh báo*\n📱 \`${device.deviceId}\`\n\n1️⃣ 🔋 Pin đầy: *${th.batteryFull}%* ${th.batteryFull >= 100 ? '❌ TẮT' : '✅'}\n2️⃣ 🪫 Pin thấp: *${th.batteryLow}%*\n3️⃣ ☀️ PV/ngày: *${th.pvDaily} kWh* ${th.pvDaily <= 0 ? '❌ TẮT' : '✅'}\n4️⃣ ⚡ EVN/ngày: *${th.gridUsage} kWh* ${th.gridUsage <= 0 ? '❌ TẮT' : '✅'}\n5️⃣ 🏠 Tiêu thụ/ngày: *${th.loadDaily} kWh* ${th.loadDaily <= 0 ? '❌ TẮT' : '✅'}\n6️⃣ 🔌 Điện áp pin cao: *${th.batteryVoltHigh || 0}V* ${(th.batteryVoltHigh || 0) <= 0 ? '❌ TẮT' : '✅'}\n7️⃣ 🔌 Điện áp pin thấp: *${th.batteryVoltLow || 0}V* ${(th.batteryVoltLow || 0) <= 0 ? '❌ TẮT' : '✅'}\n\n📝 Nhập số (1-7) để thay đổi:\n🚪 Nhập \`0\` để thoát`);
+  await sendTelegram(chatId, `🎯 *Ngưỡng cảnh báo*\n📱 \`${device.deviceId}\`\n\n1️⃣ 🔋 Pin đầy: *${th.batteryFull}%* ${th.batteryFull >= 100 ? '❌ TẮT' : '✅'}\n2️⃣ 🪫 Pin thấp: *${th.batteryLow}%*\n3️⃣ 🔌 Điện áp pin cao: *${th.batteryVoltHigh || 0}V* ${(th.batteryVoltHigh || 0) <= 0 ? '❌ TẮT' : '✅'}\n4️⃣ 🔌 Điện áp pin thấp: *${th.batteryVoltLow || 0}V* ${(th.batteryVoltLow || 0) <= 0 ? '❌ TẮT' : '✅'}\n5️⃣ ☀️ PV/ngày: *${th.pvDaily} kWh* ${th.pvDaily <= 0 ? '❌ TẮT' : '✅'}\n6️⃣ ⚡ EVN/ngày: *${th.gridUsage} kWh* ${th.gridUsage <= 0 ? '❌ TẮT' : '✅'}\n7️⃣ 🏠 Tiêu thụ/ngày: *${th.loadDaily} kWh* ${th.loadDaily <= 0 ? '❌ TẮT' : '✅'}\n\n📝 Nhập số (1-7) để thay đổi:\n🚪 Nhập \`0\` để thoát`);
 }
 
 async function handleAdd(chatId, args, env, devicesData) {
@@ -924,11 +924,11 @@ async function handleStart(chatId, text, env, devicesData) {
     const thresholdList = [
       `🔋 Pin đầy: ${thresholds.batteryFull}% ${thresholds.batteryFull >= 100 ? '❌' : '✅'}`,
       `🪫 Pin thấp: ${thresholds.batteryLow}%`,
+      `🔌 Điện áp pin cao: ${thresholds.batteryVoltHigh}V ${thresholds.batteryVoltHigh <= 0 ? '❌' : '✅'}`,
+      `🔌 Điện áp pin thấp: ${thresholds.batteryVoltLow}V ${thresholds.batteryVoltLow <= 0 ? '❌' : '✅'}`,
       `☀️ PV/ngày: ${thresholds.pvDaily} kWh ${thresholds.pvDaily <= 0 ? '❌' : '✅'}`,
       `⚡ EVN/ngày: ${thresholds.gridUsage} kWh ${thresholds.gridUsage <= 0 ? '❌' : '✅'}`,
-      `🏠 Tiêu thụ/ngày: ${thresholds.loadDaily} kWh ${thresholds.loadDaily <= 0 ? '❌' : '✅'}`,
-      `🔌 Điện áp pin cao: ${thresholds.batteryVoltHigh}V ${thresholds.batteryVoltHigh <= 0 ? '❌' : '✅'}`,
-      `🔌 Điện áp pin thấp: ${thresholds.batteryVoltLow}V ${thresholds.batteryVoltLow <= 0 ? '❌' : '✅'}`
+      `🏠 Tiêu thụ/ngày: ${thresholds.loadDaily} kWh ${thresholds.loadDaily <= 0 ? '❌' : '✅'}`
     ].join('\n');
     
     const action = result.isNew ? '✅ *ĐÃ THÊM THIẾT BỊ*' : '✅ *ĐÃ CẬP NHẬT THIẾT BỊ*';
@@ -1164,9 +1164,9 @@ async function handleConversation(chatId, text, env, devicesData) {
       if (text === '0') { await sendTelegram(chatId, `🚪 Đã thoát cài đặt ngưỡng.`); return { handled: true, devicesData }; }
       const thNum = parseInt(text);
       if (thNum >= 1 && thNum <= 7) {
-        const thNames = { 1: 'batteryFull', 2: 'batteryLow', 3: 'pvDaily', 4: 'gridUsage', 5: 'loadDaily', 6: 'batteryVoltHigh', 7: 'batteryVoltLow' };
-        const thLabels = { 1: '🔋 Pin đầy (%)', 2: '🪫 Pin thấp (%)', 3: '☀️ PV/ngày (kWh)', 4: '⚡ EVN/ngày (kWh)', 5: '🏠 Tiêu thụ/ngày (kWh)', 6: '🔌 Điện áp pin cao (V)', 7: '🔌 Điện áp pin thấp (V)' };
-        const thHints = { 1: '💡 Nhập 100 để TẮT. VD: 95', 2: '💡 VD: 20 hoặc 30', 3: '💡 Nhập 0 để TẮT. VD: 10', 4: '💡 Nhập 0 để TẮT. VD: 5', 5: '💡 Nhập 0 để TẮT. VD: 15', 6: '💡 Nhập 0 để TẮT. VD: 250 hoặc 260', 7: '💡 Nhập 0 để TẮT. VD: 180 hoặc 190' };
+        const thNames = { 1: 'batteryFull', 2: 'batteryLow', 3: 'batteryVoltHigh', 4: 'batteryVoltLow', 5: 'pvDaily', 6: 'gridUsage', 7: 'loadDaily' };
+        const thLabels = { 1: '🔋 Pin đầy (%)', 2: '🪫 Pin thấp (%)', 3: '🔌 Điện áp pin cao (V)', 4: '🔌 Điện áp pin thấp (V)', 5: '☀️ PV/ngày (kWh)', 6: '⚡ EVN/ngày (kWh)', 7: '🏠 Tiêu thụ/ngày (kWh)' };
+        const thHints = { 1: '💡 Nhập 100 để TẮT. VD: 95', 2: '💡 VD: 20 hoặc 30', 3: '💡 Nhập 0 để TẮT. VD: 55 (pin 48V)', 4: '💡 Nhập 0 để TẮT. VD: 45 (pin 48V)', 5: '💡 Nhập 0 để TẮT. VD: 10', 6: '💡 Nhập 0 để TẮT. VD: 5', 7: '💡 Nhập 0 để TẮT. VD: 15' };
         userStates.set(chatId, { waiting: 'thresholds_input', deviceId: state.deviceId, thresholdKey: thNames[thNum] });
         await sendTelegram(chatId, `*${thLabels[thNum]}*\n\n${thHints[thNum]}\n\n📝 Nhập giá trị mới:`);
       } else {

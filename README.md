@@ -1,14 +1,8 @@
 # LightEarth Cloudflare v13292
 
-## 🔧 Latest Update: Telegram Bot v1.9.1 - Alert Once Fix
+## 🔧 Latest Update: Telegram Bot v1.9.0 - Short Deep Link
 
-### v1.9.1 (31/12/2024) 🔔 NEW!
-- ✅ **Alert Once Logic**: Mỗi ngưỡng chỉ báo **1 lần/ngày**
-- ✅ **Daily Reset**: Auto reset lúc 00:00 giờ Việt Nam
-- ✅ **Config Reset**: Reset alerts khi thay đổi cài đặt ngưỡng
-- ✅ **5 Ngưỡng**: Pin đầy, Pin thấp, PV, EVN, Tiêu thụ
-
-### v1.9.0 (30/12/2024)
+### v1.9.0 (31/12/2024) ⚡ LATEST
 - ✅ **Short Deep Link**: Giảm từ 75 → 44 chars (fix START_PARAM_TOO_LONG)
 - ✅ **Weather Forecast**: Dự báo thời tiết 63 tỉnh/thành
 - ✅ **Web UI Sync**: Đồng bộ cài đặt qua Deep Link
@@ -50,14 +44,12 @@ https://lumentree.pages.dev/?deviceId=P250801055
 │   ├── api-versions.json                   # API versions & changelog
 │   └── device-config.json                  # Device config & whitelist
 ├── worker/
-│   ├── worker-bot-v1.9.1.js                # ⚡ Latest - Alert Once Fix
-│   ├── worker-bot-v1.9.0.js                # Short Deep Link
+│   ├── worker-bot-v1.9.0.js                # ⚡ Latest - Short Deep Link
 │   ├── worker-bot-v1.8.0.js                # Smart Thresholds
 │   ├── worker-bot-v1.6.0.js                # Weather Forecast
 │   └── worker-bot-v1.4.0.js                # Legacy
 ├── output/
-│   ├── LightEarth-Bot-v1.9.1.html          # Deploy page with Copy button
-│   └── LightEarth-Bot-v1.9.0-Full.html     # v1.9.0 deploy page
+│   └── LightEarth-Bot-v1.9.0-Full.html     # Deploy page with Copy button
 ├── workers/
 │   ├── lightearth-api-gateway-v3.9.js      # Main API Gateway
 │   ├── temperature-soc-power-v3.0.js       # History/Stats Worker
@@ -97,7 +89,7 @@ Có 4 Workers cần deploy:
 
 | Worker | Version | File | URL |
 |--------|---------|------|-----|
-| Telegram Bot | **v1.9.1** | `worker/worker-bot-v1.9.1.js` | `https://lightearth-telegram-bot.applike098.workers.dev` |
+| Telegram Bot | **v1.9.0** | `worker/worker-bot-v1.9.0.js` | `https://lightearth-telegram-bot.applike098.workers.dev` |
 | API Gateway | v3.9 | `workers/lightearth-api-gateway-v3.9.js` | `https://lightearth.applike098.workers.dev` |
 | Temp-SOC-Power | v3.0 | `workers/temperature-soc-power-v3.0.js` | `https://temperature-soc-power.applike098.workers.dev` |
 | Full Device | v4.0 | `workers/full-device-v4.0.js` | `https://full-device.applike098.workers.dev` |

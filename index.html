@@ -987,6 +987,16 @@
         /* PV line: h-16 sm:h-20 (4rem/5rem) - same as light mode */
         /* EVN line: h-32 sm:h-40 (8rem/10rem) - same as light mode */
         
+        /* Dark mode: Pull 3D house image up more to match light mode */
+        .dark #energyFlow3DHome .relative.-mt-24 {
+            margin-top: -8rem !important; /* -mt-32 */
+        }
+        @media (min-width: 640px) {
+            .dark #energyFlow3DHome .relative.-mt-24 {
+                margin-top: -10rem !important; /* sm:-mt-40 */
+            }
+        }
+        
         /* Battery SOC and % animations - enabled for both modes */
         
         /* Khi không có flow level - endpoint không pulse mạnh */

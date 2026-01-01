@@ -997,6 +997,16 @@
             }
         }
         
+        /* Dark mode: Push 3 bottom cards down */
+        .dark #energyFlow3DHome .grid.grid-cols-3.-mt-10 {
+            margin-top: -4rem !important; /* less negative = lower */
+        }
+        
+        /* Dark mode: Push battery SOC % text down */
+        .dark #energyFlow3DHome .absolute.left-\[8\%\].top-\[52\%\] {
+            top: 56% !important;
+        }
+        
         /* Battery SOC and % animations - enabled for both modes */
         
         /* Khi không có flow level - endpoint không pulse mạnh */

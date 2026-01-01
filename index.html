@@ -1003,9 +1003,30 @@
         }
         
         /* Dark mode: Top cards (Nguồn PV, Sun, Lưới EVN) có khoảng cách cố định với ảnh */
-        /* Line vẫn dính vào ảnh - chỉ cards cách xa */
-        .dark #energyFlow3DHome .grid.grid-cols-3.-mt-4 {
-            margin-bottom: 1.5rem !important; /* larger gap between top cards and image */
+        /* Line vẫn dính vào cards - tăng chiều cao container để tạo khoảng cách */
+        .dark #energyFlow3DHome .relative.h-8 {
+            height: 4rem !important; /* tăng chiều cao container chứa lines */
+        }
+        @media (min-width: 640px) {
+            .dark #energyFlow3DHome .relative.h-8 {
+                height: 5rem !important;
+            }
+        }
+        
+        /* Dark mode: Tăng chiều dài lines để dính vào ảnh */
+        .dark #energyFlow3DHome #pv-energy-line {
+            height: 6rem !important;
+        }
+        .dark #energyFlow3DHome #evn-energy-line {
+            height: 10rem !important;
+        }
+        @media (min-width: 640px) {
+            .dark #energyFlow3DHome #pv-energy-line {
+                height: 7rem !important;
+            }
+            .dark #energyFlow3DHome #evn-energy-line {
+                height: 12rem !important;
+            }
         }
         
         /* Dark mode: Push battery SOC % text down */

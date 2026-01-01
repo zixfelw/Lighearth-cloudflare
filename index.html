@@ -983,6 +983,16 @@
             opacity: 0;
         }
         
+        /* Dark mode: EVN line longer */
+        .dark .evn-energy-line {
+            height: 12rem !important; /* h-48 */
+        }
+        @media (min-width: 640px) {
+            .dark .evn-energy-line {
+                height: 14rem !important; /* sm:h-56 */
+            }
+        }
+        
         /* Khi không có flow level - endpoint không pulse mạnh */
         .evn-energy-line:not(.flow-level-1):not(.flow-level-2):not(.flow-level-3) .evn-endpoint {
             animation: none;
@@ -1841,12 +1851,13 @@
                         
                         <!-- Tiếp điểm tròn ở cuối đường line (giữa tấm pin) -->
                         <div class="energy-endpoint absolute -bottom-1 left-1/2 -translate-x-1/2 w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-amber-400 border-2 border-amber-300 shadow-[0_0_10px_#fbbf24,0_0_20px_rgba(251,191,36,0.5)]">
-                            <div class="absolute inset-0.5 rounded-full bg-amber-200 animate-pulse"></div>
+                            <div class="absolute inset-0.5 rounded-full bg-amber-200"></div>
                         </div>
                     </div>
                     
                     <!-- EVN Grid Energy Flow Line (Right) - z-0 nằm sau mái nhà, dài xuống đến ảnh -->
-                    <div id="evn-energy-line" class="evn-energy-line absolute right-[16.5%] top-0 h-48 sm:h-56 z-0">
+                    <!-- Light mode: shorter line (h-32), Dark mode: longer line (dark:h-48 sm:dark:h-56) -->
+                    <div id="evn-energy-line" class="evn-energy-line absolute right-[16.5%] top-0 h-32 sm:h-40 z-0">
                         <!-- Energy particles - controlled by JS based on power level -->
                         <div class="evn-energy-particle" data-particle="1"></div>
                         <div class="evn-energy-particle" data-particle="2"></div>
@@ -1854,7 +1865,7 @@
                         
                         <!-- Tiếp điểm tròn ở cuối -->
                         <div class="evn-endpoint absolute -bottom-1 left-1/2 -translate-x-1/2 w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-amber-400 border-2 border-amber-300 shadow-[0_0_10px_#fbbf24,0_0_20px_rgba(251,191,36,0.5)]">
-                            <div class="absolute inset-0.5 rounded-full bg-amber-200 animate-pulse"></div>
+                            <div class="absolute inset-0.5 rounded-full bg-amber-200"></div>
                         </div>
                     </div>
                 </div>

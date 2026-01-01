@@ -993,13 +993,13 @@
             }
         }
         
-        /* Dark mode: PV line longer */
+        /* Dark mode: PV line longer - reach roof */
         .dark .pv-energy-line {
-            height: 6rem !important; /* h-24 */
+            height: 10rem !important; /* h-40 - đụng nóc nhà */
         }
         @media (min-width: 640px) {
             .dark .pv-energy-line {
-                height: 6rem !important; /* sm:h-24 */
+                height: 12rem !important; /* sm:h-48 */
             }
         }
         
@@ -1181,6 +1181,16 @@
            Màu nhẹ nhàng hơn, phù hợp nền sáng
            ======================================== */
         
+        /* LOAD CARD - Light Mode: Level 0 (0W) = Green like battery charging */
+        .load-heat-card.heat-level-0:not(.dark *) {
+            border-color: rgba(16, 185, 129, 0.5) !important;
+            background: linear-gradient(135deg, rgba(209, 250, 229, 0.8), rgba(167, 243, 208, 0.6)) !important;
+        }
+        .load-heat-card.heat-level-0:not(.dark *) #load-power-3d,
+        .load-heat-card.heat-level-0:not(.dark *) #load-label-3d {
+            color: rgb(5, 150, 105) !important;
+        }
+        
         /* LOAD CARD - Light Mode Heat Effect */
         .load-heat-card.heat-level-1:not(.dark *) {
             border-color: rgba(217, 119, 6, 0.6) !important;
@@ -1217,6 +1227,15 @@
         .load-heat-card.heat-level-4:not(.dark *) #load-power-3d,
         .load-heat-card.heat-level-4:not(.dark *) #load-label-3d {
             color: rgb(153, 27, 27) !important;
+        }
+        
+        /* ESSENTIAL CARD - Light Mode: Level 0 (0W) = Green like battery charging */
+        .essential-heat-card.essential-level-0:not(.dark *) {
+            border-color: rgba(16, 185, 129, 0.5) !important;
+            background: linear-gradient(135deg, rgba(209, 250, 229, 0.8), rgba(167, 243, 208, 0.6)) !important;
+        }
+        .essential-heat-card.essential-level-0:not(.dark *) #essential-power-3d {
+            color: rgb(5, 150, 105) !important;
         }
         
         /* ESSENTIAL CARD - Light Mode Heat Effect */

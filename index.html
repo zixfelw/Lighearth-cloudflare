@@ -983,56 +983,10 @@
             opacity: 0;
         }
         
-        /* Dark mode: Same line heights as light mode - unified layout */
-        /* PV line: h-16 sm:h-20 (4rem/5rem) - same as light mode */
-        /* EVN line: h-32 sm:h-40 (8rem/10rem) - same as light mode */
-        
-        /* Dark mode: Pull 3D house image up higher */
-        .dark #energyFlow3DHome .relative.-mt-24 {
-            margin-top: -10rem !important; /* -mt-40 */
-        }
-        @media (min-width: 640px) {
-            .dark #energyFlow3DHome .relative.-mt-24 {
-                margin-top: -12rem !important; /* sm:-mt-48 */
-            }
-        }
-        
-        /* Dark mode: Bottom cards có khoảng cách cố định với ảnh - không đè lên */
-        .dark #energyFlow3DHome .grid.grid-cols-3.-mt-10 {
-            margin-top: 0.75rem !important; /* fixed gap, no overlap */
-        }
-        
-        /* Dark mode: Top cards (Nguồn PV, Sun, Lưới EVN) có khoảng cách cố định với ảnh */
-        /* Line vẫn dính vào cards - tăng chiều cao container để tạo khoảng cách */
-        .dark #energyFlow3DHome .relative.h-8 {
-            height: 4rem !important; /* tăng chiều cao container chứa lines */
-        }
-        @media (min-width: 640px) {
-            .dark #energyFlow3DHome .relative.h-8 {
-                height: 5rem !important;
-            }
-        }
-        
-        /* Dark mode: Tăng chiều dài lines để dính vào ảnh */
-        .dark #energyFlow3DHome #pv-energy-line {
-            height: 6rem !important;
-        }
-        .dark #energyFlow3DHome #evn-energy-line {
-            height: 10rem !important;
-        }
-        @media (min-width: 640px) {
-            .dark #energyFlow3DHome #pv-energy-line {
-                height: 7rem !important;
-            }
-            .dark #energyFlow3DHome #evn-energy-line {
-                height: 12rem !important;
-            }
-        }
-        
-        /* Dark mode: Push battery SOC % text down */
-        .dark #energyFlow3DHome .absolute.left-\[8\%\].top-\[52\%\] {
-            top: 60% !important;
-        }
+        /* =====================================================
+           UNIFIED LAYOUT - Dark Mode = Light Mode (NO OVERRIDE)
+           Cả 2 mode dùng chung HTML classes, không có CSS riêng
+           ===================================================== */
         
         /* Battery SOC and % animations - enabled for both modes */
         

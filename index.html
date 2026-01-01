@@ -1005,16 +1005,6 @@
         
         /* Battery SOC and % animations - enabled for both modes */
         
-        /* Dark mode: Cards closer to image (move up) */
-        .dark #energyFlow3DHome .grid.grid-cols-3 {
-            margin-top: -2.5rem !important; /* -mt-10 default, now -mt-10 more = closer */
-        }
-        @media (min-width: 640px) {
-            .dark #energyFlow3DHome .grid.grid-cols-3 {
-                margin-top: -3rem !important;
-            }
-        }
-        
         /* Khi không có flow level - endpoint không pulse mạnh */
         .evn-energy-line:not(.flow-level-1):not(.flow-level-2):not(.flow-level-3) .evn-endpoint {
             animation: none;

@@ -983,23 +983,23 @@
             opacity: 0;
         }
         
-        /* Dark mode: EVN line longer */
-        .dark .evn-energy-line {
-            height: 12rem !important; /* h-48 */
-        }
-        @media (min-width: 640px) {
-            .dark .evn-energy-line {
-                height: 14rem !important; /* sm:h-56 */
-            }
-        }
-        
-        /* Dark mode: PV line longer */
+        /* Dark mode: PV line shorter like light mode */
         .dark .pv-energy-line {
-            height: 6rem !important; /* h-24 */
+            height: 4rem !important; /* h-16 */
         }
         @media (min-width: 640px) {
             .dark .pv-energy-line {
-                height: 6rem !important; /* sm:h-24 */
+                height: 5rem !important; /* sm:h-20 */
+            }
+        }
+        
+        /* Dark mode: EVN line shorter like light mode */
+        .dark .evn-energy-line {
+            height: 8rem !important; /* h-32 */
+        }
+        @media (min-width: 640px) {
+            .dark .evn-energy-line {
+                height: 10rem !important; /* sm:h-40 */
             }
         }
         

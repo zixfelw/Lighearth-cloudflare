@@ -983,25 +983,9 @@
             opacity: 0;
         }
         
-        /* Dark mode: EVN line longer */
-        .dark .evn-energy-line {
-            height: 12rem !important; /* h-48 */
-        }
-        @media (min-width: 640px) {
-            .dark .evn-energy-line {
-                height: 14rem !important; /* sm:h-56 */
-            }
-        }
-        
-        /* Dark mode: PV line longer - reach roof */
-        .dark .pv-energy-line {
-            height: 10rem !important; /* h-40 - đụng nóc nhà */
-        }
-        @media (min-width: 640px) {
-            .dark .pv-energy-line {
-                height: 12rem !important; /* sm:h-48 */
-            }
-        }
+        /* Dark mode: Same line heights as light mode - unified layout */
+        /* PV line: h-16 sm:h-20 (4rem/5rem) - same as light mode */
+        /* EVN line: h-32 sm:h-40 (8rem/10rem) - same as light mode */
         
         /* Battery SOC and % animations - enabled for both modes */
         

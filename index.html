@@ -1003,15 +1003,7 @@
             }
         }
         
-        /* Disable blink animation for battery SOC in dark mode */
-        .dark #battery-soc-3d.value-updated {
-            animation: none !important;
-        }
-        
-        /* Disable blink animation for battery % in card (60%) */
-        #battery-percent-3d-icon.value-updated {
-            animation: none !important;
-        }
+        /* Battery SOC and % animations - enabled for both modes */
         
         /* Khi không có flow level - endpoint không pulse mạnh */
         .evn-energy-line:not(.flow-level-1):not(.flow-level-2):not(.flow-level-3) .evn-endpoint {

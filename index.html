@@ -987,9 +987,15 @@
         /* PV line: h-16 sm:h-20 (4rem/5rem) - same as light mode */
         /* EVN line: h-32 sm:h-40 (8rem/10rem) - same as light mode */
         
-        /* Dark mode: SAME margin as light mode - no override needed */
-        /* Both modes use: -mt-24 sm:-mt-28 (-6rem / -7rem) */
-        /* Image already resized to 1024x1024 to match light mode */
+        /* Dark mode: Pull 3D house image up higher */
+        .dark #energyFlow3DHome .relative.-mt-24 {
+            margin-top: -10rem !important; /* -mt-40 */
+        }
+        @media (min-width: 640px) {
+            .dark #energyFlow3DHome .relative.-mt-24 {
+                margin-top: -12rem !important; /* sm:-mt-48 */
+            }
+        }
         
         /* Battery SOC and % animations - enabled for both modes */
         

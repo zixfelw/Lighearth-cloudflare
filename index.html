@@ -1026,157 +1026,6 @@
                 animation: none;
             }
         }
-        
-        /* ========================================
-           3D HOME HEAT EFFECT - DARK MODE
-           Tải tiêu thụ & Tải cổng load: Đỏ dần theo mức
-           Pin sạc: Xanh đậm dần | Pin xả: Đỏ dần
-           ======================================== */
-        
-        /* LOAD CARD - Dark Mode Heat Effect (Red gradient) */
-        .dark .load-heat-card.heat-level-1 {
-            border-color: rgba(251, 146, 60, 0.5) !important;
-            box-shadow: 0 0 15px rgba(251, 146, 60, 0.3);
-        }
-        .dark .load-heat-card.heat-level-1 #load-power-3d,
-        .dark .load-heat-card.heat-level-1 #load-label-3d {
-            color: rgb(251, 146, 60) !important;
-        }
-        
-        .dark .load-heat-card.heat-level-2 {
-            border-color: rgba(249, 115, 22, 0.6) !important;
-            box-shadow: 0 0 20px rgba(249, 115, 22, 0.4);
-        }
-        .dark .load-heat-card.heat-level-2 #load-power-3d,
-        .dark .load-heat-card.heat-level-2 #load-label-3d {
-            color: rgb(249, 115, 22) !important;
-        }
-        
-        .dark .load-heat-card.heat-level-3 {
-            border-color: rgba(239, 68, 68, 0.7) !important;
-            box-shadow: 0 0 25px rgba(239, 68, 68, 0.5);
-        }
-        .dark .load-heat-card.heat-level-3 #load-power-3d,
-        .dark .load-heat-card.heat-level-3 #load-label-3d {
-            color: rgb(239, 68, 68) !important;
-        }
-        
-        .dark .load-heat-card.heat-level-4 {
-            border-color: rgba(220, 38, 38, 0.8) !important;
-            box-shadow: 0 0 30px rgba(220, 38, 38, 0.6), 0 0 60px rgba(220, 38, 38, 0.3);
-        }
-        .dark .load-heat-card.heat-level-4 #load-power-3d,
-        .dark .load-heat-card.heat-level-4 #load-label-3d {
-            color: rgb(220, 38, 38) !important;
-        }
-        
-        /* ESSENTIAL CARD - Dark Mode Heat Effect (Red gradient) */
-        .dark .essential-heat-card.essential-level-1 {
-            border-color: rgba(251, 146, 60, 0.5) !important;
-            box-shadow: 0 0 15px rgba(251, 146, 60, 0.3);
-        }
-        .dark .essential-heat-card.essential-level-1 #essential-power-3d {
-            color: rgb(251, 146, 60) !important;
-        }
-        
-        .dark .essential-heat-card.essential-level-2 {
-            border-color: rgba(249, 115, 22, 0.6) !important;
-            box-shadow: 0 0 20px rgba(249, 115, 22, 0.4);
-        }
-        .dark .essential-heat-card.essential-level-2 #essential-power-3d {
-            color: rgb(249, 115, 22) !important;
-        }
-        
-        .dark .essential-heat-card.essential-level-3 {
-            border-color: rgba(239, 68, 68, 0.7) !important;
-            box-shadow: 0 0 25px rgba(239, 68, 68, 0.5);
-        }
-        .dark .essential-heat-card.essential-level-3 #essential-power-3d {
-            color: rgb(239, 68, 68) !important;
-        }
-        
-        .dark .essential-heat-card.essential-level-4 {
-            border-color: rgba(220, 38, 38, 0.8) !important;
-            box-shadow: 0 0 30px rgba(220, 38, 38, 0.6), 0 0 60px rgba(220, 38, 38, 0.3);
-        }
-        .dark .essential-heat-card.essential-level-4 #essential-power-3d {
-            color: rgb(220, 38, 38) !important;
-        }
-        
-        /* BATTERY CARD - Dark Mode: Charging = Green gradient, Discharging = Red gradient */
-        /* Charging Level 0-3 (Green intensifies) */
-        .dark .battery-heat-card.battery-charging-0 {
-            border-color: rgba(52, 211, 153, 0.4) !important;
-        }
-        .dark .battery-heat-card.battery-charging-0 #battery-power-3d,
-        .dark .battery-heat-card.battery-charging-0 #battery-status-label-3d {
-            color: rgb(52, 211, 153) !important;
-        }
-        
-        .dark .battery-heat-card.battery-charging-1 {
-            border-color: rgba(16, 185, 129, 0.6) !important;
-            box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
-        }
-        .dark .battery-heat-card.battery-charging-1 #battery-power-3d,
-        .dark .battery-heat-card.battery-charging-1 #battery-status-label-3d {
-            color: rgb(16, 185, 129) !important;
-        }
-        
-        .dark .battery-heat-card.battery-charging-2 {
-            border-color: rgba(5, 150, 105, 0.7) !important;
-            box-shadow: 0 0 20px rgba(5, 150, 105, 0.4);
-        }
-        .dark .battery-heat-card.battery-charging-2 #battery-power-3d,
-        .dark .battery-heat-card.battery-charging-2 #battery-status-label-3d {
-            color: rgb(5, 150, 105) !important;
-        }
-        
-        .dark .battery-heat-card.battery-charging-3 {
-            border-color: rgba(4, 120, 87, 0.8) !important;
-            box-shadow: 0 0 25px rgba(4, 120, 87, 0.5), 0 0 50px rgba(4, 120, 87, 0.3);
-        }
-        .dark .battery-heat-card.battery-charging-3 #battery-power-3d,
-        .dark .battery-heat-card.battery-charging-3 #battery-status-label-3d {
-            color: rgb(4, 120, 87) !important;
-        }
-        
-        /* Discharging Level 0-3 (Red intensifies) */
-        .dark .battery-heat-card.battery-discharging-0 {
-            border-color: rgba(251, 146, 60, 0.4) !important;
-        }
-        .dark .battery-heat-card.battery-discharging-0 #battery-power-3d,
-        .dark .battery-heat-card.battery-discharging-0 #battery-status-label-3d {
-            color: rgb(251, 146, 60) !important;
-        }
-        
-        .dark .battery-heat-card.battery-discharging-1 {
-            border-color: rgba(249, 115, 22, 0.6) !important;
-            box-shadow: 0 0 15px rgba(249, 115, 22, 0.3);
-        }
-        .dark .battery-heat-card.battery-discharging-1 #battery-power-3d,
-        .dark .battery-heat-card.battery-discharging-1 #battery-status-label-3d {
-            color: rgb(249, 115, 22) !important;
-        }
-        
-        .dark .battery-heat-card.battery-discharging-2 {
-            border-color: rgba(239, 68, 68, 0.7) !important;
-            box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
-        }
-        .dark .battery-heat-card.battery-discharging-2 #battery-power-3d,
-        .dark .battery-heat-card.battery-discharging-2 #battery-status-label-3d {
-            color: rgb(239, 68, 68) !important;
-        }
-        
-        .dark .battery-heat-card.battery-discharging-3 {
-            border-color: rgba(220, 38, 38, 0.8) !important;
-            box-shadow: 0 0 25px rgba(220, 38, 38, 0.5), 0 0 50px rgba(220, 38, 38, 0.3);
-        }
-        .dark .battery-heat-card.battery-discharging-3 #battery-power-3d,
-        .dark .battery-heat-card.battery-discharging-3 #battery-status-label-3d {
-            color: rgb(220, 38, 38) !important;
-        }
-        
-        /* Light Mode: No heat effect - keep default emerald colors */
     </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 min-h-screen">
@@ -2049,7 +1898,7 @@
                 <!-- Bottom Stats Cards - 3 columns: Pin sạc/xả | Tải cổng load | Tải tiêu thụ -->
                 <div class="-mt-10 grid grid-cols-3 gap-2.5 relative z-10 px-1">
                     <!-- 1. Battery Card - Design giống điện thoại với % pin - CÂN ĐỐI CHIỀU CAO -->
-                    <div id="battery-card-3d" class="battery-heat-card bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-slate-800/90 dark:to-slate-800/90 backdrop-blur rounded-xl p-3 text-center border border-emerald-400 dark:border-emerald-500/30 shadow-lg flex flex-col items-center transition-all duration-300">
+                    <div id="battery-card-3d" class="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-slate-800/90 dark:to-slate-800/90 backdrop-blur rounded-xl p-3 text-center border border-emerald-400 dark:border-emerald-500/30 shadow-lg flex flex-col items-center">
                         <!-- Battery icon - container cùng chiều cao với icon cards khác -->
                         <div class="w-12 h-12 sm:w-14 sm:h-14 mb-2 flex items-center justify-center">
                             <div class="battery-phone-icon relative">
@@ -2069,7 +1918,7 @@
                     </div>
                     
                     <!-- 2. Essential Load Card - Mobile optimized với picture srcset -->
-                    <div id="essential-card-3d" class="essential-heat-card bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-slate-800/90 dark:to-slate-800/90 backdrop-blur rounded-xl p-3 text-center border border-emerald-400 dark:border-emerald-500/30 shadow-lg flex flex-col items-center transition-all duration-300">
+                    <div id="essential-card-3d" class="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-slate-800/90 dark:to-slate-800/90 backdrop-blur rounded-xl p-3 text-center border border-emerald-400 dark:border-emerald-500/30 shadow-lg flex flex-col items-center">
                         <div class="w-12 h-12 sm:w-14 sm:h-14 mb-2 flex items-center justify-center">
                             <picture>
                                 <source media="(max-width: 640px)" srcset="/icons/essential-load-3d-mobile.png">
@@ -2081,7 +1930,7 @@
                     </div>
                     
                     <!-- 3. Load Card - Mobile optimized -->
-                    <div id="load-card-3d" class="load-heat-card bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-slate-800/90 dark:to-slate-800/90 backdrop-blur rounded-xl p-3 text-center border border-emerald-400 dark:border-emerald-500/30 shadow-lg flex flex-col items-center relative overflow-hidden transition-all duration-300">
+                    <div id="load-card-3d" class="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-slate-800/90 dark:to-slate-800/90 backdrop-blur rounded-xl p-3 text-center border border-emerald-400 dark:border-emerald-500/30 shadow-lg flex flex-col items-center relative overflow-hidden">
                         <div class="w-12 h-12 sm:w-14 sm:h-14 mb-2 flex items-center justify-center">
                             <!-- Light mode icon -->
                             <img id="load-icon-3d-light" src="/icons/grid-load-3d-light.png" loading="lazy" alt="Tải tiêu thụ" class="w-11 h-11 sm:w-12 sm:h-12 object-contain dark:hidden">

@@ -307,15 +307,24 @@ window.autoSync3DHomeView = function() {
     const batteryStatusLabelEl = document.getElementById('battery-status-label-3d');
     
     if (batteryPowerEl) {
+        let newValue;
         if (batteryPowerVal > 10) {
-            batteryPowerEl.textContent = '+' + Math.abs(batteryPowerVal) + 'W';
+            newValue = '+' + Math.abs(batteryPowerVal) + 'W';
             if (batteryStatusLabelEl) batteryStatusLabelEl.textContent = 'Pin đang sạc';
         } else if (batteryPowerVal < -10) {
-            batteryPowerEl.textContent = '-' + Math.abs(batteryPowerVal) + 'W';
+            newValue = '-' + Math.abs(batteryPowerVal) + 'W';
             if (batteryStatusLabelEl) batteryStatusLabelEl.textContent = 'Pin đang xả';
         } else {
-            batteryPowerEl.textContent = '0W';
+            newValue = '0W';
             if (batteryStatusLabelEl) batteryStatusLabelEl.textContent = 'Pin chờ';
+        }
+        // Apply value with blink animation
+        if (batteryPowerEl.textContent !== newValue) {
+            batteryPowerEl.textContent = newValue;
+            batteryPowerEl.classList.remove('value-updated');
+            void batteryPowerEl.offsetWidth;
+            batteryPowerEl.classList.add('value-updated');
+            setTimeout(() => batteryPowerEl.classList.remove('value-updated'), 600);
         }
     }
     
@@ -4142,24 +4151,33 @@ document.addEventListener('DOMContentLoaded', function () {
         // Note: Battery Heat Effect CSS handles all colors via battery-heat-card class
         const batteryStatusLabelEl = document.getElementById('battery-status-label-3d');
         if (batteryPowerEl) {
+            let newValue;
             if (batteryPowerVal > 10) {
                 // Charging: + màu xanh
-                batteryPowerEl.textContent = '+' + Math.abs(batteryPowerVal) + 'W';
+                newValue = '+' + Math.abs(batteryPowerVal) + 'W';
                 if (batteryStatusLabelEl) {
                     batteryStatusLabelEl.textContent = 'Pin đang sạc';
                 }
             } else if (batteryPowerVal < -10) {
                 // Discharging: - màu đỏ
-                batteryPowerEl.textContent = '-' + Math.abs(batteryPowerVal) + 'W';
+                newValue = '-' + Math.abs(batteryPowerVal) + 'W';
                 if (batteryStatusLabelEl) {
                     batteryStatusLabelEl.textContent = 'Pin đang xả';
                 }
             } else {
                 // Idle: màu emerald (đồng bộ với các card khác)
-                batteryPowerEl.textContent = '0W';
+                newValue = '0W';
                 if (batteryStatusLabelEl) {
                     batteryStatusLabelEl.textContent = 'Pin chờ';
                 }
+            }
+            // Apply value with blink animation
+            if (batteryPowerEl.textContent !== newValue) {
+                batteryPowerEl.textContent = newValue;
+                batteryPowerEl.classList.remove('value-updated');
+                void batteryPowerEl.offsetWidth;
+                batteryPowerEl.classList.add('value-updated');
+                setTimeout(() => batteryPowerEl.classList.remove('value-updated'), 600);
             }
         }
         

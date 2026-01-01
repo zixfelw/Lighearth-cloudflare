@@ -997,9 +997,14 @@
             }
         }
         
-        /* Dark mode: Cards có khoảng cách cố định với ảnh - không đè lên */
+        /* Dark mode: Bottom cards có khoảng cách cố định với ảnh - không đè lên */
         .dark #energyFlow3DHome .grid.grid-cols-3.-mt-10 {
             margin-top: 0.25rem !important; /* fixed small gap, no overlap */
+        }
+        
+        /* Dark mode: Top cards (Nguồn PV, Sun, Lưới EVN) có khoảng cách cố định với ảnh */
+        .dark #energyFlow3DHome .grid.grid-cols-3.-mt-4 {
+            margin-bottom: 0.5rem !important; /* fixed gap between top cards and image */
         }
         
         /* Dark mode: Push battery SOC % text down */

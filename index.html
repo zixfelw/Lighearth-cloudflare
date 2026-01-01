@@ -1831,9 +1831,9 @@
                 </div>
                 
                 <!-- Energy Flow Lines Container - Ngắn hơn để cards lên cao -->
-                <div class="relative h-12 sm:h-16">
+                <div class="relative h-20 sm:h-24">
                     <!-- PV Energy Flow Line (Left) - z-30 nằm trên ảnh, ngắn hơn trên PC -->
-                    <div id="pv-energy-line" class="pv-energy-line absolute left-[16.5%] top-0 h-16 sm:h-20 z-30">
+                    <div id="pv-energy-line" class="pv-energy-line absolute left-[16.5%] top-0 h-24 sm:h-24 z-30">
                         <!-- Energy particles flowing down -->
                         <div class="energy-particle"></div>
                         <div class="energy-particle"></div>
@@ -1860,7 +1860,7 @@
                 </div>
                 
                 <!-- 3D House Image with battery overlay -->
-                <div class="relative -mt-28 sm:-mt-36">
+                <div class="relative -mt-36 sm:-mt-44">
                     <img id="house3dImage" src="/images/3dhome/house-3d-dark.png" alt="3D Solar Home" 
                          class="w-full h-auto object-contain transition-opacity duration-300">
                     
@@ -1888,9 +1888,9 @@
                         <div class="w-12 h-12 sm:w-14 sm:h-14 mb-2 flex items-center justify-center">
                             <div class="battery-phone-icon relative">
                                 <!-- Battery body -->
-                                <div id="battery-body-3d" class="w-16 h-7 sm:w-20 sm:h-8 rounded-[5px] border-2 border-emerald-500 dark:border-emerald-400 relative overflow-hidden bg-emerald-100 dark:bg-slate-900/80">
-                                    <div id="battery-fill-3d" class="absolute left-0.5 top-0.5 bottom-0.5 rounded-[3px] bg-gradient-to-r from-emerald-400 to-teal-400 dark:bg-emerald-500 transition-all duration-500" style="width: 0%"></div>
-                                    <span id="battery-percent-3d-icon" class="absolute inset-0 flex items-center justify-center text-sm sm:text-base font-black text-emerald-800 dark:text-white z-10 drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)]" style="text-shadow: 0 1px 2px rgba(255,255,255,0.9), 0 0 8px rgba(255,255,255,0.5);">--%</span>
+                                <div id="battery-body-3d" class="w-16 h-7 sm:w-20 sm:h-8 rounded-[5px] border-2 border-emerald-500 dark:border-emerald-400 relative overflow-hidden bg-white dark:bg-slate-900/80">
+                                    <div id="battery-fill-3d" class="absolute left-0.5 top-0.5 bottom-0.5 rounded-[3px] bg-emerald-400 dark:bg-emerald-500 transition-all duration-500" style="width: 0%"></div>
+                                    <span id="battery-percent-3d-icon" class="absolute inset-0 flex items-center justify-center text-sm sm:text-base font-extrabold text-emerald-700 dark:text-white z-10">--%</span>
                                 </div>
                                 <!-- Battery cap -->
                                 <div id="battery-cap-3d" class="absolute -right-1.5 top-1/2 -translate-y-1/2 w-1.5 h-4 sm:h-5 bg-emerald-500 dark:bg-emerald-400 rounded-r-sm"></div>

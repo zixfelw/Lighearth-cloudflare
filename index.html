@@ -1861,8 +1861,8 @@
                 
                 <!-- 3D House Image with battery overlay -->
                 <div class="relative -mt-52 sm:-mt-60">
-                    <img src="/images/3dhome/house-3d-dark.png" alt="3D Solar Home" 
-                         class="w-full h-auto object-contain">
+                    <img id="house3dImage" src="/images/3dhome/house-3d-dark.png" alt="3D Solar Home" 
+                         class="w-full h-auto object-contain transition-opacity duration-300">
                     
                     <!-- Battery SOC % (on battery) - dịch xuống 1 chút -->
                     <div class="absolute left-[8%] top-[52%] z-20">
@@ -1875,7 +1875,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
                                 </svg>
                             </div>
-                            <span id="battery-soc-3d" class="text-2xl sm:text-3xl font-black text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">--%</span>
+                            <span id="battery-soc-3d" class="text-2xl sm:text-3xl font-black text-emerald-700 dark:text-white drop-shadow-[0_2px_4px_rgba(255,255,255,0.8)] dark:drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">--%</span>
                         </div>
                     </div>
                 </div>
@@ -1883,39 +1883,39 @@
                 <!-- Bottom Stats Cards - 3 columns: Pin sạc/xả | Tải cổng load | Tải tiêu thụ -->
                 <div class="-mt-12 grid grid-cols-3 gap-2.5 relative z-10 px-1">
                     <!-- 1. Battery Card - Design giống điện thoại với % pin - CÂN ĐỐI CHIỀU CAO -->
-                    <div id="battery-card-3d" class="battery-heat-card bg-slate-800/90 backdrop-blur rounded-xl p-3 text-center border border-emerald-500/30 shadow-lg flex flex-col items-center transition-all duration-500">
+                    <div id="battery-card-3d" class="battery-heat-card bg-white/95 dark:bg-slate-800/90 backdrop-blur rounded-xl p-3 text-center border border-emerald-400/50 dark:border-emerald-500/30 shadow-lg shadow-emerald-100/50 dark:shadow-emerald-900/30 flex flex-col items-center transition-all duration-500">
                         <!-- Battery icon - container cùng chiều cao với icon cards khác -->
                         <div class="w-12 h-12 sm:w-14 sm:h-14 mb-2 flex items-center justify-center">
                             <div class="battery-phone-icon relative">
                                 <!-- Battery body -->
-                                <div id="battery-body-3d" class="w-16 h-7 sm:w-20 sm:h-8 rounded-[5px] border-2 border-emerald-400 relative overflow-hidden bg-slate-900/80">
+                                <div id="battery-body-3d" class="w-16 h-7 sm:w-20 sm:h-8 rounded-[5px] border-2 border-emerald-500 dark:border-emerald-400 relative overflow-hidden bg-slate-200 dark:bg-slate-900/80">
                                     <div id="battery-fill-3d" class="absolute left-0.5 top-0.5 bottom-0.5 rounded-[3px] bg-emerald-500 transition-all duration-500" style="width: 0%"></div>
-                                    <span id="battery-percent-3d-icon" class="absolute inset-0 flex items-center justify-center text-sm sm:text-base font-black text-white z-10 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">--%</span>
+                                    <span id="battery-percent-3d-icon" class="absolute inset-0 flex items-center justify-center text-sm sm:text-base font-black text-slate-700 dark:text-white z-10 drop-shadow-[0_1px_2px_rgba(255,255,255,0.5)] dark:drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">--%</span>
                                 </div>
                                 <!-- Battery cap -->
-                                <div id="battery-cap-3d" class="absolute -right-1.5 top-1/2 -translate-y-1/2 w-1.5 h-4 sm:h-5 bg-emerald-400 rounded-r-sm"></div>
+                                <div id="battery-cap-3d" class="absolute -right-1.5 top-1/2 -translate-y-1/2 w-1.5 h-4 sm:h-5 bg-emerald-500 dark:bg-emerald-400 rounded-r-sm"></div>
                             </div>
                         </div>
                         <!-- Power value -->
-                        <div id="battery-power-3d" class="text-xl sm:text-2xl font-black text-emerald-400 leading-tight">--W</div>
+                        <div id="battery-power-3d" class="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 leading-tight">--W</div>
                         <!-- Label động -->
-                        <div id="battery-status-label-3d" class="battery-label text-xs sm:text-sm text-emerald-400 mt-1 font-medium transition-colors duration-300">Pin sạc/xả</div>
+                        <div id="battery-status-label-3d" class="battery-label text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 mt-1 font-medium transition-colors duration-300">Pin sạc/xả</div>
                     </div>
                     
                     <!-- 2. Essential Load Card - Mobile optimized với picture srcset -->
-                    <div id="essential-card-3d" class="essential-heat-card bg-slate-800/90 backdrop-blur rounded-xl p-3 text-center border border-emerald-500/30 shadow-lg flex flex-col items-center transition-all duration-500">
+                    <div id="essential-card-3d" class="essential-heat-card bg-white/95 dark:bg-slate-800/90 backdrop-blur rounded-xl p-3 text-center border border-emerald-400/50 dark:border-emerald-500/30 shadow-lg shadow-emerald-100/50 dark:shadow-emerald-900/30 flex flex-col items-center transition-all duration-500">
                         <div class="w-12 h-12 sm:w-14 sm:h-14 mb-2 flex items-center justify-center">
                             <picture>
                                 <source media="(max-width: 640px)" srcset="/icons/essential-load-3d-mobile.png">
                                 <img id="essential-icon-3d" src="/icons/essential-load-3d.png" loading="lazy" alt="Tải cổng load" class="w-11 h-11 sm:w-12 sm:h-12 object-contain drop-shadow-[0_2px_4px_rgba(16,185,129,0.3)] transition-all duration-300">
                             </picture>
                         </div>
-                        <div id="essential-power-3d" class="text-xl sm:text-2xl font-black text-emerald-400 leading-tight transition-colors duration-300">--W</div>
-                        <div class="essential-label text-xs sm:text-sm text-emerald-400 mt-1 font-medium transition-colors duration-300">Tải cổng load</div>
+                        <div id="essential-power-3d" class="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 leading-tight transition-colors duration-300">--W</div>
+                        <div class="essential-label text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 mt-1 font-medium transition-colors duration-300">Tải cổng load</div>
                     </div>
                     
                     <!-- 3. Load Card - Mobile optimized với Heat Effect animation -->
-                    <div id="load-card-3d" class="load-heat-card bg-slate-800/90 backdrop-blur rounded-xl p-3 text-center border border-emerald-500/30 shadow-lg flex flex-col items-center relative overflow-hidden transition-all duration-500">
+                    <div id="load-card-3d" class="load-heat-card bg-white/95 dark:bg-slate-800/90 backdrop-blur rounded-xl p-3 text-center border border-emerald-400/50 dark:border-emerald-500/30 shadow-lg shadow-emerald-100/50 dark:shadow-emerald-900/30 flex flex-col items-center relative overflow-hidden transition-all duration-500">
                         <!-- Heat waves effect container -->
                         <div id="heat-waves" class="heat-waves-container absolute inset-0 pointer-events-none opacity-0"></div>
                         <div class="w-12 h-12 sm:w-14 sm:h-14 mb-2 flex items-center justify-center relative z-10">
@@ -1924,8 +1924,8 @@
                                 <img id="load-icon-3d" src="/icons/grid-load-3d.png" loading="lazy" alt="Tải tiêu thụ" class="w-11 h-11 sm:w-12 sm:h-12 object-contain drop-shadow-[0_2px_4px_rgba(16,185,129,0.3)] transition-all duration-300">
                             </picture>
                         </div>
-                        <div id="load-power-3d" class="text-xl sm:text-2xl font-black text-emerald-400 leading-tight relative z-10 transition-colors duration-300">--W</div>
-                        <div id="load-label-3d" class="text-xs sm:text-sm text-emerald-400 mt-1 font-medium relative z-10 transition-colors duration-300">Tải tiêu thụ</div>
+                        <div id="load-power-3d" class="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 leading-tight relative z-10 transition-colors duration-300">--W</div>
+                        <div id="load-label-3d" class="text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 mt-1 font-medium relative z-10 transition-colors duration-300">Tải tiêu thụ</div>
                     </div>
                 </div>
             </div>
@@ -2699,9 +2699,30 @@
             }
         }
         
+        // Function to update 3D house image based on theme
+        function updateHouse3DImage() {
+            const house3dImg = document.getElementById('house3dImage');
+            if (house3dImg) {
+                const isDark = html.classList.contains('dark');
+                const newSrc = isDark ? '/images/3dhome/house-3d-dark.png' : '/images/3dhome/house-3d-light.png';
+                if (house3dImg.src !== newSrc) {
+                    house3dImg.style.opacity = '0.5';
+                    house3dImg.src = newSrc;
+                    house3dImg.onload = () => {
+                        house3dImg.style.opacity = '1';
+                    };
+                }
+            }
+        }
+        
+        // Initial update for house image
+        updateHouse3DImage();
+        
         themeToggle.addEventListener('click', () => {
             html.classList.toggle('dark');
             localStorage.theme = html.classList.contains('dark') ? 'dark' : 'light';
+            // Update 3D house image when theme changes
+            updateHouse3DImage();
         });
         
         // Mobile Menu Toggle

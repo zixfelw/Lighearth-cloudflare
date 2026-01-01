@@ -2983,6 +2983,34 @@
             return names;
         }
 
+        // Parse tháng/năm từ tên tháng (ví dụ: "Tháng 1/2025" -> {month: 1, year: 2025})
+        function parseMonthFromName(monthName) {
+            const match = monthName.match(/Tháng\s*(\d+)\/(\d+)/i);
+            if (match) {
+                return {
+                    month: parseInt(match[1]),
+                    year: parseInt(match[2])
+                };
+            }
+            return null;
+        }
+
+        // Tính index từ tháng/năm dựa trên startMonth và startYear hiện tại
+        function getIndexFromMonthYear(month, year) {
+            // Số tháng từ startMonth/startYear đến month/year
+            const monthsFromStart = (year - startYear) * 12 + (month - startMonth);
+            return monthsFromStart;
+        }
+
+        // Tính tháng/năm từ index
+        function getMonthYearFromIndex(index) {
+            const totalMonthsFromStart = startMonth - 1 + index;
+            const monthInYear = (totalMonthsFromStart % 12) + 1;
+            const yearOffset = Math.floor(totalMonthsFromStart / 12);
+            const year = startYear + yearOffset;
+            return { month: monthInYear, year: year };
+        }
+
         // Format số tiền với dấu phẩy
         function formatNumber(num) {
             return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -3672,7 +3700,7 @@
             }
         }
 
-        // Nhập cài đặt từ file JSON
+        // Nhập cài đặt từ file JSON - HỖ TRỢ MERGE DATA
         function importSettings(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -3682,57 +3710,188 @@
                 try {
                     const settings = JSON.parse(e.target.result);
                     
-                    // Cập nhật số tháng và năm - QUAN TRỌNG!
-                    if (settings.totalMonths) {
-                        totalMonths = settings.totalMonths;
-                    } else if (settings.monthlyData) {
-                        // Fallback: Nếu không có totalMonths, dùng length của monthlyData
-                        totalMonths = settings.monthlyData.length;
+                    if (!settings.monthlyData || settings.monthlyData.length === 0) {
+                        showNotification('❌ File không có dữ liệu tháng!', 'error');
+                        return;
                     }
                     
-                    if (settings.startYear) {
-                        startYear = settings.startYear;
+                    // Parse tháng/năm từ file import
+                    let importMinMonth = Infinity, importMaxMonth = -Infinity;
+                    let importMinYear = Infinity, importMaxYear = -Infinity;
+                    const importDataMap = new Map(); // key: "month/year" -> data
+                    
+                    settings.monthlyData.forEach((data, index) => {
+                        let month, year;
+                        
+                        // Thử parse từ tên tháng (ví dụ: "Tháng 1/2025")
+                        if (data.month) {
+                            const parsed = parseMonthFromName(data.month);
+                            if (parsed) {
+                                month = parsed.month;
+                                year = parsed.year;
+                            }
+                        }
+                        
+                        // Fallback: Tính từ startYear và startMonth của file
+                        if (!month || !year) {
+                            const fileStartYear = settings.startYear || new Date().getFullYear();
+                            const fileStartMonth = settings.startMonth || 1;
+                            const totalMonthsFromStart = fileStartMonth - 1 + index;
+                            month = (totalMonthsFromStart % 12) + 1;
+                            year = fileStartYear + Math.floor(totalMonthsFromStart / 12);
+                        }
+                        
+                        // Lưu vào map
+                        const key = `${month}/${year}`;
+                        importDataMap.set(key, {
+                            load: data.load || '0',
+                            grid: data.grid || '0',
+                            backup: data.backup || '0'
+                        });
+                        
+                        // Track min/max
+                        if (year < importMinYear || (year === importMinYear && month < importMinMonth)) {
+                            importMinYear = year;
+                            importMinMonth = month;
+                        }
+                        if (year > importMaxYear || (year === importMaxYear && month > importMaxMonth)) {
+                            importMaxYear = year;
+                            importMaxMonth = month;
+                        }
+                    });
+                    
+                    console.log(`📥 Import data: ${importMinMonth}/${importMinYear} -> ${importMaxMonth}/${importMaxYear}`);
+                    console.log(`📊 Current data: ${startMonth}/${startYear}, ${totalMonths} tháng`);
+                    
+                    // Lưu data hiện tại vào cache trước khi merge
+                    for (let i = 0; i < totalMonths; i++) {
+                        const loadEl = document.getElementById(`load${i}`);
+                        const gridEl = document.getElementById(`grid${i}`);
+                        const backupEl = document.getElementById(`backup${i}`);
+                        
+                        if (loadEl) monthDataCache[`load${i}`] = loadEl.value;
+                        if (gridEl) monthDataCache[`grid${i}`] = gridEl.value;
+                        if (backupEl) monthDataCache[`backup${i}`] = backupEl.value;
+                    }
+                    
+                    // Build existing data map
+                    const existingDataMap = new Map();
+                    for (let i = 0; i < totalMonths; i++) {
+                        const monthYear = getMonthYearFromIndex(i);
+                        const key = `${monthYear.month}/${monthYear.year}`;
+                        existingDataMap.set(key, {
+                            load: monthDataCache[`load${i}`] || '0',
+                            grid: monthDataCache[`grid${i}`] || '0',
+                            backup: monthDataCache[`backup${i}`] || '0'
+                        });
+                    }
+                    
+                    // Tính current min/max
+                    let currentMinMonth = startMonth, currentMinYear = startYear;
+                    const lastMonthYear = getMonthYearFromIndex(totalMonths - 1);
+                    let currentMaxMonth = lastMonthYear.month, currentMaxYear = lastMonthYear.year;
+                    
+                    // Tính new range (merge cả 2)
+                    let newMinMonth, newMinYear, newMaxMonth, newMaxYear;
+                    
+                    if (importMinYear < currentMinYear || (importMinYear === currentMinYear && importMinMonth < currentMinMonth)) {
+                        newMinMonth = importMinMonth;
+                        newMinYear = importMinYear;
                     } else {
-                        startYear = new Date().getFullYear();
+                        newMinMonth = currentMinMonth;
+                        newMinYear = currentMinYear;
+                    }
+                    
+                    if (importMaxYear > currentMaxYear || (importMaxYear === currentMaxYear && importMaxMonth > currentMaxMonth)) {
+                        newMaxMonth = importMaxMonth;
+                        newMaxYear = importMaxYear;
+                    } else {
+                        newMaxMonth = currentMaxMonth;
+                        newMaxYear = currentMaxYear;
+                    }
+                    
+                    // Tính tổng số tháng mới
+                    const newTotalMonths = (newMaxYear - newMinYear) * 12 + (newMaxMonth - newMinMonth) + 1;
+                    
+                    console.log(`🔄 Merged range: ${newMinMonth}/${newMinYear} -> ${newMaxMonth}/${newMaxYear} (${newTotalMonths} tháng)`);
+                    
+                    // Cập nhật startMonth, startYear, totalMonths
+                    startYear = newMinYear;
+                    startMonth = newMinMonth;
+                    totalMonths = newTotalMonths;
+                    
+                    // Clear cache và rebuild
+                    monthDataCache = {};
+                    
+                    // Merge data: Import data GHI ĐÈ lên existing data (nếu có)
+                    for (let i = 0; i < totalMonths; i++) {
+                        const monthYear = getMonthYearFromIndex(i);
+                        const key = `${monthYear.month}/${monthYear.year}`;
+                        
+                        // Ưu tiên: Import data > Existing data > Default 0
+                        let data = { load: '0', grid: '0', backup: '0' };
+                        
+                        if (existingDataMap.has(key)) {
+                            data = existingDataMap.get(key);
+                        }
+                        
+                        // Import data ghi đè
+                        if (importDataMap.has(key)) {
+                            const importData = importDataMap.get(key);
+                            // Chỉ ghi đè nếu import có giá trị > 0
+                            if (parseFloat(importData.load) > 0 || parseFloat(importData.grid) > 0 || parseFloat(importData.backup) > 0) {
+                                data = importData;
+                            }
+                        }
+                        
+                        monthDataCache[`load${i}`] = data.load;
+                        monthDataCache[`grid${i}`] = data.grid;
+                        monthDataCache[`backup${i}`] = data.backup;
                     }
                     
                     // Reset về trang 1
                     currentPage = 1;
                     
-                    // Clear cache và load lại
-                    monthDataCache = {};
-                    
-                    // Load data vào cache trước
-                    settings.monthlyData.forEach((data, index) => {
-                        monthDataCache[`load${index}`] = data.load;
-                        monthDataCache[`grid${index}`] = data.grid;
-                        monthDataCache[`backup${index}`] = data.backup;
-                    });
-                    
-                    // Khởi tạo lại inputs với số tháng mới
+                    // Khởi tạo lại inputs
                     initializeInputs();
                     
-                    document.getElementById('solarPrice').value = settings.solarPrice || 0;
-                    document.getElementById('vatRate').value = settings.vatRate || 8;
-                    setInitialCostValue(parseFloat(settings.initialCost) || 0);
-
-                    // Load data vào các input hiển thị
-                    settings.monthlyData.forEach((data, index) => {
-                        if (index < totalMonths) {
-                            const loadEl = document.getElementById(`load${index}`);
-                            const gridEl = document.getElementById(`grid${index}`);
-                            const backupEl = document.getElementById(`backup${index}`);
-                            
-                            if (loadEl) loadEl.value = data.load;
-                            if (gridEl) gridEl.value = data.grid;
-                            if (backupEl) backupEl.value = data.backup;
-                        }
-                    });
-
-                    showNotification('📥 Đã nhập file cài đặt thành công!', 'success');
+                    // Cập nhật các settings khác
+                    if (settings.solarPrice !== undefined) {
+                        document.getElementById('solarPrice').value = settings.solarPrice || 0;
+                    }
+                    if (settings.vatRate !== undefined) {
+                        document.getElementById('vatRate').value = settings.vatRate || 8;
+                    }
+                    if (settings.initialCost !== undefined) {
+                        setInitialCostValue(parseFloat(settings.initialCost) || 0);
+                    }
+                    
+                    // Load data vào các input hiển thị (cho trang hiện tại)
+                    const startIndex = (currentPage - 1) * MONTHS_PER_PAGE;
+                    const endIndex = Math.min(startIndex + MONTHS_PER_PAGE, totalMonths);
+                    
+                    for (let i = startIndex; i < endIndex; i++) {
+                        const loadEl = document.getElementById(`load${i}`);
+                        const gridEl = document.getElementById(`grid${i}`);
+                        const backupEl = document.getElementById(`backup${i}`);
+                        
+                        if (loadEl) loadEl.value = monthDataCache[`load${i}`] || '0';
+                        if (gridEl) gridEl.value = monthDataCache[`grid${i}`] || '0';
+                        if (backupEl) backupEl.value = monthDataCache[`backup${i}`] || '0';
+                    }
+                    
+                    // Đếm số tháng đã merge
+                    const importedCount = importDataMap.size;
+                    const mergedMessage = `📥 Đã merge ${importedCount} tháng từ file!\n` +
+                        `📊 Dữ liệu: ${newMinMonth}/${newMinYear} → ${newMaxMonth}/${newMaxYear}\n` +
+                        `📅 Tổng: ${totalMonths} tháng`;
+                    
+                    showNotification(mergedMessage, 'success');
                     calculateSavings();
                     saveSettings(true);
+                    
                 } catch (e) {
+                    console.error('Import error:', e);
                     showNotification('❌ Lỗi khi đọc file: ' + e.message, 'error');
                 }
             };

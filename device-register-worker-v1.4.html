@@ -1,4 +1,203 @@
-/**
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Device Register Worker v1.4 - Copy Code</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      color: #fff;
+      padding: 20px;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    h1 { text-align: center; margin-bottom: 10px; color: #4ade80; }
+    .subtitle { text-align: center; color: #94a3b8; margin-bottom: 30px; }
+    .version-badge {
+      display: inline-block;
+      background: #22c55e;
+      color: #000;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    .card {
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .card h2 { color: #4ade80; margin-bottom: 15px; font-size: 18px; }
+    .btn {
+      display: inline-block;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      font-size: 14px;
+      transition: all 0.2s;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    .btn-primary { background: #22c55e; color: #000; }
+    .btn-primary:hover { background: #16a34a; transform: translateY(-2px); }
+    .btn-secondary { background: #3b82f6; color: #fff; }
+    .btn-secondary:hover { background: #2563eb; }
+    .btn-warning { background: #f59e0b; color: #000; }
+    .btn-warning:hover { background: #d97706; }
+    .btn-danger { background: #ef4444; color: #fff; }
+    .btn-danger:hover { background: #dc2626; }
+    pre {
+      background: #0d1117;
+      border-radius: 8px;
+      padding: 15px;
+      overflow-x: auto;
+      font-size: 12px;
+      line-height: 1.5;
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid #30363d;
+    }
+    code { font-family: 'Fira Code', 'Monaco', 'Consolas', monospace; }
+    .endpoints { display: grid; gap: 10px; }
+    .endpoint {
+      background: rgba(0,0,0,0.3);
+      padding: 10px 15px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .method {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 12px;
+    }
+    .method-get { background: #22c55e; color: #000; }
+    .method-post { background: #3b82f6; color: #fff; }
+    .path { font-family: monospace; color: #e2e8f0; }
+    .desc { color: #94a3b8; font-size: 13px; }
+    .test-section { margin-top: 20px; }
+    .input-group { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+    .input-group input {
+      flex: 1;
+      min-width: 200px;
+      padding: 10px 15px;
+      border-radius: 8px;
+      border: 1px solid #30363d;
+      background: #0d1117;
+      color: #fff;
+      font-size: 14px;
+    }
+    .result {
+      background: #0d1117;
+      border-radius: 8px;
+      padding: 15px;
+      border: 1px solid #30363d;
+      min-height: 100px;
+      white-space: pre-wrap;
+      font-family: monospace;
+      font-size: 13px;
+    }
+    .success { color: #4ade80; }
+    .error { color: #ef4444; }
+    .changes-list { list-style: none; }
+    .changes-list li { 
+      padding: 8px 0; 
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .changes-list li:last-child { border-bottom: none; }
+    .change-icon { font-size: 18px; }
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 15px 25px;
+      border-radius: 8px;
+      background: #22c55e;
+      color: #000;
+      font-weight: 600;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Device Register Worker <span class="version-badge">v1.4</span></h1>
+    <p class="subtitle">Auto-register new devices to Home Assistant via MQTT Discovery</p>
+    
+    <!-- Changes -->
+    <div class="card">
+      <h2>What's New in v1.4</h2>
+      <ul class="changes-list">
+        <li><span class="change-icon">🧹</span> <span>NEW: <strong>/cleanup</strong> endpoint - Remove ALL entity formats (fix duplicate issues)</span></li>
+        <li><span class="change-icon">🔧</span> <span>Fixed syntax error in unregisterDevice function</span></li>
+        <li><span class="change-icon">📝</span> <span>Added 4 topic formats for cleanup: old_simple, middle_nested, duplicate_id, current_correct</span></li>
+        <li><span class="change-icon">✅</span> <span>Topic format: <code>homeassistant/sensor/lumentree_h250325151_pv_power/config</code></span></li>
+        <li><span class="change-icon">✅</span> <span>Entity ID: <code>sensor.lumentree_h250325151_pv_power</code> (no duplicates)</span></li>
+      </ul>
+    </div>
+    
+    <!-- Endpoints -->
+    <div class="card">
+      <h2>API Endpoints</h2>
+      <div class="endpoints">
+        <div class="endpoint">
+          <span class="method method-get">GET</span>
+          <span class="path">/health</span>
+          <span class="desc">- Health check & version info</span>
+        </div>
+        <div class="endpoint">
+          <span class="method method-get">GET</span>
+          <span class="path">/check/:deviceId</span>
+          <span class="desc">- Check if device exists in HA</span>
+        </div>
+        <div class="endpoint">
+          <span class="method method-post">POST</span>
+          <span class="path">/register</span>
+          <span class="desc">- Register new device (create 39 sensors)</span>
+        </div>
+        <div class="endpoint">
+          <span class="method method-post">POST</span>
+          <span class="path">/unregister</span>
+          <span class="desc">- Remove device sensors</span>
+        </div>
+        <div class="endpoint">
+          <span class="method method-post">POST</span>
+          <span class="path">/cleanup</span>
+          <span class="desc">- Remove ALL entity formats (fix duplicates)</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Required Environment Variables -->
+    <div class="card">
+      <h2>Required Environment Variables</h2>
+      <pre><code>HA_URL=https://your-ha-instance.trycloudflare.com
+HA_TOKEN=your_long_lived_access_token</code></pre>
+    </div>
+    
+    <!-- Copy Code -->
+    <div class="card">
+      <h2>Worker Code</h2>
+      <div style="margin-bottom: 15px;">
+        <button class="btn btn-primary" onclick="copyCode()">📋 Copy Worker Code</button>
+        <button class="btn btn-secondary" onclick="downloadCode()">⬇️ Download .js File</button>
+      </div>
+      <pre><code id="workerCode">/**
  * Device Registration Worker v1.4
  * Auto-register new devices to Home Assistant via MQTT Discovery
  * 
@@ -192,7 +391,7 @@ async function registerDevice(haUrl, haToken, deviceId) {
   let errorCount = 0;
   
   for (const sensor of SENSOR_DEFINITIONS) {
-    // Topic format: homeassistant/sensor/<unique_id>/config
+    // Topic format: homeassistant/sensor/&lt;unique_id&gt;/config
     // HA uses unique_id from payload to create entity_id
     // unique_id in payload: lumentree_h250325151_pv_power
     // This should create: sensor.lumentree_h250325151_pv_power
@@ -299,7 +498,7 @@ async function cleanupAllFormats(haUrl, haToken, deviceId) {
     'current_correct'
   ];
   
-  for (let i = 0; i < topicFormats.length; i++) {
+  for (let i = 0; i &lt; topicFormats.length; i++) {
     const formatFn = topicFormats[i];
     let formatCount = 0;
     
@@ -359,7 +558,7 @@ export default {
         status: 'ok',
         version: '1.4',
         service: 'Device Registration Worker',
-        haConfigured: !!(HA_URL && HA_TOKEN),
+        haConfigured: !!(HA_URL &amp;&amp; HA_TOKEN),
         endpoints: [
           'GET /check/:deviceId - Check if device exists',
           'POST /register - Register new device',
@@ -379,7 +578,7 @@ export default {
     }
     
     // GET /check/:deviceId - Check if device exists
-    if (path.match(/^\/check\/([^\/]+)$/) && request.method === 'GET') {
+    if (path.match(/^\/check\/([^\/]+)$/) &amp;&amp; request.method === 'GET') {
       const match = path.match(/^\/check\/([^\/]+)$/);
       const deviceId = match[1];
       
@@ -405,7 +604,7 @@ export default {
     }
     
     // POST /register - Register new device
-    if (path === '/register' && request.method === 'POST') {
+    if (path === '/register' &amp;&amp; request.method === 'POST') {
       let body;
       try {
         body = await request.json();
@@ -459,7 +658,7 @@ export default {
     }
     
     // POST /unregister - Remove device
-    if (path === '/unregister' && request.method === 'POST') {
+    if (path === '/unregister' &amp;&amp; request.method === 'POST') {
       let body;
       try {
         body = await request.json();
@@ -492,7 +691,7 @@ export default {
     }
     
     // POST /cleanup - Remove ALL entity formats (for fixing duplicate issues)
-    if (path === '/cleanup' && request.method === 'POST') {
+    if (path === '/cleanup' &amp;&amp; request.method === 'POST') {
       let body;
       try {
         body = await request.json();
@@ -532,4 +731,111 @@ export default {
       availableEndpoints: ['/health', '/check/:deviceId', '/register', '/unregister', '/cleanup']
     }), { status: 404, headers: CORS_HEADERS });
   }
-};
+};</code></pre>
+    </div>
+    
+    <!-- Test Section -->
+    <div class="card">
+      <h2>Test API</h2>
+      <div class="test-section">
+        <div class="input-group">
+          <input type="text" id="deviceId" placeholder="Device ID (e.g., H250325151)" value="H250325151">
+        </div>
+        <div style="margin-bottom: 15px;">
+          <button class="btn btn-secondary" onclick="testHealth()">🔍 Health Check</button>
+          <button class="btn btn-secondary" onclick="testCheck()">📋 Check Device</button>
+          <button class="btn btn-primary" onclick="testRegister()">➕ Register</button>
+          <button class="btn btn-warning" onclick="testUnregister()">➖ Unregister</button>
+          <button class="btn btn-danger" onclick="testCleanup()">🧹 Cleanup ALL</button>
+        </div>
+        <div class="result" id="result">Click a button to test the API...</div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="toast" id="toast">Copied to clipboard!</div>
+  
+  <script>
+    const API_BASE = 'https://device-register.applike098.workers.dev';
+    
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+    
+    function copyCode() {
+      const code = document.getElementById('workerCode').textContent
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&amp;/g, '&');
+      navigator.clipboard.writeText(code).then(() => showToast('Copied to clipboard!'));
+    }
+    
+    function downloadCode() {
+      const code = document.getElementById('workerCode').textContent
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&amp;/g, '&');
+      const blob = new Blob([code], { type: 'text/javascript' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'device-register-worker-v1.4.js';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Downloaded!');
+    }
+    
+    async function showResult(promise) {
+      const result = document.getElementById('result');
+      result.textContent = 'Loading...';
+      try {
+        const res = await promise;
+        const data = await res.json();
+        result.innerHTML = `<span class="${data.success !== false ? 'success' : 'error'}">${JSON.stringify(data, null, 2)}</span>`;
+      } catch (e) {
+        result.innerHTML = `<span class="error">Error: ${e.message}</span>`;
+      }
+    }
+    
+    function testHealth() {
+      showResult(fetch(`${API_BASE}/health`));
+    }
+    
+    function testCheck() {
+      const deviceId = document.getElementById('deviceId').value;
+      showResult(fetch(`${API_BASE}/check/${deviceId}`));
+    }
+    
+    function testRegister() {
+      const deviceId = document.getElementById('deviceId').value;
+      showResult(fetch(`${API_BASE}/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deviceId })
+      }));
+    }
+    
+    function testUnregister() {
+      const deviceId = document.getElementById('deviceId').value;
+      showResult(fetch(`${API_BASE}/unregister`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deviceId })
+      }));
+    }
+    
+    function testCleanup() {
+      const deviceId = document.getElementById('deviceId').value;
+      if (!confirm(`Are you sure you want to cleanup ALL entity formats for ${deviceId}? This will remove all MQTT Discovery configs.`)) return;
+      showResult(fetch(`${API_BASE}/cleanup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deviceId })
+      }));
+    }
+  </script>
+</body>
+</html>

@@ -558,6 +558,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const CLOUDFLARE_WORKER = 'https://lightearth.applike098.workers.dev';
     const CLOUDFLARE_WORKER_TSP = 'https://temperature-soc-power.applike098.workers.dev';
     
+    // Device Registration Worker (for auto-registering new devices to HA)
+    const DEVICE_REGISTER_WORKER = 'https://device-register.applike098.workers.dev';
+    
     // Keep currentOrigin for backward compatibility (but not used for API calls)
     const currentOrigin = window.location.origin;
     
@@ -1271,6 +1274,129 @@ document.addEventListener('DOMContentLoaded', function () {
     // DATA FETCHING
     // ========================================
     
+    // ========================================
+    // AUTO DEVICE REGISTRATION (NEW!)
+    // Check if device exists in HA, if not - auto-register via MQTT Discovery
+    // ========================================
+    
+    // Cache for device existence checks (avoid repeated API calls)
+    const deviceExistsCache = new Map();
+    const DEVICE_CHECK_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+    
+    /**
+     * Check if device exists in Home Assistant
+     * @param {string} deviceId - Device ID to check
+     * @returns {Promise<{exists: boolean, entityCount: number}>}
+     */
+    async function checkDeviceInHA(deviceId) {
+        const normalizedId = deviceId.toUpperCase();
+        
+        // Check cache first
+        const cached = deviceExistsCache.get(normalizedId);
+        if (cached && (Date.now() - cached.timestamp) < DEVICE_CHECK_CACHE_TTL) {
+            console.log(`📦 [Device Check] Cache hit for ${normalizedId}: exists=${cached.exists}`);
+            return cached;
+        }
+        
+        try {
+            const response = await fetch(`${DEVICE_REGISTER_WORKER}/check/${normalizedId}`);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            
+            const data = await response.json();
+            const result = {
+                exists: data.exists,
+                entityCount: data.entityCount || 0,
+                timestamp: Date.now()
+            };
+            
+            // Cache the result
+            deviceExistsCache.set(normalizedId, result);
+            console.log(`🔍 [Device Check] ${normalizedId}: exists=${result.exists}, entities=${result.entityCount}`);
+            
+            return result;
+        } catch (error) {
+            console.warn(`⚠️ [Device Check] Failed for ${normalizedId}:`, error.message);
+            // On error, assume device exists (don't block user)
+            return { exists: true, entityCount: -1, error: error.message };
+        }
+    }
+    
+    /**
+     * Auto-register a new device to Home Assistant via MQTT Discovery
+     * @param {string} deviceId - Device ID to register
+     * @returns {Promise<{success: boolean, message: string}>}
+     */
+    async function autoRegisterDevice(deviceId) {
+        const normalizedId = deviceId.toUpperCase();
+        console.log(`🔧 [Auto Register] Registering new device: ${normalizedId}`);
+        
+        try {
+            const response = await fetch(`${DEVICE_REGISTER_WORKER}/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ deviceId: normalizedId })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                console.log(`✅ [Auto Register] Device ${normalizedId} registered! Sensors: ${data.sensorsCreated}`);
+                
+                // Update cache
+                deviceExistsCache.set(normalizedId, {
+                    exists: true,
+                    entityCount: data.sensorsCreated,
+                    timestamp: Date.now()
+                });
+                
+                // Show notification to user
+                showDeviceRegistrationNotification(normalizedId, data.sensorsCreated, data.alreadyExists);
+                
+                return { success: true, message: data.message };
+            } else {
+                console.error(`❌ [Auto Register] Failed:`, data.error);
+                return { success: false, message: data.error };
+            }
+        } catch (error) {
+            console.error(`❌ [Auto Register] Error:`, error.message);
+            return { success: false, message: error.message };
+        }
+    }
+    
+    /**
+     * Show notification when device is registered
+     */
+    function showDeviceRegistrationNotification(deviceId, sensorCount, alreadyExists) {
+        // Create toast notification
+        const toast = document.createElement('div');
+        toast.className = 'fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 px-4 py-3 rounded-lg shadow-lg text-white text-sm font-medium transition-all duration-300';
+        
+        if (alreadyExists) {
+            toast.classList.add('bg-blue-500');
+            toast.innerHTML = `<span class="mr-2">ℹ️</span> Thiết bị ${deviceId} đã có trong hệ thống`;
+        } else {
+            toast.classList.add('bg-green-500');
+            toast.innerHTML = `<span class="mr-2">✅</span> Đã đăng ký ${deviceId} - Tạo ${sensorCount} sensors`;
+        }
+        
+        document.body.appendChild(toast);
+        
+        // Animate in
+        setTimeout(() => {
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateX(-50%) translateY(0)';
+        }, 10);
+        
+        // Remove after 4 seconds
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(-50%) translateY(20px)';
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
+    }
+    
     function fetchData() {
         const deviceId = document.getElementById('deviceId')?.value?.trim();
         const date = document.getElementById('dateInput')?.value;
@@ -1307,6 +1433,26 @@ document.addEventListener('DOMContentLoaded', function () {
     // Fast load: Optimized data loading with minimal API calls
     async function fetchRealtimeFirst(deviceId, date) {
         console.log(`🚀 Loading data for device: ${deviceId}, date: ${date || 'today'}`);
+        
+        // ========================================
+        // AUTO DEVICE REGISTRATION CHECK (NEW!)
+        // If device doesn't exist in HA, auto-register it
+        // ========================================
+        try {
+            const deviceCheck = await checkDeviceInHA(deviceId);
+            
+            if (!deviceCheck.exists && !deviceCheck.error) {
+                console.log(`🆕 [New Device] ${deviceId} not found in HA - auto-registering...`);
+                await autoRegisterDevice(deviceId);
+                
+                // Wait a bit for HA to process the MQTT discovery
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+        } catch (error) {
+            // Don't block if check fails - continue with normal flow
+            console.warn('⚠️ Device check failed, continuing anyway:', error.message);
+        }
+        // ========================================
         
         // Show UI immediately
         showElement('deviceInfo');

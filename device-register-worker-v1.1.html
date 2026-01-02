@@ -1,5 +1,76 @@
-/**
- * Device Registration Worker v1.0
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Device Register Worker v1.1 - Copy Code</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .code-container { max-height: 500px; overflow-y: auto; }
+        pre { white-space: pre-wrap; word-wrap: break-word; }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen p-8">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-3xl font-bold text-green-400 mb-4">Device Register Worker v1.1</h1>
+        <p class="text-gray-400 mb-6">Auto-register new devices to Home Assistant via MQTT Discovery</p>
+        
+        <!-- Features -->
+        <div class="bg-gray-800 rounded-lg p-4 mb-6">
+            <h2 class="text-xl font-semibold text-cyan-400 mb-3">Features:</h2>
+            <ul class="list-disc list-inside text-gray-300 space-y-1">
+                <li>Check if device exists in HA (both lumentree & MQTT Discovery formats)</li>
+                <li>Auto-create 39 sensors via MQTT Discovery</li>
+                <li>Support power, energy, battery, temperature sensors</li>
+                <li>CORS enabled for Dashboard</li>
+            </ul>
+        </div>
+
+        <!-- Endpoints -->
+        <div class="bg-gray-800 rounded-lg p-4 mb-6">
+            <h2 class="text-xl font-semibold text-cyan-400 mb-3">Endpoints:</h2>
+            <div class="space-y-2 text-sm font-mono">
+                <div><span class="text-green-400">GET</span> <span class="text-yellow-300">/health</span> - Health check</div>
+                <div><span class="text-green-400">GET</span> <span class="text-yellow-300">/check/:deviceId</span> - Check if device exists</div>
+                <div><span class="text-blue-400">POST</span> <span class="text-yellow-300">/register</span> - Register new device</div>
+                <div><span class="text-blue-400">POST</span> <span class="text-yellow-300">/unregister</span> - Remove device</div>
+            </div>
+        </div>
+
+        <!-- Environment Variables -->
+        <div class="bg-red-900/30 border border-red-500 rounded-lg p-4 mb-6">
+            <h2 class="text-xl font-semibold text-red-400 mb-3">Required Environment Variables:</h2>
+            <table class="w-full text-sm">
+                <tr class="border-b border-red-800">
+                    <td class="py-2 font-mono text-yellow-300">HA_URL</td>
+                    <td class="py-2 text-gray-300">Home Assistant URL (e.g., https://xxx.trycloudflare.com)</td>
+                </tr>
+                <tr>
+                    <td class="py-2 font-mono text-yellow-300">HA_TOKEN</td>
+                    <td class="py-2 text-gray-300">HA Long-lived Access Token</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Copy Button -->
+        <div class="flex gap-4 mb-4">
+            <button id="copyBtn" onclick="copyCode()" 
+                class="px-6 py-3 bg-green-600 hover:bg-green-700 rounded-lg font-semibold transition-colors flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                </svg>
+                Copy Worker Code
+            </button>
+            <button onclick="testWorker()" 
+                class="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition-colors">
+                Test Worker
+            </button>
+        </div>
+
+        <!-- Code Display -->
+        <div class="bg-gray-800 rounded-lg p-4 code-container">
+            <pre id="workerCode" class="text-xs text-gray-300 font-mono">/**
+ * Device Registration Worker v1.1
  * Auto-register new devices to Home Assistant via MQTT Discovery
  * 
  * Features:
@@ -281,7 +352,7 @@ export default {
     if (path === '/' || path === '/health') {
       return new Response(JSON.stringify({
         status: 'ok',
-        version: '1.0',
+        version: '1.1',
         service: 'Device Registration Worker',
         haConfigured: !!(HA_URL && HA_TOKEN),
         endpoints: [
@@ -323,7 +394,8 @@ export default {
         entityCount: countResult.count,
         sampleEntities: countResult.entities || [],
         state: existsResult.state,
-        lastUpdated: existsResult.lastUpdated
+        lastUpdated: existsResult.lastUpdated,
+        entityFormat: existsResult.entityFormat
       }), { headers: CORS_HEADERS });
     }
     
@@ -358,7 +430,8 @@ export default {
           message: 'Device already exists in Home Assistant',
           deviceId: normalizeDeviceId(deviceId),
           alreadyExists: true,
-          entityCount: countResult.count
+          entityCount: countResult.count,
+          entityFormat: existsResult.entityFormat
         }), { headers: CORS_HEADERS });
       }
       
@@ -420,4 +493,46 @@ export default {
       availableEndpoints: ['/health', '/check/:deviceId', '/register', '/unregister']
     }), { status: 404, headers: CORS_HEADERS });
   }
-};
+};</pre>
+        </div>
+
+        <!-- Test Result -->
+        <div id="testResult" class="mt-4 hidden bg-gray-800 rounded-lg p-4">
+            <h3 class="text-lg font-semibold mb-2">Test Result:</h3>
+            <pre id="testOutput" class="text-sm text-gray-300 font-mono"></pre>
+        </div>
+    </div>
+
+    <script>
+        function copyCode() {
+            const code = document.getElementById('workerCode').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                const btn = document.getElementById('copyBtn');
+                btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Copied!';
+                btn.classList.remove('bg-green-600', 'hover:bg-green-700');
+                btn.classList.add('bg-emerald-500');
+                setTimeout(() => {
+                    btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg> Copy Worker Code';
+                    btn.classList.remove('bg-emerald-500');
+                    btn.classList.add('bg-green-600', 'hover:bg-green-700');
+                }, 2000);
+            });
+        }
+
+        async function testWorker() {
+            const resultDiv = document.getElementById('testResult');
+            const outputPre = document.getElementById('testOutput');
+            resultDiv.classList.remove('hidden');
+            outputPre.textContent = 'Testing...';
+
+            try {
+                const response = await fetch('https://device-register.applike098.workers.dev/health');
+                const data = await response.json();
+                outputPre.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                outputPre.textContent = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

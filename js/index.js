@@ -1437,6 +1437,46 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     
     /**
+     * Check if device exists in LightEarth Cloud (source of truth)
+     * This checks the actual cloud API where devices send their data
+     * @param {string} deviceId - Device ID to check
+     * @returns {Promise<{exists: boolean, data?: object}>}
+     */
+    async function checkDeviceInLightEarthCloud(deviceId) {
+        const normalizedId = deviceId.toUpperCase();
+        
+        try {
+            // Try main API first
+            const response = await fetch(`${CLOUDFLARE_WORKER}/api/realtime/device/${normalizedId}`, {
+                signal: AbortSignal.timeout(10000) // 10 second timeout
+            });
+            
+            if (!response.ok) {
+                console.warn(`⚠️ [Cloud Check] HTTP ${response.status} for ${normalizedId}`);
+                return { exists: false };
+            }
+            
+            const data = await response.json();
+            
+            // Check if device was found (success: true means device exists)
+            if (data.success === true) {
+                console.log(`✅ [Cloud Check] ${normalizedId} found in LightEarth Cloud`);
+                return { exists: true, data: data };
+            }
+            
+            // Device not found in cloud
+            console.log(`❌ [Cloud Check] ${normalizedId} not found: ${data.message}`);
+            return { exists: false, message: data.message };
+            
+        } catch (error) {
+            console.warn(`⚠️ [Cloud Check] Error for ${normalizedId}:`, error.message);
+            // On timeout or network error, allow user to continue (don't block)
+            // They might have connectivity issues but device is valid
+            return { exists: true, error: error.message, allowContinue: true };
+        }
+    }
+    
+    /**
      * Check if device has MQTT data (exists in MQTT broker)
      * This is used to validate if device ID is real before registering
      * @param {string} deviceId - Device ID to check
@@ -1487,6 +1527,26 @@ Vui lòng kiểm tra lại:
             toast.style.opacity = '0';
             setTimeout(() => toast.remove(), 300);
         }, 5000);
+    }
+    
+    /**
+     * Show warning when registration fails but allow continue
+     */
+    function showRegistrationWarning(deviceId, reason) {
+        const toast = document.createElement('div');
+        toast.className = 'fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 px-4 py-3 rounded-lg shadow-lg bg-yellow-500 text-white text-sm font-medium max-w-sm text-center';
+        toast.innerHTML = `
+            <div class="flex flex-col gap-1">
+                <span>⚠️ Không thể đăng ký tự động ${deviceId}</span>
+                <span class="text-xs opacity-80">${reason || 'Vui lòng thêm thủ công trong Home Assistant'}</span>
+            </div>
+        `;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 300);
+        }, 6000);
     }
     
     // Global reference for waiting notification
@@ -1579,46 +1639,37 @@ Vui lòng kiểm tra lại:
         console.log(`🚀 Loading data for device: ${deviceId}, date: ${date || 'today'}`);
         
         // ========================================
-        // AUTO DEVICE REGISTRATION CHECK (V3.2)
+        // AUTO DEVICE REGISTRATION CHECK (V3.3)
         // 1. Check if device exists in Lumentree Integration
-        // 2. If not, check if device has MQTT data (real device)
-        // 3. Only register if MQTT data exists (prevent ghost devices)
+        // 2. If not, auto-register (device format already validated)
+        // 3. Device will receive data from MQTT broker after registration
+        // 
+        // NOTE: We trust format validation (H/P + 9 digits)
+        // New devices won't have data until registered
         // ========================================
         try {
             const deviceCheck = await checkDeviceInHA(deviceId);
             
             if (!deviceCheck.exists && !deviceCheck.error) {
-                console.log(`🆕 [New Device] ${deviceId} not found in Lumentree Integration`);
+                console.log(`🆕 [New Device] ${deviceId} not found in Lumentree Integration - registering...`);
                 
                 // Show waiting notification
-                showWaitingNotification(deviceId, 'Đang kiểm tra thiết bị trong hệ thống...');
+                showWaitingNotification(deviceId, 'Đang đăng ký thiết bị mới vào hệ thống...');
                 
-                // IMPORTANT: Check if device has MQTT data before registering
-                // This prevents creating ghost devices that don't exist
-                const hasMqttData = await checkDeviceHasMqttData(deviceId);
-                
-                if (!hasMqttData) {
-                    // Device doesn't have MQTT data = doesn't exist in system
-                    hideWaitingNotification();
-                    showDeviceNotFoundError(deviceId);
-                    console.error(`❌ [Device Not Found] ${deviceId} has no MQTT data - device doesn't exist`);
-                    return; // STOP - don't continue loading
-                }
-                
-                // Device has MQTT data - proceed with registration
-                console.log(`✅ [MQTT Data Found] ${deviceId} has data - proceeding with registration`);
-                showWaitingNotification(deviceId, 'Đang đăng ký thiết bị mới...');
-                
+                // Register device to Lumentree Integration
+                // Format is already validated, proceed with registration
                 const registerResult = await autoRegisterDevice(deviceId);
                 
                 if (registerResult.success) {
-                    showWaitingNotification(deviceId, 'Đã đăng ký! Đang chờ hệ thống tạo sensors...');
+                    showWaitingNotification(deviceId, '✅ Đã đăng ký! Đang chờ hệ thống khởi tạo...');
                     await new Promise(resolve => setTimeout(resolve, 5000));
                     hideWaitingNotification();
+                    console.log(`✅ [Registration Complete] ${deviceId} added to Lumentree Integration`);
                 } else {
                     console.warn(`⚠️ Registration failed: ${registerResult.message}`);
                     hideWaitingNotification();
-                    // Continue anyway - device might still work via MQTT Discovery
+                    // Show warning but continue - user might want to see the dashboard anyway
+                    showRegistrationWarning(deviceId, registerResult.message);
                 }
             } else if (deviceCheck.exists) {
                 console.log(`✅ [Device OK] ${deviceId} already in Lumentree Integration (${deviceCheck.entityCount} entities)`);

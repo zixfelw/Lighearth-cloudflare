@@ -1546,7 +1546,7 @@ Vui lòng kiểm tra lại:
         
         // Validate Device ID format: H/P + 9 digits
         if (!validateDeviceId(deviceId)) {
-            showError('❌ Device ID không hợp lệ! Định dạng đúng: H hoặc P + 9 số. Ví dụ: H250325151 hoặc P250801055');
+            showError('❌ Device ID không hợp lệ!\n\nĐịnh dạng đúng: H hoặc P + 9 số\nVí dụ: H250325151 hoặc P250801055');
             return;
         }
 
@@ -5210,8 +5210,12 @@ Vui lòng kiểm tra lại:
         const errorDiv = document.getElementById('errorMessage');
         const errorText = document.getElementById('errorText');
         if (errorDiv && errorText) {
-            errorText.textContent = message;
+            // Support multi-line messages by converting \n to <br>
+            errorText.innerHTML = message.replace(/\n/g, '<br>');
             errorDiv.classList.remove('hidden');
+            
+            // Scroll to error message
+            errorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     }
 

@@ -1,5 +1,5 @@
 /**
- * LightEarth API Gateway v3.9
+ * LightEarth API Gateway v4.0
  * Solar Energy Monitoring System
  * 
  * Features:
@@ -9,6 +9,7 @@
  * - Device information
  * - Battery cell info (16 cells voltage)
  * - Vietnam timezone (UTC+7)
+ * - NEW: Device verification before registration!
  * 
  * Security:
  * - Geographic access control (bypass for Railway with API key)
@@ -16,6 +17,11 @@
  * - Rate limiting by Device ID (not just IP)
  * - Origin validation
  * - Input sanitization
+ * 
+ * v4.0 Changes:
+ * - NEW: /api/verify-device/{deviceId} endpoint to verify device exists on SunTCN
+ * - Prevents ghost devices from being registered to Home Assistant
+ * - Checks multiple SunTCN APIs (getDevice, getBatDayData, getPVDayData)
  * 
  * v3.9 Changes:
  * - NEW: Battery cell info (16 cells voltage) in realtime API response
@@ -643,6 +649,140 @@ export default {
     }
 
     // LightEarth Public API Endpoints
+
+    // ============================================
+    // NEW v4.0: VERIFY DEVICE EXISTS ON SUNTCN API
+    // This checks if device has data BEFORE registration
+    // ============================================
+    if (path.match(/^\/api\/verify-device\/([^\/]+)$/)) {
+      const match = path.match(/^\/api\/verify-device\/([^\/]+)$/);
+      const deviceId = match[1].toUpperCase();
+      
+      if (!isValidDeviceId(deviceId)) {
+        return new Response(JSON.stringify({ 
+          success: false,
+          exists: false,
+          deviceId: deviceId,
+          error: 'Invalid device ID format',
+          message: 'Device ID phải có format: H hoặc P + 9 số. VD: H240819126, P250801055'
+        }), { status: 400, headers });
+      }
+      
+      try {
+        // Method 1: Try getDevice API first (with deviceId param)
+        const deviceApiUrl = `https://lesvr.suntcn.com/lesvr/getDevice/${deviceId}`;
+        console.log(`🔍 [Verify] Checking device ${deviceId} via getDevice API...`);
+        
+        const deviceRes = await fetch(deviceApiUrl, { 
+          method: 'GET', 
+          headers: apiHeaders,
+          cf: { cacheTtl: 0 } // No cache for verification
+        });
+        
+        if (deviceRes.ok) {
+          const deviceData = await deviceRes.json();
+          console.log(`📡 [Verify] Device API response:`, JSON.stringify(deviceData).substring(0, 200));
+          
+          // Check if response indicates device exists
+          // SunTCN API returns empty array or object if device not found
+          const hasData = deviceData && 
+            ((Array.isArray(deviceData) && deviceData.length > 0) ||
+             (typeof deviceData === 'object' && Object.keys(deviceData).length > 0 && !deviceData.error));
+          
+          if (hasData) {
+            return new Response(JSON.stringify({
+              success: true,
+              exists: true,
+              deviceId: deviceId,
+              message: `Device ${deviceId} exists in SunTCN system`,
+              source: 'getDevice'
+            }), { headers });
+          }
+        }
+        
+        // Method 2: Try getBatDayData (devices with data will return arrays)
+        const today = new Date().toISOString().split('T')[0];
+        const batApiUrl = `https://lesvr.suntcn.com/lesvr/getBatDayData?queryDate=${today}&deviceId=${deviceId}`;
+        console.log(`🔍 [Verify] Checking device ${deviceId} via getBatDayData API...`);
+        
+        const batRes = await fetch(batApiUrl, { 
+          method: 'GET', 
+          headers: apiHeaders,
+          cf: { cacheTtl: 0 }
+        });
+        
+        if (batRes.ok) {
+          const batData = await batRes.json();
+          console.log(`📡 [Verify] BatDayData response:`, JSON.stringify(batData).substring(0, 200));
+          
+          // If we get actual data arrays, device exists
+          const hasData = batData && 
+            ((Array.isArray(batData) && batData.length > 0) ||
+             (batData.battery && batData.battery.length > 0) ||
+             (batData.data && batData.data.length > 0));
+          
+          if (hasData) {
+            return new Response(JSON.stringify({
+              success: true,
+              exists: true,
+              deviceId: deviceId,
+              message: `Device ${deviceId} has battery data`,
+              source: 'getBatDayData'
+            }), { headers });
+          }
+        }
+        
+        // Method 3: Try getPVDayData as final check
+        const pvApiUrl = `https://lesvr.suntcn.com/lesvr/getPVDayData?queryDate=${today}&deviceId=${deviceId}`;
+        console.log(`🔍 [Verify] Checking device ${deviceId} via getPVDayData API...`);
+        
+        const pvRes = await fetch(pvApiUrl, { 
+          method: 'GET', 
+          headers: apiHeaders,
+          cf: { cacheTtl: 0 }
+        });
+        
+        if (pvRes.ok) {
+          const pvData = await pvRes.json();
+          console.log(`📡 [Verify] PVDayData response:`, JSON.stringify(pvData).substring(0, 200));
+          
+          const hasData = pvData && 
+            ((Array.isArray(pvData) && pvData.length > 0) ||
+             (pvData.pv && pvData.pv.length > 0) ||
+             (pvData.data && pvData.data.length > 0));
+          
+          if (hasData) {
+            return new Response(JSON.stringify({
+              success: true,
+              exists: true,
+              deviceId: deviceId,
+              message: `Device ${deviceId} has PV data`,
+              source: 'getPVDayData'
+            }), { headers });
+          }
+        }
+        
+        // No data found in any API - device doesn't exist
+        console.log(`❌ [Verify] Device ${deviceId} NOT FOUND in any API`);
+        return new Response(JSON.stringify({
+          success: true,
+          exists: false,
+          deviceId: deviceId,
+          message: `Device ${deviceId} không tồn tại trong hệ thống SunTCN`,
+          hint: 'Kiểm tra lại Device ID: chữ cái đầu H hoặc P có đúng không? VD: H240819126 ≠ P240819126'
+        }), { headers });
+        
+      } catch (error) {
+        console.error(`❌ [Verify] Error checking device ${deviceId}:`, error.message);
+        return new Response(JSON.stringify({ 
+          success: false,
+          exists: null,
+          deviceId: deviceId,
+          error: 'API error',
+          message: error.message 
+        }), { status: 502, headers });
+      }
+    }
 
     if (path.match(/^\/api\/bat\/([^\/]+)\/(\d{4}-\d{2}-\d{2})$/)) {
       const match = path.match(/^\/api\/bat\/([^\/]+)\/(\d{4}-\d{2}-\d{2})$/);

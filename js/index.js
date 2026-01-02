@@ -561,6 +561,9 @@ document.addEventListener('DOMContentLoaded', function () {
     // Device Registration Worker (for auto-registering new devices to HA)
     const DEVICE_REGISTER_WORKER = 'https://device-register.applike098.workers.dev';
     
+    // Device Verification API (v4.0 - check device exists on SunTCN before registration)
+    const DEVICE_VERIFY_API = `${CLOUDFLARE_WORKER}/api/verify-device`;
+    
     // Keep currentOrigin for backward compatibility (but not used for API calls)
     const currentOrigin = window.location.origin;
     
@@ -1324,6 +1327,95 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     
     /**
+     * V4.0: Verify device exists on SunTCN Cloud BEFORE registering to HA
+     * This prevents ghost devices that crash Home Assistant
+     * @param {string} deviceId - Device ID to verify
+     * @returns {Promise<{exists: boolean, message: string, hint?: string}>}
+     */
+    async function verifyDeviceOnSunTCN(deviceId) {
+        const normalizedId = deviceId.toUpperCase();
+        console.log(`🔍 [Verify] Checking device ${normalizedId} on SunTCN Cloud...`);
+        
+        try {
+            const response = await fetch(`${DEVICE_VERIFY_API}/${normalizedId}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            
+            const data = await response.json();
+            console.log(`📡 [Verify] Response:`, data);
+            
+            if (data.exists === true) {
+                console.log(`✅ [Verify] Device ${normalizedId} EXISTS on SunTCN (source: ${data.source})`);
+                return { exists: true, message: data.message };
+            } else if (data.exists === false) {
+                console.warn(`⚠️ [Verify] Device ${normalizedId} NOT FOUND on SunTCN`);
+                return { exists: false, message: data.message, hint: data.hint };
+            } else {
+                // API error - let registration continue but log warning
+                console.warn(`⚠️ [Verify] API returned uncertain result for ${normalizedId}:`, data);
+                return { exists: true, message: 'Verification inconclusive, proceeding...' };
+            }
+        } catch (error) {
+            console.error(`❌ [Verify] Error checking ${normalizedId}:`, error.message);
+            // On error, allow registration (don't block user)
+            return { exists: true, message: 'Verification failed, proceeding...', error: error.message };
+        }
+    }
+    
+    /**
+     * Show error when device doesn't exist on SunTCN
+     * This blocks registration and asks user to check their Device ID
+     */
+    function showDeviceNotExistsError(deviceId, hint) {
+        // Hide any loading indicators
+        showLoading(false);
+        hideWaitingNotification();
+        
+        // Create error panel
+        const errorHtml = `
+            <div class="text-center py-8 px-4">
+                <div class="text-6xl mb-4">❌</div>
+                <h2 class="text-xl font-bold text-red-500 mb-2">Device không tồn tại!</h2>
+                <p class="text-gray-600 dark:text-gray-400 mb-4">
+                    Device ID <strong class="text-red-500">${deviceId}</strong> không có dữ liệu trong hệ thống SunTCN.
+                </p>
+                ${hint ? `<p class="text-amber-600 dark:text-amber-400 text-sm mb-4">💡 ${hint}</p>` : ''}
+                <div class="bg-gray-100 dark:bg-gray-800 rounded-lg p-4 text-left text-sm">
+                    <p class="font-semibold mb-2">Kiểm tra lại:</p>
+                    <ul class="list-disc list-inside space-y-1 text-gray-600 dark:text-gray-400">
+                        <li>Chữ cái đầu <strong>H</strong> hoặc <strong>P</strong> có đúng không?</li>
+                        <li>VD: <span class="text-green-500">H240819126</span> ≠ <span class="text-red-500">P240819126</span></li>
+                        <li>Thiết bị đã được kết nối internet chưa?</li>
+                        <li>Kiểm tra Device ID trong app Lumentree</li>
+                    </ul>
+                </div>
+                <button onclick="window.location.reload()" class="mt-4 px-6 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors">
+                    🔄 Thử lại
+                </button>
+            </div>
+        `;
+        
+        // Show in main content area
+        const mainContent = document.getElementById('deviceInfo') || document.getElementById('summaryStats');
+        if (mainContent) {
+            mainContent.innerHTML = errorHtml;
+            mainContent.classList.remove('hidden');
+        }
+        
+        // Also show toast notification
+        const toast = document.createElement('div');
+        toast.className = 'fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 px-4 py-3 rounded-lg shadow-lg bg-red-500 text-white text-sm font-medium';
+        toast.innerHTML = `<span class="mr-2">❌</span> Device ${deviceId} không tồn tại trong hệ thống!`;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 300);
+        }, 5000);
+    }
+    
+    /**
      * Auto-register a new device to Home Assistant via MQTT Discovery
      * @param {string} deviceId - Device ID to register
      * @returns {Promise<{success: boolean, message: string}>}
@@ -1435,22 +1527,40 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log(`🚀 Loading data for device: ${deviceId}, date: ${date || 'today'}`);
         
         // ========================================
-        // AUTO DEVICE REGISTRATION CHECK (NEW!)
-        // If device doesn't exist in HA, auto-register it
+        // V4.0: VERIFY DEVICE EXISTS ON SUNTCN BEFORE REGISTRATION
+        // Prevents ghost devices from crashing Home Assistant
         // ========================================
         try {
             const deviceCheck = await checkDeviceInHA(deviceId);
             
             if (!deviceCheck.exists && !deviceCheck.error) {
-                console.log(`🆕 [New Device] ${deviceId} not found in HA - auto-registering...`);
+                console.log(`🆕 [New Device] ${deviceId} not found in HA - verifying on SunTCN first...`);
+                
+                // NEW V4.0: Verify device exists on SunTCN BEFORE registering
+                const verifyResult = await verifyDeviceOnSunTCN(deviceId);
+                
+                if (!verifyResult.exists) {
+                    // Device doesn't exist on SunTCN - BLOCK REGISTRATION!
+                    console.error(`❌ [Verify] Device ${deviceId} NOT FOUND on SunTCN - blocking registration!`);
+                    showDeviceNotExistsError(deviceId, verifyResult.hint);
+                    showLoading(false);
+                    return; // Stop here - don't continue to dashboard
+                }
+                
+                // Device exists on SunTCN - safe to register
+                console.log(`✅ [Verify] Device ${deviceId} verified on SunTCN - proceeding with registration...`);
+                showWaitingNotification(deviceId, 'Đang đăng ký thiết bị vào Home Assistant...');
+                
                 await autoRegisterDevice(deviceId);
                 
                 // Wait a bit for HA to process the MQTT discovery
                 await new Promise(resolve => setTimeout(resolve, 2000));
+                hideWaitingNotification();
             }
         } catch (error) {
             // Don't block if check fails - continue with normal flow
             console.warn('⚠️ Device check failed, continuing anyway:', error.message);
+            hideWaitingNotification();
         }
         // ========================================
         

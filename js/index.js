@@ -1284,9 +1284,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const DEVICE_CHECK_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
     
     /**
-     * Check if device exists in Home Assistant
+     * Check if device exists in Lumentree Integration (Home Assistant)
+     * Uses Worker v3.1 API to check both Integration and MQTT Discovery
      * @param {string} deviceId - Device ID to check
-     * @returns {Promise<{exists: boolean, entityCount: number}>}
+     * @returns {Promise<{exists: boolean, entityCount: number, inLumentreeIntegration: boolean}>}
      */
     async function checkDeviceInHA(deviceId) {
         const normalizedId = deviceId.toUpperCase();
@@ -1305,15 +1306,22 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             
             const data = await response.json();
+            
+            // v3.1 API returns: inLumentreeIntegration, entityCount.integrationCount, etc.
+            const inIntegration = data.inLumentreeIntegration || false;
+            const entityCount = data.entityCount?.integrationCount || data.entityCount?.totalCount || 0;
+            
             const result = {
-                exists: data.exists,
-                entityCount: data.entityCount || 0,
+                exists: inIntegration,
+                entityCount: entityCount,
+                inLumentreeIntegration: inIntegration,
+                inMqttDiscovery: data.inMqttDiscovery || false,
                 timestamp: Date.now()
             };
             
             // Cache the result
             deviceExistsCache.set(normalizedId, result);
-            console.log(`🔍 [Device Check] ${normalizedId}: exists=${result.exists}, entities=${result.entityCount}`);
+            console.log(`🔍 [Device Check] ${normalizedId}: inLumentree=${inIntegration}, entities=${entityCount}`);
             
             return result;
         } catch (error) {
@@ -1324,16 +1332,18 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     
     /**
-     * Auto-register a new device to Home Assistant via MQTT Discovery
+     * Auto-register a new device to Lumentree Integration via Config Flow API
+     * Uses Worker v3.1 to trigger Home Assistant Config Flow
      * @param {string} deviceId - Device ID to register
      * @returns {Promise<{success: boolean, message: string}>}
      */
     async function autoRegisterDevice(deviceId) {
         const normalizedId = deviceId.toUpperCase();
-        console.log(`🔧 [Auto Register] Registering new device: ${normalizedId}`);
+        console.log(`🔧 [Auto Register] Registering to Lumentree Integration: ${normalizedId}`);
         
         try {
-            const response = await fetch(`${DEVICE_REGISTER_WORKER}/register`, {
+            // Use /register-integration endpoint (v3.1 API)
+            const response = await fetch(`${DEVICE_REGISTER_WORKER}/register-integration`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ deviceId: normalizedId })
@@ -1342,27 +1352,56 @@ document.addEventListener('DOMContentLoaded', function () {
             const data = await response.json();
             
             if (data.success) {
-                console.log(`✅ [Auto Register] Device ${normalizedId} registered! Sensors: ${data.sensorsCreated}`);
+                const deviceName = data.deviceName || normalizedId;
+                console.log(`✅ [Auto Register] Device ${normalizedId} (${deviceName}) added to Lumentree Integration!`);
+                console.log(`   Entry ID: ${data.entryId}`);
                 
                 // Update cache
                 deviceExistsCache.set(normalizedId, {
                     exists: true,
-                    entityCount: data.sensorsCreated,
+                    inLumentreeIntegration: true,
+                    entityCount: 51, // Lumentree creates ~51 entities
                     timestamp: Date.now()
                 });
                 
-                // Show notification to user
-                showDeviceRegistrationNotification(normalizedId, data.sensorsCreated, data.alreadyExists);
+                // Show success notification
+                showDeviceRegistrationNotification(normalizedId, 51, false);
                 
-                return { success: true, message: data.message };
+                return { success: true, message: data.message, deviceName: deviceName };
             } else {
                 console.error(`❌ [Auto Register] Failed:`, data.error);
+                
+                // Show error notification
+                showErrorNotification(`Không thể đăng ký ${normalizedId}: ${data.error}`);
+                
                 return { success: false, message: data.error };
             }
         } catch (error) {
             console.error(`❌ [Auto Register] Error:`, error.message);
             return { success: false, message: error.message };
         }
+    }
+    
+    /**
+     * Show error notification
+     */
+    function showErrorNotification(message) {
+        const toast = document.createElement('div');
+        toast.className = 'fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 px-4 py-3 rounded-lg shadow-lg bg-red-500 text-white text-sm font-medium transition-all duration-300';
+        toast.innerHTML = `<span class="mr-2">❌</span> ${message}`;
+        
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateX(-50%) translateY(0)';
+        }, 10);
+        
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(-50%) translateY(20px)';
+            setTimeout(() => toast.remove(), 300);
+        }, 5000);
     }
     
     /**
@@ -1397,12 +1436,64 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 4000);
     }
     
+    // Global reference for waiting notification
+    let waitingNotificationEl = null;
+    
+    /**
+     * Show waiting notification while connecting new device
+     */
+    function showWaitingNotification(deviceId, message) {
+        // Remove existing if any
+        hideWaitingNotification();
+        
+        waitingNotificationEl = document.createElement('div');
+        waitingNotificationEl.id = 'waiting-notification';
+        waitingNotificationEl.className = 'fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[100] px-6 py-4 rounded-xl shadow-2xl bg-gray-800 border border-gray-600 text-white text-center';
+        waitingNotificationEl.innerHTML = `
+            <div class="flex flex-col items-center gap-3">
+                <div class="animate-spin w-8 h-8 border-3 border-blue-400 border-t-transparent rounded-full"></div>
+                <div class="text-lg font-semibold">🔗 ${deviceId}</div>
+                <div class="text-sm text-gray-300">${message}</div>
+            </div>
+        `;
+        
+        document.body.appendChild(waitingNotificationEl);
+    }
+    
+    /**
+     * Hide waiting notification
+     */
+    function hideWaitingNotification() {
+        if (waitingNotificationEl) {
+            waitingNotificationEl.remove();
+            waitingNotificationEl = null;
+        }
+        // Also try to find by ID (in case reference was lost)
+        const el = document.getElementById('waiting-notification');
+        if (el) el.remove();
+    }
+    
+    /**
+     * Validate Device ID format: H or P followed by 9 digits
+     * Examples: H250325151, P250801055
+     */
+    function validateDeviceId(deviceId) {
+        const pattern = /^[HP]\d{9}$/i;
+        return pattern.test(deviceId);
+    }
+    
     function fetchData() {
         const deviceId = document.getElementById('deviceId')?.value?.trim();
         const date = document.getElementById('dateInput')?.value;
 
         if (!deviceId) {
             showError('Vui lòng nhập Device ID');
+            return;
+        }
+        
+        // Validate Device ID format: H/P + 9 digits
+        if (!validateDeviceId(deviceId)) {
+            showError('❌ Device ID không hợp lệ! Định dạng đúng: H hoặc P + 9 số. Ví dụ: H250325151 hoặc P250801055');
             return;
         }
 
@@ -1435,22 +1526,39 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log(`🚀 Loading data for device: ${deviceId}, date: ${date || 'today'}`);
         
         // ========================================
-        // AUTO DEVICE REGISTRATION CHECK (NEW!)
-        // If device doesn't exist in HA, auto-register it
+        // AUTO DEVICE REGISTRATION CHECK (V3.1)
+        // Check if device exists in Lumentree Integration
+        // If not, auto-register via Config Flow API
         // ========================================
         try {
             const deviceCheck = await checkDeviceInHA(deviceId);
             
             if (!deviceCheck.exists && !deviceCheck.error) {
-                console.log(`🆕 [New Device] ${deviceId} not found in HA - auto-registering...`);
-                await autoRegisterDevice(deviceId);
+                console.log(`🆕 [New Device] ${deviceId} not found in Lumentree Integration`);
                 
-                // Wait a bit for HA to process the MQTT discovery
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                // Show waiting notification to user
+                showWaitingNotification(deviceId, 'Đang kiểm tra và kết nối thiết bị mới...');
+                
+                // Auto-register to Lumentree Integration via Config Flow
+                const registerResult = await autoRegisterDevice(deviceId);
+                
+                if (registerResult.success) {
+                    // Wait for HA to create entities (5 seconds for Config Flow)
+                    showWaitingNotification(deviceId, 'Đã đăng ký! Đang chờ hệ thống tạo sensors...');
+                    await new Promise(resolve => setTimeout(resolve, 5000));
+                    hideWaitingNotification();
+                } else {
+                    // Show error but continue anyway
+                    console.warn(`⚠️ Registration failed: ${registerResult.message}`);
+                    hideWaitingNotification();
+                }
+            } else if (deviceCheck.exists) {
+                console.log(`✅ [Device OK] ${deviceId} already in Lumentree Integration (${deviceCheck.entityCount} entities)`);
             }
         } catch (error) {
             // Don't block if check fails - continue with normal flow
             console.warn('⚠️ Device check failed, continuing anyway:', error.message);
+            hideWaitingNotification();
         }
         // ========================================
         
@@ -3201,7 +3309,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // Only show error once, then keep previous values
             if (!deviceNotFoundShown) {
                 updateValue('pv-power', 'N/A');
-                updateValueHTML('pv-desc', `<span class="text-red-400 text-xs">Thiết bị chưa được thêm vào, vui lòng liên hệ trong nhóm Zalo</span>`);
+                updateValueHTML('pv-desc', `<span class="text-red-400 text-xs">⏳ Đang kết nối thiết bị...</span>`);
                 
                 updateValue('grid-power', 'N/A');
                 updateValue('grid-voltage', 'N/A');

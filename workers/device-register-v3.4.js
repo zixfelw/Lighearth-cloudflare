@@ -1,6 +1,11 @@
 /**
- * Device Registration Worker v3.2
+ * Device Registration Worker v3.4
  * Auto-register new devices to Home Assistant via Lumentree Integration
+ * 
+ * v3.4 Changes:
+ * - NEW: /remove-entry endpoint to remove invalid devices
+ * - Auto-cleanup devices that have no data after registration
+ * - Prevents ghost devices from crashing the system
  * 
  * v3.2 Changes:
  * - NEW: /has-mqtt-data/:deviceId - Check if device has MQTT data (prevent ghost devices)
@@ -338,23 +343,25 @@ export default {
     if (path === '/health' || path === '/') {
       return new Response(JSON.stringify({
         status: 'ok',
-        version: '3.2',
+        version: '3.4',
         service: 'Device Registration Worker (Lumentree Integration)',
         haConfigured: !!(haUrl && haToken),
         features: [
           'Check device in Lumentree Integration',
-          'Check device MQTT data existence (NEW in v3.2)',
+          'Check device MQTT data existence',
           'Register device via Config Flow',
+          'Remove invalid devices (NEW in v3.4)',
           'Multi-step flow support',
           'Enable disabled entities'
         ],
         endpoints: [
           'GET /health',
           'GET /check/:deviceId',
-          'GET /has-mqtt-data/:deviceId (NEW!)',
+          'GET /has-mqtt-data/:deviceId',
           'GET /disabled/:deviceId',
           'GET /config-entries',
           'POST /register-integration',
+          'POST /remove-entry (NEW!)',
           'POST /enable-entities'
         ],
         integrationDomain: LUMENTREE_DOMAIN,
@@ -473,6 +480,72 @@ export default {
       }
     }
     
+    // POST /remove-entry - Remove device from Lumentree Integration
+    // Used to clean up invalid devices that have no data
+    if (path === '/remove-entry' && request.method === 'POST') {
+      try {
+        const body = await request.json();
+        const deviceId = body.deviceId;
+        const entryId = body.entryId;
+        
+        if (!deviceId) {
+          return new Response(JSON.stringify({
+            success: false,
+            error: 'Missing deviceId'
+          }), { status: 400, headers: CORS_HEADERS });
+        }
+        
+        const normalizedId = normalizeDeviceId(deviceId);
+        
+        // Find config entry for this device if entryId not provided
+        let targetEntryId = entryId;
+        if (!targetEntryId) {
+          const entries = await getLumentreeConfigEntries(haUrl, haToken);
+          const deviceEntry = entries.find(e => 
+            e.title.toUpperCase().includes(normalizedId) ||
+            e.data?.device_id?.toUpperCase() === normalizedId
+          );
+          if (deviceEntry) {
+            targetEntryId = deviceEntry.entry_id;
+          }
+        }
+        
+        if (!targetEntryId) {
+          return new Response(JSON.stringify({
+            success: false,
+            error: `No config entry found for device ${normalizedId}`
+          }), { status: 404, headers: CORS_HEADERS });
+        }
+        
+        // Remove config entry
+        const removeResponse = await fetch(`${haUrl}/api/config/config_entries/entry/${targetEntryId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${haToken}` }
+        });
+        
+        if (removeResponse.ok) {
+          console.log(`✅ [Remove] Config entry ${targetEntryId} for ${normalizedId} removed`);
+          return new Response(JSON.stringify({
+            success: true,
+            message: `Device ${normalizedId} removed from Lumentree Integration`,
+            entryId: targetEntryId
+          }), { headers: CORS_HEADERS });
+        } else {
+          const error = await removeResponse.text();
+          return new Response(JSON.stringify({
+            success: false,
+            error: `Failed to remove: ${error}`
+          }), { status: removeResponse.status, headers: CORS_HEADERS });
+        }
+        
+      } catch (error) {
+        return new Response(JSON.stringify({
+          success: false,
+          error: error.message
+        }), { status: 500, headers: CORS_HEADERS });
+      }
+    }
+    
     // 404 for unknown endpoints
     return new Response(JSON.stringify({
       error: 'Not found',
@@ -482,7 +555,8 @@ export default {
         'GET /check/:deviceId',
         'GET /has-mqtt-data/:deviceId',
         'GET /config-entries',
-        'POST /register-integration'
+        'POST /register-integration',
+        'POST /remove-entry (NEW!)'
       ]
     }), { status: 404, headers: CORS_HEADERS });
   }

@@ -1549,6 +1549,99 @@ Vui lòng kiểm tra lại:
         }, 6000);
     }
     
+    /**
+     * Verify device has data after registration
+     * Wait up to 15 seconds for data to appear
+     * @returns {Promise<boolean>} - true if device has valid data
+     */
+    async function verifyDeviceHasDataAfterRegistration(deviceId, entryId) {
+        const normalizedId = deviceId.toUpperCase();
+        const maxWaitTime = 15000; // 15 seconds max
+        const checkInterval = 3000; // Check every 3 seconds
+        const startTime = Date.now();
+        
+        console.log(`🔍 [Verify] Checking data for ${normalizedId} (max ${maxWaitTime/1000}s)...`);
+        
+        while (Date.now() - startTime < maxWaitTime) {
+            try {
+                // Check via device-register worker
+                const response = await fetch(`${DEVICE_REGISTER_WORKER}/has-mqtt-data/${normalizedId}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.hasData === true) {
+                        console.log(`✅ [Verify] ${normalizedId} has data!`);
+                        return true;
+                    }
+                    console.log(`⏳ [Verify] ${normalizedId} no data yet, waiting...`);
+                }
+            } catch (error) {
+                console.warn(`⚠️ [Verify] Error checking ${normalizedId}:`, error.message);
+            }
+            
+            // Wait before next check
+            await new Promise(resolve => setTimeout(resolve, checkInterval));
+        }
+        
+        console.log(`❌ [Verify] ${normalizedId} timeout - no data received in ${maxWaitTime/1000}s`);
+        return false;
+    }
+    
+    /**
+     * Remove invalid device from Lumentree Integration
+     */
+    async function removeInvalidDevice(deviceId, entryId) {
+        const normalizedId = deviceId.toUpperCase();
+        
+        try {
+            console.log(`🗑️ [Remove] Removing invalid device ${normalizedId}...`);
+            
+            const response = await fetch(`${DEVICE_REGISTER_WORKER}/remove-entry`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ deviceId: normalizedId, entryId: entryId })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log(`✅ [Remove] Device ${normalizedId} removed:`, data);
+                return true;
+            } else {
+                console.warn(`⚠️ [Remove] Failed to remove ${normalizedId}: HTTP ${response.status}`);
+                return false;
+            }
+        } catch (error) {
+            console.error(`❌ [Remove] Error removing ${normalizedId}:`, error.message);
+            return false;
+        }
+    }
+    
+    /**
+     * Show error when device is invalid (registered but no data)
+     */
+    function showInvalidDeviceError(deviceId) {
+        showLoading(false);
+        
+        showError(`❌ Thiết bị ${deviceId} không hợp lệ!
+
+Thiết bị đã được đăng ký nhưng không nhận được dữ liệu.
+
+Vui lòng kiểm tra:
+• Device ID có đúng chữ cái đầu không? (H hoặc P)
+• VD: H240911164 ≠ P240911164
+• Thiết bị có đang hoạt động và kết nối mạng không?`);
+        
+        // Toast notification
+        const toast = document.createElement('div');
+        toast.className = 'fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 px-4 py-3 rounded-lg shadow-lg bg-red-600 text-white text-sm font-medium';
+        toast.innerHTML = `<span class="mr-2">❌</span> Device ${deviceId} không hợp lệ - đã xóa khỏi hệ thống`;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 300);
+        }, 6000);
+    }
+    
     // Global reference for waiting notification
     let waitingNotificationEl = null;
     
@@ -1657,18 +1750,32 @@ Vui lòng kiểm tra lại:
                 showWaitingNotification(deviceId, 'Đang đăng ký thiết bị mới vào hệ thống...');
                 
                 // Register device to Lumentree Integration
-                // Format is already validated, proceed with registration
                 const registerResult = await autoRegisterDevice(deviceId);
                 
                 if (registerResult.success) {
-                    showWaitingNotification(deviceId, '✅ Đã đăng ký! Đang chờ hệ thống khởi tạo...');
-                    await new Promise(resolve => setTimeout(resolve, 5000));
+                    // Wait for HA to create entities
+                    showWaitingNotification(deviceId, '✅ Đã đăng ký! Đang chờ dữ liệu từ thiết bị...');
+                    
+                    // IMPORTANT: Verify device has data after registration
+                    // This prevents ghost devices from crashing the system
+                    const hasData = await verifyDeviceHasDataAfterRegistration(deviceId, registerResult.entryId);
+                    
                     hideWaitingNotification();
-                    console.log(`✅ [Registration Complete] ${deviceId} added to Lumentree Integration`);
+                    
+                    if (!hasData) {
+                        // Device registered but no data received - likely invalid device
+                        console.error(`❌ [No Data] ${deviceId} registered but no data received - removing...`);
+                        showInvalidDeviceError(deviceId);
+                        
+                        // Try to remove the device to prevent system crash
+                        await removeInvalidDevice(deviceId, registerResult.entryId);
+                        return; // STOP - don't continue loading
+                    }
+                    
+                    console.log(`✅ [Registration Complete] ${deviceId} has data - OK`);
                 } else {
                     console.warn(`⚠️ Registration failed: ${registerResult.message}`);
                     hideWaitingNotification();
-                    // Show warning but continue - user might want to see the dashboard anyway
                     showRegistrationWarning(deviceId, registerResult.message);
                 }
             } else if (deviceCheck.exists) {

@@ -189,7 +189,11 @@ async function registerDevice(haUrl, haToken, deviceId) {
   let errorCount = 0;
   
   for (const sensor of SENSOR_DEFINITIONS) {
-    const topic = `homeassistant/sensor/${normalizedId}_${sensor.id}/config`;
+    // Topic format: homeassistant/sensor/<node_id>/<object_id>/config
+    // This creates entity_id: sensor.<object_id>
+    // We want: sensor.lumentree_h250325151_pv_power
+    const objectId = `lumentree_${normalizedId}_${sensor.id}`;
+    const topic = `homeassistant/sensor/${normalizedId}/${objectId}/config`;
     const payload = createMqttDiscoveryPayload(deviceId, sensor);
     
     try {
@@ -235,7 +239,9 @@ async function unregisterDevice(haUrl, haToken, deviceId) {
   let successCount = 0;
   
   for (const sensor of SENSOR_DEFINITIONS) {
-    const topic = `homeassistant/sensor/${normalizedId}_${sensor.id}/config`;
+    // Match the topic format used in registerDevice
+    const objectId = `lumentree_${normalizedId}_${sensor.id}`;
+    const topic = `homeassistant/sensor/${normalizedId}/${objectId}/config`;
     
     try {
       const response = await fetch(`${haUrl}/api/services/mqtt/publish`, {
@@ -281,7 +287,7 @@ export default {
     if (path === '/' || path === '/health') {
       return new Response(JSON.stringify({
         status: 'ok',
-        version: '1.0',
+        version: '1.2',
         service: 'Device Registration Worker',
         haConfigured: !!(HA_URL && HA_TOKEN),
         endpoints: [

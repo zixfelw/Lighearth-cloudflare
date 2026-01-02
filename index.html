@@ -3292,6 +3292,8 @@
         
         // Build SHORT deep link (max 64 chars) - v2.0 format with voltage
         // Format: add_DEVICEID_NNNNNN_bf_bl_pv_gr_ld_vh_vl_loc
+        // v2.4: Voltage * 10 trong Deep Link (54.7V -> 547)
+        // Telegram chỉ cho phép: A-Z, a-z, 0-9, _, - (KHÔNG cho dấu chấm)
         function buildShortDeepLink(deviceId, thresholds, location) {
             const notifBits = getNotificationBits();
             const locCode = LOCATION_CODES[location] || 'hcm';
@@ -3300,11 +3302,12 @@
             const pv = Math.round(thresholds.pvDaily);
             const gr = Math.round(thresholds.gridUsage);
             const ld = Math.round(thresholds.loadDaily);
-            const vh = Math.round(thresholds.batteryVoltHigh || 0);
-            const vl = Math.round(thresholds.batteryVoltLow || 0);
+            // v2.4: Nhân 10 để tránh dấu chấm (54.7 -> 547)
+            const vh = Math.round((thresholds.batteryVoltHigh || 0) * 10);
+            const vl = Math.round((thresholds.batteryVoltLow || 0) * 10);
             
             const payload = `add_${deviceId}_${notifBits}_${bf}_${bl}_${pv}_${gr}_${ld}_${vh}_${vl}_${locCode}`;
-            console.log('Short Deep Link v2.0:', payload, `(${payload.length} chars)`);
+            console.log('Short Deep Link v2.4:', payload, `(${payload.length} chars)`);
             return payload;
         }
         

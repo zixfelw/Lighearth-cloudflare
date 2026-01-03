@@ -1,0 +1,14 @@
+# Render.com Blueprint
+# Deploy: Connect GitHub repo and Render will auto-detect this file
+
+services:
+  - type: web
+    name: mqtt-verify-service
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production

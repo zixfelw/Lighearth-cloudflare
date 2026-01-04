@@ -63,6 +63,7 @@ let socCache = {
 // More global state variables to avoid TDZ errors
 let socChartInstance = null;
 let socData = [];
+let socApiStats = { min: null, max: null, minTime: null, maxTime: null }; // Store API-calculated min/max
 let lastCellsFetch = 0;
 let socAutoReloadInterval = null;
 const CELLS_FETCH_INTERVAL = 5000; // Min 5s between fetches
@@ -3140,13 +3141,21 @@ Vui lòng kiểm tra:
         // Process data
         if (data && data.timeline && Array.isArray(data.timeline) && data.timeline.length > 0) {
             socData = data.timeline;
+            // Store API-calculated min/max (more accurate, filters sensor glitches)
+            socApiStats = {
+                min: data.min,
+                max: data.max,
+                minTime: data.minTime,
+                maxTime: data.maxTime
+            };
             renderSOCChart();
             updateSOCLastTime('LightEarth Cloud');
             startSOCAutoReload();
-            console.log(`✅ [SOC] Chart rendered with ${socData.length} points`);
+            console.log(`✅ [SOC] Chart rendered with ${socData.length} points, API min=${data.min}%, max=${data.max}%`);
         } else {
             console.warn(`⚠️ [SOC] No data available for ${deviceId} on ${date}`);
             socData = [];
+            socApiStats = { min: null, max: null, minTime: null, maxTime: null };
             renderSOCChartEmpty();
         }
     }
@@ -3215,10 +3224,20 @@ Vui lòng kiểm tra:
         });
         const values = socData.map(d => d.soc !== undefined ? d.soc : (d.value !== undefined ? d.value : 0));
         
-        // Calculate stats - filter out invalid values (0, null, undefined) for accurate MIN/MAX
-        const validValues = values.filter(v => v !== null && v !== undefined && v > 0);
-        const maxSOC = validValues.length > 0 ? Math.max(...validValues) : 0;
-        const minSOC = validValues.length > 0 ? Math.min(...validValues) : 0;
+        // Use API-calculated min/max if available (more accurate, filters sensor glitches)
+        // Otherwise fallback to local calculation
+        let maxSOC, minSOC;
+        if (socApiStats.min !== null && socApiStats.max !== null) {
+            maxSOC = socApiStats.max;
+            minSOC = socApiStats.min;
+            console.log(`📊 [SOC] Using API stats: min=${minSOC}%, max=${maxSOC}%`);
+        } else {
+            // Fallback: filter out values below 5% as likely sensor glitches
+            const validValues = values.filter(v => v !== null && v !== undefined && v >= 5);
+            maxSOC = validValues.length > 0 ? Math.max(...validValues) : 0;
+            minSOC = validValues.length > 0 ? Math.min(...validValues) : 0;
+            console.log(`📊 [SOC] Using local stats: min=${minSOC}%, max=${maxSOC}%`);
+        }
         const currentSOC = values[values.length - 1] || 0;
         const currentData = socData[socData.length - 1];
         

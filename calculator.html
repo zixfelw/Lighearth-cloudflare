@@ -5159,9 +5159,21 @@
                             <input type="text" id="haDeviceId" placeholder="VD: P250801055" style="text-transform: uppercase; width: 100%; padding: 14px 16px; background: rgba(0,0,0,0.4); border: 2px solid rgba(16,185,129,0.2); border-radius: 12px; color: #fff; font-size: 1em; font-weight: 600; transition: all 0.3s;">
                         </div>
                         <div class="evn-input-group" style="margin-bottom: 16px;">
-                            <label for="haYear" style="color: rgba(255,255,255,0.7); font-size: 0.85em; margin-bottom: 8px; display: block;">Năm</label>
-                            <select id="haYear" style="width: 100%; padding: 14px 16px; background: rgba(0,0,0,0.4); border: 2px solid rgba(16,185,129,0.2); border-radius: 12px; color: #fff; font-size: 1em; font-weight: 600; cursor: pointer;">
-                            </select>
+                            <label style="color: rgba(255,255,255,0.7); font-size: 0.85em; margin-bottom: 10px; display: block;">Chọn Năm (có thể chọn nhiều)</label>
+                            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 10px 16px; background: rgba(0,0,0,0.3); border: 2px solid rgba(16,185,129,0.2); border-radius: 10px; transition: all 0.3s;">
+                                    <input type="checkbox" id="haYear2024" value="2024" style="width: 18px; height: 18px; accent-color: #10b981; cursor: pointer;">
+                                    <span style="color: #fff; font-weight: 600;">2024</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 10px 16px; background: rgba(0,0,0,0.3); border: 2px solid rgba(16,185,129,0.2); border-radius: 10px; transition: all 0.3s;">
+                                    <input type="checkbox" id="haYear2025" value="2025" checked style="width: 18px; height: 18px; accent-color: #10b981; cursor: pointer;">
+                                    <span style="color: #fff; font-weight: 600;">2025</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 10px 16px; background: rgba(0,0,0,0.3); border: 2px solid rgba(16,185,129,0.2); border-radius: 10px; transition: all 0.3s;">
+                                    <input type="checkbox" id="haYear2026" value="2026" checked style="width: 18px; height: 18px; accent-color: #10b981; cursor: pointer;">
+                                    <span style="color: #fff; font-weight: 600;">2026</span>
+                                </label>
+                            </div>
                         </div>
                         <button class="evn-btn-calculate" onclick="fetchHAYearlyData()" style="width: 100%; padding: 16px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; border-radius: 12px; color: #fff; font-size: 1em; font-weight: 700; cursor: pointer; transition: all 0.3s; box-shadow: 0 8px 24px rgba(16,185,129,0.3);">
                             📊 Lấy Dữ Liệu Năm
@@ -5249,18 +5261,8 @@
                 haInput.value = deviceId.toUpperCase();
             }
             
-            // Populate year selector
-            const yearSelect = document.getElementById('haYear');
-            if (yearSelect) {
-                yearSelect.innerHTML = '';
-                const currentYear = new Date().getFullYear();
-                for (let y = currentYear; y >= currentYear - 4; y--) {
-                    const option = document.createElement('option');
-                    option.value = y;
-                    option.textContent = y;
-                    yearSelect.appendChild(option);
-                }
-            }
+            // Year checkboxes are now static in HTML (2024, 2025, 2026)
+            // Default: 2025 and 2026 are checked
         }
         
         function closeLumentreeModal() {
@@ -5268,14 +5270,23 @@
             document.body.style.overflow = 'auto';
         }
         
-        // Fetch yearly data from Home Assistant via Railway API proxy
-        // Railway connects to HA via Cloudflare Tunnel (avoids CORS issues)
+        // Fetch yearly data from Home Assistant - supports MULTI-YEAR
         async function fetchHAYearlyData() {
             const deviceId = document.getElementById('haDeviceId').value.trim().toUpperCase();
-            const year = document.getElementById('haYear').value;
+            
+            // Get selected years from checkboxes
+            const selectedYears = [];
+            if (document.getElementById('haYear2024')?.checked) selectedYears.push(2024);
+            if (document.getElementById('haYear2025')?.checked) selectedYears.push(2025);
+            if (document.getElementById('haYear2026')?.checked) selectedYears.push(2026);
             
             if (!deviceId) {
-                showNotification('⚠️ Vui long nhap Device ID!', 'error');
+                showNotification('⚠️ Vui lòng nhập Device ID!', 'error');
+                return;
+            }
+            
+            if (selectedYears.length === 0) {
+                showNotification('⚠️ Vui lòng chọn ít nhất 1 năm!', 'error');
                 return;
             }
             
@@ -5283,42 +5294,73 @@
             localStorage.setItem('lumentreeDeviceId', deviceId);
             
             try {
-                showNotification('🔄 Đang lấy dữ liệu năm từ hệ thống...', 'info');
+                showNotification(`🔄 Đang lấy dữ liệu ${selectedYears.length} năm...`, 'info');
                 const startTime = Date.now();
                 
-                // Call Cloudflare Worker API (replaces Railway to reduce egress costs)
-                const response = await fetch(`${TEMPERATURE_SOC_API}/api/ha/statistics/${deviceId}/year?year=${year}`);
+                // Fetch all years in parallel
+                const fetchPromises = selectedYears.map(year => 
+                    fetch(`${TEMPERATURE_SOC_API}/api/ha/statistics/${deviceId}/year?year=${year}`)
+                        .then(res => res.json())
+                        .then(data => ({ year, ...data }))
+                        .catch(err => ({ year, success: false, error: err.message }))
+                );
                 
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`Server trả về lỗi: ${response.status} - ${errorText}`);
-                }
-                
-                const result = await response.json();
+                const results = await Promise.all(fetchPromises);
                 const elapsed = Date.now() - startTime;
                 
-                if (!result.success) {
-                    throw new Error(result.message || 'Không có dữ liệu');
+                // Merge all months from all years, sorted by date
+                const allMonths = [];
+                const yearResults = [];
+                let totalPv = 0, totalLoad = 0, totalGrid = 0, totalBackup = 0;
+                
+                results.forEach(result => {
+                    if (result.success && result.months) {
+                        yearResults.push({ year: result.year, count: result.months.length });
+                        result.months.forEach(m => {
+                            allMonths.push({
+                                month: m.month,         // "2025-08" format
+                                monthNumber: m.monthNumber,
+                                year: result.year,
+                                load: m.load || 0,
+                                grid: m.grid || 0,
+                                pv: m.pv || 0,
+                                backup: m.essential || 0
+                            });
+                            totalPv += m.pv || 0;
+                            totalLoad += m.load || 0;
+                            totalGrid += m.grid || 0;
+                            totalBackup += m.essential || 0;
+                        });
+                    }
+                });
+                
+                if (allMonths.length === 0) {
+                    throw new Error('Không có dữ liệu từ các năm đã chọn');
                 }
                 
-                // Store for import
-                // Map: load = main load, backup = essential (backup load when power outage)
+                // Sort by month (YYYY-MM format)
+                allMonths.sort((a, b) => a.month.localeCompare(b.month));
+                
+                // Store for import - MULTI-YEAR format
                 haYearlyData = {
                     deviceId: deviceId,
-                    year: result.year,
-                    source: result.source,
-                    months: result.months.map(m => ({
-                        month: m.month,
-                        monthNumber: m.monthNumber,
-                        load: m.load,           // Main load (tải chính)
-                        grid: m.grid,           // Grid input (điện lưới)
-                        pv: m.pv,               // PV generation
-                        backup: m.essential || 0 // Essential/Backup load (tải backup)
-                    })),
-                    totals: result.totals
+                    years: selectedYears,
+                    source: 'multi_year',
+                    months: allMonths,
+                    totals: {
+                        pv: Math.round(totalPv * 10) / 10,
+                        load: Math.round(totalLoad * 10) / 10,
+                        grid: Math.round(totalGrid * 10) / 10,
+                        essential: Math.round(totalBackup * 10) / 10
+                    }
                 };
                 
-                // Display preview - Premium design
+                // Year badges HTML
+                const yearBadges = selectedYears.map(y => 
+                    `<span style="background: rgba(16,185,129,0.3); padding: 4px 10px; border-radius: 20px; font-size: 0.75em; font-weight: 600;">${y}</span>`
+                ).join(' ');
+                
+                // Display preview - Premium design for multi-year
                 let previewHtml = `
                     <div style="background: linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(5,150,105,0.05) 100%); border-radius: 16px; overflow: hidden;">
                         <!-- Header -->
@@ -5327,7 +5369,10 @@
                                 <span style="font-size: 24px;">⚡</span>
                                 <div style="text-align: center;">
                                     <div style="font-size: 1.1em; font-weight: 700; color: #10b981;">Device: ${deviceId}</div>
-                                    <div style="font-size: 0.85em; color: rgba(255,255,255,0.6); margin-top: 2px;">Năm ${result.year} • ${result.totalMonths} tháng dữ liệu</div>
+                                    <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 6px;">
+                                        ${yearBadges}
+                                    </div>
+                                    <div style="font-size: 0.8em; color: rgba(255,255,255,0.5); margin-top: 4px;">${allMonths.length} tháng dữ liệu</div>
                                 </div>
                             </div>
                         </div>
@@ -5335,29 +5380,31 @@
                         <div style="padding: 16px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
                             <div style="background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.2); padding: 14px; border-radius: 12px; text-align: center;">
                                 <div style="font-size: 0.75em; color: rgba(255,255,255,0.6); margin-bottom: 6px;">☀️ PV Generation</div>
-                                <div style="font-size: 1.5em; font-weight: 800; color: #f59e0b;">${result.totals.pv}</div>
+                                <div style="font-size: 1.5em; font-weight: 800; color: #f59e0b;">${haYearlyData.totals.pv}</div>
                                 <div style="font-size: 0.7em; color: rgba(255,255,255,0.5);">kWh</div>
                             </div>
                             <div style="background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.2); padding: 14px; border-radius: 12px; text-align: center;">
                                 <div style="font-size: 0.75em; color: rgba(255,255,255,0.6); margin-bottom: 6px;">🏠 Load</div>
-                                <div style="font-size: 1.5em; font-weight: 800; color: #4ade80;">${result.totals.load}</div>
+                                <div style="font-size: 1.5em; font-weight: 800; color: #4ade80;">${haYearlyData.totals.load}</div>
                                 <div style="font-size: 0.7em; color: rgba(255,255,255,0.5);">kWh</div>
                             </div>
                             <div style="background: rgba(96,165,250,0.1); border: 1px solid rgba(96,165,250,0.2); padding: 14px; border-radius: 12px; text-align: center;">
                                 <div style="font-size: 0.75em; color: rgba(255,255,255,0.6); margin-bottom: 6px;">🔌 Grid</div>
-                                <div style="font-size: 1.5em; font-weight: 800; color: #60a5fa;">${result.totals.grid}</div>
+                                <div style="font-size: 1.5em; font-weight: 800; color: #60a5fa;">${haYearlyData.totals.grid}</div>
                                 <div style="font-size: 0.7em; color: rgba(255,255,255,0.5);">kWh</div>
                             </div>
                             <div style="background: rgba(168,85,247,0.1); border: 1px solid rgba(168,85,247,0.2); padding: 14px; border-radius: 12px; text-align: center;">
                                 <div style="font-size: 0.75em; color: rgba(255,255,255,0.6); margin-bottom: 6px;">⚡ Backup</div>
-                                <div style="font-size: 1.5em; font-weight: 800; color: #a855f7;">${result.totals.essential || 0}</div>
+                                <div style="font-size: 1.5em; font-weight: 800; color: #a855f7;">${haYearlyData.totals.essential}</div>
                                 <div style="font-size: 0.7em; color: rgba(255,255,255,0.5);">kWh</div>
                             </div>
                         </div>
                         <!-- Footer -->
                         <div style="padding: 12px 16px; background: rgba(0,0,0,0.2); border-top: 1px solid rgba(255,255,255,0.05);">
                             <div style="display: flex; justify-content: center; align-items: center; gap: 16px; font-size: 0.75em; color: rgba(255,255,255,0.5);">
-                                <span>✅ ${result.months.length} tháng</span>
+                                <span>📅 ${selectedYears.join(' + ')}</span>
+                                <span>•</span>
+                                <span>✅ ${allMonths.length} tháng</span>
                                 <span>•</span>
                                 <span>⏱️ ${elapsed}ms</span>
                             </div>
@@ -5368,7 +5415,7 @@
                 document.getElementById('lumentreePreview').innerHTML = previewHtml;
                 document.getElementById('lumentreeResultSection').classList.add('show');
                 
-                showNotification(`✅ Đã lấy dữ liệu năm ${result.year} (${elapsed}ms)!`, 'success');
+                showNotification(`✅ Đã lấy dữ liệu ${selectedYears.join(' + ')} (${allMonths.length} tháng, ${elapsed}ms)!`, 'success');
                 
             } catch (error) {
                 console.error('System data fetch error:', error);

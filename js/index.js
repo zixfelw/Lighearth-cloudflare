@@ -3215,10 +3215,11 @@ Vui lòng kiểm tra:
         });
         const values = socData.map(d => d.soc !== undefined ? d.soc : (d.value !== undefined ? d.value : 0));
         
-        // Calculate stats
-        const maxSOC = Math.max(...values);
-        const minSOC = Math.min(...values);
-        const currentSOC = values[values.length - 1];
+        // Calculate stats - filter out invalid values (0, null, undefined) for accurate MIN/MAX
+        const validValues = values.filter(v => v !== null && v !== undefined && v > 0);
+        const maxSOC = validValues.length > 0 ? Math.max(...validValues) : 0;
+        const minSOC = validValues.length > 0 ? Math.min(...validValues) : 0;
+        const currentSOC = values[values.length - 1] || 0;
         const currentData = socData[socData.length - 1];
         
         // Update displays

@@ -3232,11 +3232,12 @@ Vui lòng kiểm tra:
             minSOC = socApiStats.min;
             console.log(`📊 [SOC] Using API stats: min=${minSOC}%, max=${maxSOC}%`);
         } else {
-            // Fallback: filter out values below 5% as likely sensor glitches
-            const validValues = values.filter(v => v !== null && v !== undefined && v >= 5);
+            // Fallback: filter out values <= 1% as likely sensor glitches (0, 1%)
+            // Valid range is 2-100% for MIN calculation
+            const validValues = values.filter(v => v !== null && v !== undefined && v > 1);
             maxSOC = validValues.length > 0 ? Math.max(...validValues) : 0;
             minSOC = validValues.length > 0 ? Math.min(...validValues) : 0;
-            console.log(`📊 [SOC] Using local stats: min=${minSOC}%, max=${maxSOC}%`);
+            console.log(`📊 [SOC] Using local stats (filtered >1%): min=${minSOC}%, max=${maxSOC}%`);
         }
         const currentSOC = values[values.length - 1] || 0;
         const currentData = socData[socData.length - 1];

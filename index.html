@@ -3131,13 +3131,17 @@
                     const canvas = document.getElementById('summaryMonthlyChart');
                     const yearBadges = document.getElementById('summaryChartYearBadges');
                     
+                    console.log('📊 renderSummaryChart called:', { chartData, years });
+                    
                     if (!chartData || !chartData.labels || chartData.labels.length === 0) {
+                        console.log('⚠️ No chartData or empty labels, hiding chart');
                         chartSection?.classList.add('hidden');
                         return;
                     }
                     
                     // Show chart section
                     chartSection?.classList.remove('hidden');
+                    console.log('✅ Chart section shown, labels:', chartData.labels);
                     
                     // Add year badges
                     if (yearBadges && years.length > 0) {
@@ -3146,6 +3150,7 @@
                         ).join('');
                     }
                     
+                    try {
                     // Destroy existing chart
                     if (summaryChartInstance) {
                         summaryChartInstance.destroy();
@@ -3349,6 +3354,11 @@
                     }
                     
                     console.log('📊 Summary chart rendered with', chartData.labels.length, 'months');
+                    
+                    } catch (chartError) {
+                        console.error('❌ Error rendering chart:', chartError);
+                        // Keep chart section visible even if there's an error
+                    }
                 }
                 
                 // Function to update UI with data
@@ -3476,22 +3486,48 @@
                 const solarPrice = parseFloat(settings.solarPrice) || 0;
                 const vatRate = (parseFloat(settings.vatRate) || 8) / 100;
                 
-                settings.monthlyData.forEach(month => {
+                // Build chartData from localStorage
+                const chartLabels = [];
+                const chartPv = [];
+                const chartLoad = [];
+                const chartGrid = [];
+                const chartSavings = [];
+                const yearsSet = new Set();
+                
+                settings.monthlyData.forEach((month, index) => {
                     const load = parseFloat(month.load) || 0;
                     const grid = parseFloat(month.grid) || 0;
                     const backup = parseFloat(month.backup) || 0;
                     
                     if (load > 0 || grid > 0 || backup > 0) {
                         monthsWithData++;
+                        
+                        // Extract month label from month.month (format: "YYYY-MM" or index-based)
+                        let label = `T${index + 1}`;
+                        let year = new Date().getFullYear();
+                        if (month.month && month.month.includes('-')) {
+                            const [y, m] = month.month.split('-');
+                            label = `T${parseInt(m)}/${y}`;
+                            year = y;
+                        }
+                        chartLabels.push(label);
+                        yearsSet.add(year);
                     }
                     
                     const totalConsumption = load + backup;
-                    const solarProduced = totalConsumption - grid;
+                    const solarProduced = Math.max(0, totalConsumption - grid);
                     const gridCost = calculateTieredPrice(grid, vatRate);
                     const costWithoutSolar = calculateTieredPrice(totalConsumption, vatRate);
                     const solarCost = solarProduced * solarPrice;
                     const actualCost = gridCost + solarCost;
                     const savings = costWithoutSolar - actualCost;
+                    
+                    if (load > 0 || grid > 0 || backup > 0) {
+                        chartPv.push(Math.round(solarProduced * 10) / 10);
+                        chartLoad.push(Math.round(load * 10) / 10);
+                        chartGrid.push(Math.round(grid * 10) / 10);
+                        chartSavings.push(Math.round(savings));
+                    }
                     
                     totalSavings += savings;
                     totalLoad += load;
@@ -3502,6 +3538,15 @@
                 
                 const avgSavings = monthsWithData > 0 ? totalSavings / monthsWithData : 0;
                 
+                // Build chartData object
+                const localChartData = chartLabels.length > 0 ? {
+                    labels: chartLabels,
+                    pv: chartPv,
+                    load: chartLoad,
+                    grid: chartGrid,
+                    savings: chartSavings
+                } : null;
+                
                 if (monthsWithData > 0) {
                     console.log(`✅ Loaded solar summary from localStorage for ${deviceId}`);
                     updateSummaryUI({
@@ -3511,7 +3556,7 @@
                         totalGrid,
                         costWithoutSolar: totalCostWithoutSolar,
                         avgSavings
-                    });
+                    }, localChartData, [...yearsSet]);
                 } else {
                     document.getElementById('solarProjectSummary')?.classList.add('hidden');
                 }

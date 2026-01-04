@@ -256,6 +256,7 @@ window.autoSync3DHomeView = function() {
     const gridPower = document.getElementById('grid-power')?.textContent || '--W';
     const batteryPercent = document.getElementById('battery-percent-icon')?.textContent || '--%';
     const batteryPower = document.getElementById('battery-power')?.textContent || '--W';
+    const batteryVoltage = document.getElementById('battery-voltage-pro')?.textContent || '--V';
     const loadPower = document.getElementById('load-power')?.textContent || '--W';
     const essentialPower = document.getElementById('essential-power')?.textContent || '--W';
     
@@ -300,6 +301,9 @@ window.autoSync3DHomeView = function() {
     // Update Grid EVN voltage
     const gridVoltage = document.getElementById('grid-voltage')?.textContent || '--V';
     update3DValue('grid-voltage-3d', gridVoltage);
+    
+    // Update battery voltage display
+    update3DValue('battery-voltage-3d', batteryVoltage);
     
     // Update battery card power display
     const batteryPowerVal = parseInt(batteryPower.replace(/[^\d-]/g, '')) || 0;
@@ -414,6 +418,7 @@ window.autoSyncBasicView = function() {
     const gridVoltage = document.getElementById('grid-voltage')?.textContent || '--';
     const batteryPercent = document.getElementById('battery-percent-icon')?.textContent || '--%';
     const batteryPower = document.getElementById('battery-power')?.textContent || '--';
+    const batteryVoltage = document.getElementById('battery-voltage-pro')?.textContent || '--V';
     const essentialPower = document.getElementById('essential-power')?.textContent || '--';
     const loadPower = document.getElementById('load-power')?.textContent || '--';
     const deviceTemp = document.getElementById('device-temp')?.textContent || '--';
@@ -455,6 +460,7 @@ window.autoSyncBasicView = function() {
     updateBasicValue('grid-voltage-basic', gridVoltage);
     updateBasicValue('battery-percent-basic', batteryPercent);
     updateBasicValue('battery-power-basic', batteryPower);
+    updateBasicValue('battery-voltage-basic', batteryVoltage);
     updateBasicValue('essential-power-basic', essentialPower);
     updateBasicValue('load-power-basic', loadPower);
     updateBasicValue('device-temp-basic', deviceTemp);
@@ -3662,9 +3668,17 @@ Vui lòng kiểm tra:
             updateValueHTML('battery-power', `<span class="text-green-600 dark:text-green-400">+${Math.abs(data.batteryValue)}W</span>`);
         }
         
-        // Battery Voltage (Điện Áp Pin giao tiếp) - display in Cell section
+        // Battery Voltage (Điện Áp Pin) - display in ALL views (Pro, Basic, 3D Home, Cell section)
         if (data.batteryVoltage) {
-            updateValue('batteryVoltageDisplay', `${data.batteryVoltage.toFixed(1)}V`);
+            const voltageStr = `${data.batteryVoltage.toFixed(1)}V`;
+            // Cell section display (original)
+            updateValue('batteryVoltageDisplay', voltageStr);
+            // Pro view - voltage under battery power
+            updateValue('battery-voltage-pro', voltageStr);
+            // Basic view - voltage under battery power
+            updateValue('battery-voltage-basic', voltageStr);
+            // 3D Home view - voltage under battery power
+            updateValue('battery-voltage-3d', voltageStr);
         }
 
         // Other values - with blink effect

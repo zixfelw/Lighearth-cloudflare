@@ -297,6 +297,22 @@ window.autoSync3DHomeView = function() {
     update3DValue('grid-power-3d', gridPower);
     update3DValue('load-power-3d', loadPower);
     update3DValue('battery-soc-3d', batteryPercent);
+    
+    // Update battery SOC color based on percentage: Red 1-20%, Yellow 21-50%, Green 51-100%
+    const batterySocEl = document.getElementById('battery-soc-3d');
+    if (batterySocEl) {
+        const socValue = parseInt(batteryPercent.replace(/[^\d]/g, '')) || 0;
+        // Remove old color classes
+        batterySocEl.classList.remove('text-red-500', 'text-yellow-500', 'text-emerald-400', 'text-white');
+        if (socValue <= 20) {
+            batterySocEl.classList.add('text-red-500'); // Red for 1-20%
+        } else if (socValue <= 50) {
+            batterySocEl.classList.add('text-yellow-500'); // Yellow for 21-50%
+        } else {
+            batterySocEl.classList.add('text-emerald-400'); // Green for 51-100%
+        }
+    }
+    
     update3DValue('essential-power-3d', essentialPower);
     
     // Update Grid EVN voltage
@@ -339,11 +355,35 @@ window.autoSync3DHomeView = function() {
         batteryPercentIconEl.textContent = batteryPercent;
     }
     
-    // Update battery fill bar
+    // Update battery fill bar and color based on SOC level
     const batteryPercentNum = parseInt(batteryPercent.replace(/[^\d]/g, '')) || 0;
     const batteryFillEl = document.getElementById('battery-fill-3d');
+    const batteryBodyEl = document.getElementById('battery-body-3d');
+    const batteryCapEl = document.getElementById('battery-cap-3d');
+    
+    // Color based on SOC: Red 1-20%, Yellow 21-50%, Green 51-100%
+    let fillColorClass = 'bg-emerald-500';
+    let borderColorClass = 'border-emerald-400';
+    let capColorClass = 'bg-emerald-400';
+    if (batteryPercentNum <= 20) {
+        fillColorClass = 'bg-red-500';
+        borderColorClass = 'border-red-400';
+        capColorClass = 'bg-red-400';
+    } else if (batteryPercentNum <= 50) {
+        fillColorClass = 'bg-yellow-500';
+        borderColorClass = 'border-yellow-400';
+        capColorClass = 'bg-yellow-400';
+    }
+    
     if (batteryFillEl) {
         batteryFillEl.style.width = Math.max(batteryPercentNum - 3, 0) + '%';
+        batteryFillEl.className = `battery-fill-3d absolute left-0.5 top-0.5 bottom-0.5 rounded-[3px] ${fillColorClass} transition-all duration-500`;
+    }
+    if (batteryBodyEl) {
+        batteryBodyEl.className = `battery-body-3d w-16 h-7 sm:w-20 sm:h-8 rounded-[5px] border-2 ${borderColorClass} relative overflow-hidden bg-slate-900/80 transition-all duration-300`;
+    }
+    if (batteryCapEl) {
+        batteryCapEl.className = `absolute -right-1.5 top-1/2 -translate-y-1/2 w-1.5 h-4 sm:h-5 ${capColorClass} rounded-r-sm transition-all duration-300`;
     }
     
     // Sun/Moon Animation Control
@@ -4642,6 +4682,22 @@ Vui lòng kiểm tra:
         update3DValue('grid-power-3d', gridPower);
         update3DValue('load-power-3d', loadPower);
         update3DValue('battery-soc-3d', batteryPercent);
+        
+        // Update battery SOC color based on percentage: Red 1-20%, Yellow 21-50%, Green 51-100%
+        const batterySocEl = document.getElementById('battery-soc-3d');
+        if (batterySocEl) {
+            const socValue = parseInt(batteryPercent.replace(/[^\d]/g, '')) || 0;
+            // Remove old color classes
+            batterySocEl.classList.remove('text-red-500', 'text-yellow-500', 'text-emerald-400', 'text-white');
+            if (socValue <= 20) {
+                batterySocEl.classList.add('text-red-500'); // Red for 1-20%
+            } else if (socValue <= 50) {
+                batterySocEl.classList.add('text-yellow-500'); // Yellow for 21-50%
+            } else {
+                batterySocEl.classList.add('text-emerald-400'); // Green for 51-100%
+            }
+        }
+        
         update3DValue('essential-power-3d', essentialPower);
         
         // Update Load Heat Effect based on power consumption
@@ -4696,20 +4752,35 @@ Vui lòng kiểm tra:
         }
         
         // Update battery icon colors based on % level - BIGGER SIZE
-        // Note: Battery Heat Effect CSS will handle dynamic colors, just update structure classes
-        if (batteryBodyEl) {
-            // Keep base structure, CSS Heat Effect will add glow effects
-            batteryBodyEl.className = `battery-body-3d w-16 h-7 sm:w-20 sm:h-8 rounded-[5px] border-2 border-emerald-400 relative overflow-hidden bg-slate-900/80 transition-all duration-300`;
-        }
-        if (batteryCapEl) {
-            batteryCapEl.className = `absolute -right-1.5 top-1/2 -translate-y-1/2 w-1.5 h-4 sm:h-5 bg-emerald-400 rounded-r-sm transition-all duration-300`;
+        // Color based on SOC: Red 1-20%, Yellow 21-50%, Green 51-100%
+        let borderColorClass = 'border-emerald-400';
+        let capColorClass = 'bg-emerald-400';
+        if (batteryPercentNum <= 20) {
+            borderColorClass = 'border-red-400';
+            capColorClass = 'bg-red-400';
+        } else if (batteryPercentNum <= 50) {
+            borderColorClass = 'border-yellow-400';
+            capColorClass = 'bg-yellow-400';
         }
         
-        // Update battery fill bar - width only, CSS Heat Effect handles colors
+        if (batteryBodyEl) {
+            batteryBodyEl.className = `battery-body-3d w-16 h-7 sm:w-20 sm:h-8 rounded-[5px] border-2 ${borderColorClass} relative overflow-hidden bg-slate-900/80 transition-all duration-300`;
+        }
+        if (batteryCapEl) {
+            batteryCapEl.className = `absolute -right-1.5 top-1/2 -translate-y-1/2 w-1.5 h-4 sm:h-5 ${capColorClass} rounded-r-sm transition-all duration-300`;
+        }
+        
+        // Update battery fill bar - width and color based on SOC level
         if (batteryFillEl) {
             batteryFillEl.style.width = Math.max(batteryPercentNum - 3, 0) + '%'; // -3% for padding
-            // Base class only, CSS Heat Effect will override background color
-            batteryFillEl.className = `battery-fill-3d absolute left-0.5 top-0.5 bottom-0.5 rounded-[3px] bg-emerald-500 transition-all duration-500`;
+            // Color based on SOC: Red 1-20%, Yellow 21-50%, Green 51-100%
+            let fillColorClass = 'bg-emerald-500'; // Default green
+            if (batteryPercentNum <= 20) {
+                fillColorClass = 'bg-red-500';
+            } else if (batteryPercentNum <= 50) {
+                fillColorClass = 'bg-yellow-500';
+            }
+            batteryFillEl.className = `battery-fill-3d absolute left-0.5 top-0.5 bottom-0.5 rounded-[3px] ${fillColorClass} transition-all duration-500`;
         }
         if (batteryPercentIconEl) {
             batteryPercentIconEl.textContent = batteryPercent;

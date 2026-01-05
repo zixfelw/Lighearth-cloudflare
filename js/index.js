@@ -1379,54 +1379,186 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     
     /**
-     * Auto-register a new device to Lumentree Integration via Config Flow API
-     * Uses Worker v3.1 to trigger Home Assistant Config Flow
+     * Request device registration with Telegram approval flow (v4.2)
+     * Sends notification to admin, waits for approval before registering
      * @param {string} deviceId - Device ID to register
-     * @returns {Promise<{success: boolean, message: string}>}
+     * @returns {Promise<{success: boolean, status: string, message: string}>}
      */
     async function autoRegisterDevice(deviceId) {
         const normalizedId = deviceId.toUpperCase();
-        console.log(`🔧 [Auto Register] Registering to Lumentree Integration: ${normalizedId}`);
+        console.log(`🔧 [Device Request] Requesting device: ${normalizedId} (Telegram approval flow v4.2)`);
         
         try {
-            // Use /register-integration endpoint (v3.1 API)
-            const response = await fetch(`${DEVICE_REGISTER_WORKER}/register-integration`, {
+            // Use /request-device endpoint (v4.2 API) - triggers Telegram notification
+            const response = await fetch(`${DEVICE_REGISTER_WORKER}/request-device`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ deviceId: normalizedId })
+                body: JSON.stringify({
+                    deviceId: normalizedId,
+                    source: 'LightEarth Dashboard',
+                    userInfo: 'Web User'
+                })
             });
             
             const data = await response.json();
+            console.log('📩 [Request Device] API Response:', data);
             
-            if (data.success) {
-                const deviceName = data.deviceName || normalizedId;
-                console.log(`✅ [Auto Register] Device ${normalizedId} (${deviceName}) added to Lumentree Integration!`);
-                console.log(`   Entry ID: ${data.entryId}`);
+            // Handle different statuses:
+            // - pending_approval: New request, waiting for admin
+            // - already_exists: Device already in HA
+            // - already_pending: Request already submitted
+            
+            if (data.status === 'already_exists') {
+                // Device already exists - show info and continue
+                console.log(`✅ [Request Device] ${normalizedId} already exists in HA`);
+                showDeviceRegistrationNotification(normalizedId, 51, true);
+                return { success: true, message: 'Device already exists', alreadyExists: true };
+            }
+            
+            if (data.status === 'pending_approval' || data.status === 'already_pending') {
+                // New request or already pending - show countdown UI
+                console.log(`⏳ [Request Device] ${normalizedId} pending approval - Telegram sent: ${data.telegramSent}`);
                 
-                // Update cache
-                deviceExistsCache.set(normalizedId, {
-                    exists: true,
-                    inLumentreeIntegration: true,
-                    entityCount: 51, // Lumentree creates ~51 entities
-                    timestamp: Date.now()
-                });
+                // Show countdown notification (5 minutes)
+                showPendingApprovalUI(normalizedId);
                 
-                // Show success notification
-                showDeviceRegistrationNotification(normalizedId, 51, false);
-                
-                return { success: true, message: data.message, deviceName: deviceName };
-            } else {
-                console.error(`❌ [Auto Register] Failed:`, data.error);
-                
-                // Show error notification
-                showErrorNotification(`Không thể đăng ký ${normalizedId}: ${data.error}`);
-                
+                return { success: true, status: 'pending_approval', message: data.message, waitForApproval: true };
+            }
+            
+            // Handle errors
+            if (!data.success && data.error) {
+                console.error(`❌ [Request Device] Failed:`, data.error);
+                showErrorNotification(`Không thể gửi yêu cầu ${normalizedId}: ${data.error}`);
                 return { success: false, message: data.error };
             }
+            
+            return { success: true, message: data.message || 'Request submitted' };
         } catch (error) {
-            console.error(`❌ [Auto Register] Error:`, error.message);
+            console.error(`❌ [Request Device] Error:`, error.message);
             return { success: false, message: error.message };
         }
+    }
+    
+    /**
+     * Show pending approval UI with 5-minute countdown
+     * @param {string} deviceId - Device ID being registered
+     */
+    function showPendingApprovalUI(deviceId) {
+        // Remove any existing pending UI
+        const existingUI = document.getElementById('pending-approval-modal');
+        if (existingUI) existingUI.remove();
+        
+        // Create modal overlay
+        const modal = document.createElement('div');
+        modal.id = 'pending-approval-modal';
+        modal.className = 'fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm';
+        
+        // Calculate countdown (5 minutes = 300 seconds)
+        let remainingSeconds = 300;
+        
+        modal.innerHTML = `
+            <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 sm:p-8 max-w-md mx-4 shadow-2xl border border-slate-600">
+                <!-- Header -->
+                <div class="text-center mb-6">
+                    <div class="w-20 h-20 mx-auto mb-4 relative">
+                        <div class="absolute inset-0 rounded-full border-4 border-amber-400/30"></div>
+                        <div id="countdown-circle" class="absolute inset-0 rounded-full border-4 border-amber-400" 
+                             style="border-top-color: transparent; animation: spin 1.5s linear infinite;"></div>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <span class="text-3xl">⏳</span>
+                        </div>
+                    </div>
+                    <h2 class="text-xl font-bold text-white mb-1">Đang Chờ Duyệt</h2>
+                    <p class="text-slate-400 text-sm">Yêu cầu đã gửi đến admin</p>
+                </div>
+                
+                <!-- Device Info -->
+                <div class="bg-slate-700/50 rounded-xl p-4 mb-4">
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-400">Device ID:</span>
+                        <span class="font-mono font-bold text-amber-400">${deviceId}</span>
+                    </div>
+                </div>
+                
+                <!-- Countdown -->
+                <div class="text-center mb-6">
+                    <p class="text-slate-400 text-sm mb-2">Thời gian chờ dự kiến:</p>
+                    <div id="countdown-display" class="text-4xl font-bold text-emerald-400">
+                        05:00
+                    </div>
+                </div>
+                
+                <!-- Zalo Group CTA -->
+                <div class="bg-gradient-to-r from-blue-600 to-blue-500 rounded-xl p-4 mb-4">
+                    <p class="text-white text-sm mb-3 text-center">
+                        🔔 <strong>Tham gia nhóm Zalo</strong> để được cập nhật nhanh!
+                    </p>
+                    <a href="https://zalo.me/g/kmzrgh433" target="_blank" rel="noopener noreferrer"
+                       class="flex items-center justify-center gap-2 bg-white text-blue-600 font-bold py-3 px-4 rounded-lg hover:bg-blue-50 transition-colors">
+                        <img src="/zalo-logo.png" alt="Zalo" class="w-6 h-6" onerror="this.style.display='none'">
+                        <span>Tham gia Zalo LightEarth VN</span>
+                    </a>
+                </div>
+                
+                <!-- Actions -->
+                <div class="flex gap-3">
+                    <button id="cancel-pending-btn" 
+                            class="flex-1 py-3 px-4 rounded-lg bg-slate-700 text-slate-300 font-medium hover:bg-slate-600 transition-colors">
+                        Hủy
+                    </button>
+                    <button id="check-status-btn" 
+                            class="flex-1 py-3 px-4 rounded-lg bg-emerald-600 text-white font-medium hover:bg-emerald-500 transition-colors">
+                        Kiểm tra lại
+                    </button>
+                </div>
+            </div>
+            
+            <style>
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+            </style>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Start countdown
+        const countdownDisplay = document.getElementById('countdown-display');
+        const countdownInterval = setInterval(() => {
+            remainingSeconds--;
+            
+            if (remainingSeconds <= 0) {
+                clearInterval(countdownInterval);
+                countdownDisplay.textContent = '00:00';
+                countdownDisplay.classList.remove('text-emerald-400');
+                countdownDisplay.classList.add('text-amber-400');
+            } else {
+                const minutes = Math.floor(remainingSeconds / 60);
+                const seconds = remainingSeconds % 60;
+                countdownDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            }
+        }, 1000);
+        
+        // Event listeners
+        document.getElementById('cancel-pending-btn').addEventListener('click', () => {
+            clearInterval(countdownInterval);
+            modal.remove();
+        });
+        
+        document.getElementById('check-status-btn').addEventListener('click', async () => {
+            // Check if device is now approved
+            const deviceCheck = await checkDeviceInHA(deviceId);
+            if (deviceCheck.exists) {
+                clearInterval(countdownInterval);
+                modal.remove();
+                showDeviceRegistrationNotification(deviceId, 51, true);
+                // Reload data
+                fetchData();
+            } else {
+                showErrorNotification('Vẫn đang chờ admin duyệt...');
+            }
+        });
     }
     
     /**
@@ -1779,50 +1911,38 @@ Vui lòng kiểm tra:
         console.log(`🚀 Loading data for device: ${deviceId}, date: ${date || 'today'}`);
         
         // ========================================
-        // AUTO DEVICE REGISTRATION CHECK (V3.3)
+        // AUTO DEVICE REGISTRATION CHECK (V4.2 - Telegram Approval Flow)
         // 1. Check if device exists in Lumentree Integration
-        // 2. If not, auto-register (device format already validated)
-        // 3. Device will receive data from MQTT broker after registration
+        // 2. If not, send request via Telegram (admin must approve)
+        // 3. Device will only be added after admin clicks ACCEPT
         // 
         // NOTE: We trust format validation (H/P + 9 digits)
-        // New devices won't have data until registered
+        // New devices won't have data until approved and registered
         // ========================================
         try {
             const deviceCheck = await checkDeviceInHA(deviceId);
             
             if (!deviceCheck.exists && !deviceCheck.error) {
-                console.log(`🆕 [New Device] ${deviceId} not found in Lumentree Integration - registering...`);
+                console.log(`🆕 [New Device] ${deviceId} not found in Lumentree Integration - requesting approval...`);
                 
-                // Show waiting notification
-                showWaitingNotification(deviceId, 'Đang đăng ký thiết bị mới vào hệ thống...');
-                
-                // Register device to Lumentree Integration
+                // Request device via Telegram approval flow (v4.2)
                 const registerResult = await autoRegisterDevice(deviceId);
                 
-                if (registerResult.success) {
-                    // Wait for HA to create entities
-                    showWaitingNotification(deviceId, '✅ Đã đăng ký! Đang chờ dữ liệu từ thiết bị...');
-                    
-                    // IMPORTANT: Verify device has data after registration
-                    // This prevents ghost devices from crashing the system
-                    const hasData = await verifyDeviceHasDataAfterRegistration(deviceId, registerResult.entryId);
-                    
-                    hideWaitingNotification();
-                    
-                    if (!hasData) {
-                        // Device registered but no data received - likely invalid device
-                        console.error(`❌ [No Data] ${deviceId} registered but no data received - removing...`);
-                        showInvalidDeviceError(deviceId);
-                        
-                        // Try to remove the device to prevent system crash
-                        await removeInvalidDevice(deviceId, registerResult.entryId);
-                        return; // STOP - don't continue loading
-                    }
-                    
-                    console.log(`✅ [Registration Complete] ${deviceId} has data - OK`);
-                } else {
-                    console.warn(`⚠️ Registration failed: ${registerResult.message}`);
-                    hideWaitingNotification();
+                // If waiting for approval, stop here - don't load data
+                if (registerResult.waitForApproval) {
+                    console.log(`⏳ [Pending] ${deviceId} waiting for admin approval - stopping data load`);
+                    showLoading(false);
+                    return; // STOP - wait for approval
+                }
+                
+                // If already exists (approved), continue
+                if (registerResult.alreadyExists) {
+                    console.log(`✅ [Already Exists] ${deviceId} approved - continuing to load data`);
+                }
+                
+                // Handle error
+                if (!registerResult.success) {
+                    console.warn(`⚠️ Request failed: ${registerResult.message}`);
                     showRegistrationWarning(deviceId, registerResult.message);
                 }
             } else if (deviceCheck.exists) {
@@ -1830,7 +1950,6 @@ Vui lòng kiểm tra:
             }
         } catch (error) {
             console.warn('⚠️ Device check failed, continuing anyway:', error.message);
-            hideWaitingNotification();
         }
         // ========================================
         

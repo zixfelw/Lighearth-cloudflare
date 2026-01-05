@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LightEarth - Device Registration v4.2</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="favicon.ico">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+            min-height: 100vh;
+        }
+        
+        /* Animated Background */
+        .bg-animated {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+        
+        .bg-animated::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 30% 30%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 70%, rgba(6, 182, 212, 0.1) 0%, transparent 50%);
+            animation: bgRotate 30s linear infinite;
+        }
+        
+        @keyframes bgRotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Glass Card */
+        .glass-card {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+        }
+        
+        /* Input Styles */
+        .device-input {
+            background: rgba(15, 23, 42, 0.8);
+            border: 2px solid rgba(148, 163, 184, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .device-input:focus {
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.2);
+            outline: none;
+        }
+        
+        .device-input::placeholder {
+            color: rgba(148, 163, 184, 0.5);
+        }
+        
+        /* Button Styles */
+        .btn-primary {
+            background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(139, 92, 246, 0.4);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        
+        /* Spinner */
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Large Spinner for Pending */
+        .spinner-large {
+            width: 80px;
+            height: 80px;
+            border: 4px solid rgba(139, 92, 246, 0.2);
+            border-top-color: #8b5cf6;
+            border-radius: 50%;
+            animation: spin 1.5s linear infinite;
+        }
+        
+        /* Countdown Animation */
+        .countdown-ring {
+            width: 120px;
+            height: 120px;
+            position: relative;
+        }
+        
+        .countdown-ring svg {
+            transform: rotate(-90deg);
+        }
+        
+        .countdown-ring circle {
+            fill: none;
+            stroke-width: 4;
+        }
+        
+        .countdown-ring .bg {
+            stroke: rgba(139, 92, 246, 0.2);
+        }
+        
+        .countdown-ring .progress {
+            stroke: #8b5cf6;
+            stroke-linecap: round;
+            stroke-dasharray: 339.292;
+            stroke-dashoffset: 0;
+            animation: countdown 300s linear forwards;
+        }
+        
+        @keyframes countdown {
+            to { stroke-dashoffset: 339.292; }
+        }
+        
+        /* Pulse Animation */
+        @keyframes pulse-ring {
+            0% {
+                transform: scale(0.8);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1.5);
+                opacity: 0;
+            }
+        }
+        
+        .pulse-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 2px solid #8b5cf6;
+            border-radius: 50%;
+            animation: pulse-ring 2s ease-out infinite;
+        }
+        
+        /* Status Badge */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-online {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+        
+        .status-offline {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+        
+        .status-pending {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+        
+        /* Result Cards */
+        .result-card {
+            animation: slideUp 0.4s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Logo Animation */
+        .logo-container {
+            position: relative;
+        }
+        
+        .logo-glow {
+            position: absolute;
+            inset: -10px;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.4) 0%, transparent 70%);
+            filter: blur(20px);
+            animation: logoGlow 3s ease-in-out infinite;
+        }
+        
+        @keyframes logoGlow {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.1); }
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(30, 41, 59, 0.5);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #8b5cf6;
+            border-radius: 3px;
+        }
+        
+        /* Device List Item */
+        .device-item {
+            transition: all 0.3s ease;
+        }
+        
+        .device-item:hover {
+            background: rgba(139, 92, 246, 0.1);
+            transform: translateX(4px);
+        }
+        
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 500;
+            z-index: 9999;
+            animation: toastIn 0.3s ease-out;
+        }
+        
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .toast-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+        
+        .toast-error {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+        
+        .toast-warning {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+    </style>
+</head>
+<body class="text-white antialiased">
+    <!-- Animated Background -->
+    <div class="bg-animated"></div>
+    
+    <!-- Header -->
+    <header class="sticky top-0 z-50 glass-card border-b border-slate-700/50">
+        <div class="max-w-6xl mx-auto px-4 py-3">
+            <div class="flex items-center justify-between">
+                <!-- Logo -->
+                <a href="index.html" class="flex items-center gap-3 group">
+                    <div class="logo-container">
+                        <div class="logo-glow"></div>
+                        <img src="logo.png" alt="LightEarth" class="w-10 h-10 relative z-10">
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold bg-gradient-to-r from-cyan-400 via-violet-500 to-pink-500 bg-clip-text text-transparent">
+                            LightEarth
+                        </h1>
+                        <p class="text-[10px] text-slate-400 -mt-1">Device Registration v4.2</p>
+                    </div>
+                </a>
+                
+                <!-- Status & Links -->
+                <div class="flex items-center gap-3">
+                    <div id="workerStatus" class="status-badge status-offline">
+                        <span class="w-2 h-2 rounded-full bg-current"></span>
+                        <span id="statusText">Checking...</span>
+                    </div>
+                    
+                    <a href="https://zalo.me/g/kmzrgh433" target="_blank" 
+                       class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-600 hover:bg-blue-500 transition text-sm font-medium">
+                        <img src="zalo-logo.png" alt="Zalo" class="w-4 h-4">
+                        <span>Zalo Group</span>
+                    </a>
+                    
+                    <a href="https://t.me/lumentreeebot" target="_blank"
+                       class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-sky-600 hover:bg-sky-500 transition text-sm font-medium">
+                        <i class="fab fa-telegram"></i>
+                        <span class="hidden sm:inline">Bot</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Main Content -->
+    <main class="max-w-2xl mx-auto px-4 py-8">
+        <!-- Registration Card -->
+        <div class="glass-card rounded-3xl p-6 sm:p-8 mb-6">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 mb-4 shadow-lg shadow-violet-500/30">
+                    <i class="fas fa-solar-panel text-2xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold mb-2">Đăng Ký Thiết Bị</h2>
+                <p class="text-slate-400 text-sm">Nhập Device ID để thêm vào hệ thống giám sát</p>
+            </div>
+            
+            <!-- Form -->
+            <div id="formSection">
+                <!-- Device ID Input -->
+                <div class="mb-5">
+                    <label class="block text-sm font-medium text-slate-300 mb-2">
+                        <i class="fas fa-microchip mr-2 text-violet-400"></i>Device ID
+                    </label>
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            id="deviceId" 
+                            class="device-input w-full px-4 py-4 rounded-xl text-white text-lg font-mono tracking-wider uppercase"
+                            placeholder="P250812032"
+                            maxlength="10"
+                            autocomplete="off"
+                        >
+                        <button onclick="pasteFromClipboard()" class="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-white transition">
+                            <i class="fas fa-paste"></i>
+                        </button>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-2 flex items-center gap-1">
+                        <i class="fas fa-info-circle"></i>
+                        Format: P hoặc H + 9 chữ số (VD: P250812032)
+                    </p>
+                </div>
+                
+                <!-- User Info (Optional) -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-slate-300 mb-2">
+                        <i class="fas fa-user mr-2 text-cyan-400"></i>Tên của bạn (tùy chọn)
+                    </label>
+                    <input 
+                        type="text" 
+                        id="userInfo" 
+                        class="device-input w-full px-4 py-3 rounded-xl text-white"
+                        placeholder="Nhập tên để Admin nhận diện..."
+                    >
+                </div>
+                
+                <!-- Submit Button -->
+                <button 
+                    id="submitBtn"
+                    onclick="submitDevice()"
+                    class="btn-primary w-full py-4 rounded-xl text-lg font-semibold flex items-center justify-center gap-2"
+                >
+                    <i class="fas fa-paper-plane"></i>
+                    <span>Đăng Ký Thiết Bị</span>
+                </button>
+            </div>
+            
+            <!-- Result Section (Hidden by default) -->
+            <div id="resultSection" class="hidden">
+                <!-- Success: Already Exists -->
+                <div id="resultSuccess" class="hidden result-card text-center py-8">
+                    <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-green-500/20 flex items-center justify-center">
+                        <i class="fas fa-check-circle text-4xl text-green-500"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-green-400 mb-2">Thiết Bị Đã Tồn Tại!</h3>
+                    <p class="text-slate-400 mb-4">Device <span id="successDeviceId" class="font-mono text-white"></span> đã có trong hệ thống</p>
+                    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/20 text-green-400">
+                        <i class="fas fa-bolt"></i>
+                        <span>PV Power: <span id="successState" class="font-bold"></span></span>
+                    </div>
+                    <div class="mt-6">
+                        <a id="goDashboardBtn" href="#" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 transition font-semibold">
+                            <i class="fas fa-chart-line"></i>
+                            Xem Dashboard
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Pending: Waiting for Approval -->
+                <div id="resultPending" class="hidden result-card text-center py-8">
+                    <div class="relative w-32 h-32 mx-auto mb-6">
+                        <div class="pulse-ring"></div>
+                        <div class="pulse-ring" style="animation-delay: 0.5s;"></div>
+                        <div class="pulse-ring" style="animation-delay: 1s;"></div>
+                        <div class="countdown-ring absolute inset-0">
+                            <svg width="120" height="120" viewBox="0 0 120 120">
+                                <circle class="bg" cx="60" cy="60" r="54"/>
+                                <circle class="progress" cx="60" cy="60" r="54"/>
+                            </svg>
+                        </div>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="text-center">
+                                <div id="countdownTime" class="text-2xl font-bold text-violet-400">5:00</div>
+                                <div class="text-xs text-slate-400">phút</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h3 class="text-xl font-bold text-yellow-400 mb-2">
+                        <i class="fas fa-hourglass-half mr-2"></i>Đang Chờ Duyệt
+                    </h3>
+                    <p class="text-slate-400 mb-2">
+                        Device <span id="pendingDeviceId" class="font-mono text-white"></span>
+                    </p>
+                    <p class="text-slate-500 text-sm mb-6">
+                        Yêu cầu đã được gửi đến Admin. Vui lòng chờ trong vòng <strong class="text-yellow-400">5 phút</strong>.
+                    </p>
+                    
+                    <!-- Zalo Group CTA -->
+                    <div class="glass-card rounded-2xl p-4 mb-6 border border-violet-500/30">
+                        <div class="flex items-start gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center flex-shrink-0">
+                                <img src="zalo-logo.png" alt="Zalo" class="w-6 h-6">
+                            </div>
+                            <div class="text-left">
+                                <h4 class="font-semibold text-white mb-1">Tham gia nhóm Zalo</h4>
+                                <p class="text-slate-400 text-sm mb-2">Để được cập nhật nhanh nhất khi thiết bị được duyệt!</p>
+                                <a href="https://zalo.me/g/kmzrgh433" target="_blank" 
+                                   class="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm font-medium">
+                                    <span>Tham gia ngay</span>
+                                    <i class="fas fa-external-link-alt text-xs"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button onclick="resetForm()" class="text-slate-400 hover:text-white transition text-sm">
+                        <i class="fas fa-arrow-left mr-2"></i>Quay lại
+                    </button>
+                </div>
+                
+                <!-- Error -->
+                <div id="resultError" class="hidden result-card text-center py-8">
+                    <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center">
+                        <i class="fas fa-exclamation-triangle text-4xl text-red-500"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-red-400 mb-2">Có Lỗi Xảy Ra!</h3>
+                    <p id="errorMessage" class="text-slate-400 mb-6"></p>
+                    <button onclick="resetForm()" class="px-6 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 transition font-medium">
+                        <i class="fas fa-redo mr-2"></i>Thử lại
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Check Card -->
+        <div class="glass-card rounded-2xl p-5 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-semibold flex items-center gap-2">
+                    <i class="fas fa-search text-cyan-400"></i>
+                    Kiểm Tra Thiết Bị
+                </h3>
+            </div>
+            <div class="flex gap-2">
+                <input 
+                    type="text" 
+                    id="checkDeviceId" 
+                    class="device-input flex-1 px-4 py-3 rounded-xl text-white font-mono uppercase"
+                    placeholder="Nhập Device ID..."
+                    maxlength="10"
+                >
+                <button onclick="checkDevice()" class="px-5 py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 transition font-medium">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+            
+            <!-- Check Result -->
+            <div id="checkResult" class="hidden mt-4 p-4 rounded-xl bg-slate-800/50">
+                <div id="checkResultContent"></div>
+            </div>
+        </div>
+        
+        <!-- Registered Devices -->
+        <div class="glass-card rounded-2xl p-5">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-semibold flex items-center gap-2">
+                    <i class="fas fa-list text-green-400"></i>
+                    Thiết Bị Đã Đăng Ký
+                    <span id="deviceCount" class="text-xs px-2 py-0.5 rounded-full bg-green-500/20 text-green-400">0</span>
+                </h3>
+                <button onclick="loadDevices()" class="text-sm text-slate-400 hover:text-white transition">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+            
+            <div id="deviceList" class="space-y-2 max-h-64 overflow-y-auto">
+                <div class="text-center py-8 text-slate-500">
+                    <div class="spinner-large mx-auto mb-4"></div>
+                    <p>Đang tải danh sách...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Footer -->
+    <footer class="text-center py-6 text-slate-500 text-sm">
+        <p class="mb-2">
+            <i class="fab fa-telegram mr-1"></i>
+            Bot: <a href="https://t.me/lumentreeebot" target="_blank" class="text-cyan-400 hover:text-cyan-300">@lumentreeebot</a>
+            <span class="mx-2">|</span>
+            <i class="fas fa-users mr-1"></i>
+            Zalo: <a href="https://zalo.me/g/kmzrgh433" target="_blank" class="text-blue-400 hover:text-blue-300">LightEarth VN</a>
+        </p>
+        <p>LightEarth Monitor &copy; 2024-2026 | Device Registration v4.2</p>
+    </footer>
+
+    <script>
+        // Configuration
+        const WORKER_URL = 'https://device-register.applike098.workers.dev';
+        const DASHBOARD_URL = 'index.html';
+        
+        let countdownInterval = null;
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            checkWorkerStatus();
+            loadDevices();
+            
+            // Auto uppercase inputs
+            document.querySelectorAll('input[type="text"]').forEach(input => {
+                if (input.classList.contains('uppercase') || input.id === 'deviceId' || input.id === 'checkDeviceId') {
+                    input.addEventListener('input', function() {
+                        this.value = this.value.toUpperCase();
+                    });
+                }
+            });
+            
+            // Enter key support
+            document.getElementById('deviceId').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') submitDevice();
+            });
+            
+            document.getElementById('checkDeviceId').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') checkDevice();
+            });
+        });
+        
+        // Check Worker Status
+        async function checkWorkerStatus() {
+            const statusEl = document.getElementById('workerStatus');
+            const statusText = document.getElementById('statusText');
+            
+            try {
+                const response = await fetch(`${WORKER_URL}/health`);
+                const data = await response.json();
+                
+                if (data.status === 'ok') {
+                    statusEl.className = 'status-badge status-online';
+                    statusText.textContent = `v${data.version} Online`;
+                } else {
+                    throw new Error('Worker error');
+                }
+            } catch (error) {
+                statusEl.className = 'status-badge status-offline';
+                statusText.textContent = 'Offline';
+            }
+        }
+        
+        // Paste from Clipboard
+        async function pasteFromClipboard() {
+            try {
+                const text = await navigator.clipboard.readText();
+                document.getElementById('deviceId').value = text.toUpperCase().trim();
+                showToast('Đã dán từ clipboard', 'success');
+            } catch (error) {
+                showToast('Không thể đọc clipboard', 'error');
+            }
+        }
+        
+        // Submit Device
+        async function submitDevice() {
+            const deviceId = document.getElementById('deviceId').value.trim();
+            const userInfo = document.getElementById('userInfo').value.trim();
+            const submitBtn = document.getElementById('submitBtn');
+            
+            if (!deviceId) {
+                showToast('Vui lòng nhập Device ID', 'error');
+                return;
+            }
+            
+            // Validate format
+            if (!/^[PH]\d{9}$/i.test(deviceId)) {
+                showToast('Device ID không đúng format (P/H + 9 số)', 'error');
+                return;
+            }
+            
+            // Show loading
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<div class="spinner"></div><span>Đang xử lý...</span>';
+            
+            try {
+                const response = await fetch(`${WORKER_URL}/request-device`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        deviceId: deviceId,
+                        source: 'LightEarth Dashboard v4.2',
+                        userInfo: userInfo || 'Người dùng ẩn danh'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    if (data.status === 'already_exists') {
+                        showSuccessResult(deviceId, data.state);
+                    } else if (data.status === 'pending_approval' || data.status === 'pending') {
+                        showPendingResult(deviceId);
+                    }
+                } else {
+                    showErrorResult(data.error || 'Có lỗi xảy ra');
+                }
+            } catch (error) {
+                showErrorResult(`Không thể kết nối: ${error.message}`);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i><span>Đăng Ký Thiết Bị</span>';
+            }
+        }
+        
+        // Show Success Result
+        function showSuccessResult(deviceId, state) {
+            document.getElementById('formSection').classList.add('hidden');
+            document.getElementById('resultSection').classList.remove('hidden');
+            document.getElementById('resultSuccess').classList.remove('hidden');
+            document.getElementById('resultPending').classList.add('hidden');
+            document.getElementById('resultError').classList.add('hidden');
+            
+            document.getElementById('successDeviceId').textContent = deviceId;
+            document.getElementById('successState').textContent = state ? `${state} W` : 'N/A';
+            document.getElementById('goDashboardBtn').href = `${DASHBOARD_URL}?device=${deviceId}`;
+        }
+        
+        // Show Pending Result
+        function showPendingResult(deviceId) {
+            document.getElementById('formSection').classList.add('hidden');
+            document.getElementById('resultSection').classList.remove('hidden');
+            document.getElementById('resultSuccess').classList.add('hidden');
+            document.getElementById('resultPending').classList.remove('hidden');
+            document.getElementById('resultError').classList.add('hidden');
+            
+            document.getElementById('pendingDeviceId').textContent = deviceId;
+            
+            // Start countdown
+            startCountdown(300); // 5 minutes
+        }
+        
+        // Show Error Result
+        function showErrorResult(message) {
+            document.getElementById('formSection').classList.add('hidden');
+            document.getElementById('resultSection').classList.remove('hidden');
+            document.getElementById('resultSuccess').classList.add('hidden');
+            document.getElementById('resultPending').classList.add('hidden');
+            document.getElementById('resultError').classList.remove('hidden');
+            
+            document.getElementById('errorMessage').textContent = message;
+        }
+        
+        // Reset Form
+        function resetForm() {
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+            }
+            
+            document.getElementById('formSection').classList.remove('hidden');
+            document.getElementById('resultSection').classList.add('hidden');
+            document.getElementById('deviceId').value = '';
+            document.getElementById('userInfo').value = '';
+        }
+        
+        // Start Countdown
+        function startCountdown(seconds) {
+            const countdownEl = document.getElementById('countdownTime');
+            let remaining = seconds;
+            
+            function updateCountdown() {
+                const mins = Math.floor(remaining / 60);
+                const secs = remaining % 60;
+                countdownEl.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+                
+                if (remaining <= 0) {
+                    clearInterval(countdownInterval);
+                    countdownEl.textContent = '0:00';
+                }
+                remaining--;
+            }
+            
+            updateCountdown();
+            countdownInterval = setInterval(updateCountdown, 1000);
+        }
+        
+        // Check Device
+        async function checkDevice() {
+            const deviceId = document.getElementById('checkDeviceId').value.trim();
+            const resultEl = document.getElementById('checkResult');
+            const contentEl = document.getElementById('checkResultContent');
+            
+            if (!deviceId) {
+                showToast('Vui lòng nhập Device ID', 'error');
+                return;
+            }
+            
+            resultEl.classList.remove('hidden');
+            contentEl.innerHTML = '<div class="flex items-center justify-center py-4"><div class="spinner"></div></div>';
+            
+            try {
+                const response = await fetch(`${WORKER_URL}/check/${deviceId}`);
+                const data = await response.json();
+                
+                let statusBadge, statusText, statusIcon;
+                if (data.inIntegration) {
+                    statusBadge = 'bg-green-500/20 text-green-400';
+                    statusText = 'Đã đăng ký';
+                    statusIcon = 'check-circle';
+                } else if (data.pendingStatus === 'pending') {
+                    statusBadge = 'bg-yellow-500/20 text-yellow-400';
+                    statusText = 'Đang chờ duyệt';
+                    statusIcon = 'clock';
+                } else {
+                    statusBadge = 'bg-red-500/20 text-red-400';
+                    statusText = 'Chưa đăng ký';
+                    statusIcon = 'times-circle';
+                }
+                
+                contentEl.innerHTML = `
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="font-mono text-lg">${data.deviceId}</span>
+                        <span class="px-3 py-1 rounded-full text-xs font-medium ${statusBadge}">
+                            <i class="fas fa-${statusIcon} mr-1"></i>${statusText}
+                        </span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-sm">
+                        <div class="p-2 rounded-lg bg-slate-900/50">
+                            <span class="text-slate-500">Format:</span>
+                            <span class="${data.formatValid ? 'text-green-400' : 'text-red-400'} ml-1">
+                                ${data.formatValid ? '✓ Hợp lệ' : '✗ Không hợp lệ'}
+                            </span>
+                        </div>
+                        <div class="p-2 rounded-lg bg-slate-900/50">
+                            <span class="text-slate-500">Entities:</span>
+                            <span class="text-white ml-1">${data.entityCount || 0}</span>
+                        </div>
+                        ${data.integrationState ? `
+                        <div class="col-span-2 p-2 rounded-lg bg-violet-500/20">
+                            <span class="text-violet-300">PV Power:</span>
+                            <span class="text-violet-400 font-bold ml-1">${data.integrationState} W</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+            } catch (error) {
+                contentEl.innerHTML = `
+                    <div class="text-center py-4 text-red-400">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        Không thể kiểm tra: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        // Load Devices
+        async function loadDevices() {
+            const listEl = document.getElementById('deviceList');
+            const countEl = document.getElementById('deviceCount');
+            
+            try {
+                const response = await fetch(`${WORKER_URL}/config-entries`);
+                const data = await response.json();
+                
+                countEl.textContent = data.count || 0;
+                
+                if (!data.entries || data.entries.length === 0) {
+                    listEl.innerHTML = `
+                        <div class="text-center py-8 text-slate-500">
+                            <i class="fas fa-inbox text-3xl mb-2"></i>
+                            <p>Chưa có thiết bị nào</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                listEl.innerHTML = data.entries.slice(0, 15).map(entry => `
+                    <div class="device-item flex items-center justify-between p-3 rounded-xl bg-slate-800/30 cursor-pointer" onclick="window.location.href='${DASHBOARD_URL}?device=${entry.title}'">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex items-center justify-center">
+                                <i class="fas fa-solar-panel text-green-400"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium text-white">${entry.title}</p>
+                                <p class="text-xs text-slate-500">${entry.entryId?.slice(0, 8) || 'N/A'}...</p>
+                            </div>
+                        </div>
+                        <span class="px-2 py-1 rounded text-xs ${entry.state === 'loaded' ? 'bg-green-500/20 text-green-400' : 'bg-slate-500/20 text-slate-400'}">
+                            ${entry.state || 'unknown'}
+                        </span>
+                    </div>
+                `).join('');
+                
+                if (data.count > 15) {
+                    listEl.innerHTML += `
+                        <p class="text-center text-slate-500 text-sm py-2">
+                            +${data.count - 15} thiết bị khác...
+                        </p>
+                    `;
+                }
+            } catch (error) {
+                listEl.innerHTML = `
+                    <div class="text-center py-8 text-red-400">
+                        <i class="fas fa-exclamation-triangle text-2xl mb-2"></i>
+                        <p>Không thể tải danh sách</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Toast Notification
+        function showToast(message, type = 'info') {
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
+            
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} mr-2"></i>${message}`;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'toastIn 0.3s ease-out reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

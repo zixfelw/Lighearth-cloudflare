@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Device Registration Worker v4.2 - Copy Code</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        code, pre, .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .code-container { max-height: 600px; overflow-y: auto; }
+        .copy-success { animation: flash 0.5s ease-out; }
+        @keyframes flash {
+            0% { background-color: #10b981; }
+            100% { background-color: transparent; }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 min-h-screen p-4 sm:p-8">
+    <div class="max-w-5xl mx-auto">
+        <!-- Header -->
+        <div class="mb-8 text-center">
+            <div class="inline-flex items-center gap-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-6 py-3 rounded-full mb-4">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                </svg>
+                <span class="font-bold text-lg">Device Registration Worker v4.2</span>
+            </div>
+            <h1 class="text-3xl sm:text-4xl font-bold text-white mb-2">Proxy Worker Code</h1>
+            <p class="text-slate-400">Cloudflare Workers - Telegram Approval Flow</p>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+            <!-- Copy Full Code -->
+            <button id="copyFullBtn" onclick="copyFullCode()" 
+                class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-[1.02] shadow-lg flex items-center justify-center gap-3">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                </svg>
+                <span>Copy Toàn Bộ Code</span>
+            </button>
+
+            <!-- Download File -->
+            <a href="workers/device-register-v4.2.js" download 
+               class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-[1.02] shadow-lg flex items-center justify-center gap-3 no-underline">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+                <span>Download JS File</span>
+            </a>
+        </div>
+
+        <!-- Features -->
+        <div class="bg-slate-800/50 rounded-2xl p-6 mb-8 border border-slate-700">
+            <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <span class="text-2xl">🚀</span> Tính năng v4.2
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="flex items-start gap-3 bg-slate-700/50 rounded-lg p-4">
+                    <span class="text-2xl">📱</span>
+                    <div>
+                        <h3 class="font-semibold text-white">Telegram Approval Flow</h3>
+                        <p class="text-slate-400 text-sm">Admin duyệt thiết bị qua Telegram Bot</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3 bg-slate-700/50 rounded-lg p-4">
+                    <span class="text-2xl">✅</span>
+                    <div>
+                        <h3 class="font-semibold text-white">Accept/Reject Buttons</h3>
+                        <p class="text-slate-400 text-sm">Nút inline trên Telegram để duyệt nhanh</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3 bg-slate-700/50 rounded-lg p-4">
+                    <span class="text-2xl">🔒</span>
+                    <div>
+                        <h3 class="font-semibold text-white">Bảo vệ Hệ thống</h3>
+                        <p class="text-slate-400 text-sm">Ngăn device lạ được thêm tự động</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3 bg-slate-700/50 rounded-lg p-4">
+                    <span class="text-2xl">⚡</span>
+                    <div>
+                        <h3 class="font-semibold text-white">Auto-add sau Approve</h3>
+                        <p class="text-slate-400 text-sm">Tự động thêm vào HA sau khi duyệt</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuration -->
+        <div class="bg-amber-900/30 border border-amber-600/50 rounded-2xl p-6 mb-8">
+            <h2 class="text-xl font-bold text-amber-400 mb-4 flex items-center gap-2">
+                <span class="text-2xl">⚙️</span> Cấu hình cần thiết
+            </h2>
+            <div class="space-y-4">
+                <div class="bg-slate-800/80 rounded-lg p-4">
+                    <p class="text-slate-300 text-sm mb-2">1. <strong>Environment Variables</strong> trong Cloudflare:</p>
+                    <div class="bg-slate-900 rounded p-3 font-mono text-sm">
+                        <div class="text-emerald-400">HA_URL=<span class="text-slate-400">https://your-ha-url</span></div>
+                        <div class="text-emerald-400">HA_TOKEN=<span class="text-slate-400">your_ha_token</span></div>
+                        <div class="text-emerald-400">TELEGRAM_ADMIN_CHAT_ID=<span class="text-amber-400">273383744</span></div>
+                    </div>
+                </div>
+                <div class="bg-slate-800/80 rounded-lg p-4">
+                    <p class="text-slate-300 text-sm mb-2">2. <strong>Setup Telegram Webhook</strong> (chạy 1 lần):</p>
+                    <div class="bg-slate-900 rounded p-3 font-mono text-xs overflow-x-auto">
+                        <span class="text-blue-400">curl</span> <span class="text-amber-400">"https://api.telegram.org/bot8596250778:AAES7mzb1WZrNHGAIapXXpIn_g_iKCmRETc/setWebhook?url=https://device-register.applike098.workers.dev/telegram-webhook"</span>
+                    </div>
+                    <button onclick="copyWebhookCmd()" class="mt-2 text-xs bg-slate-700 hover:bg-slate-600 text-white px-3 py-1 rounded transition-colors">
+                        📋 Copy lệnh
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Code Display -->
+        <div class="bg-slate-800/50 rounded-2xl overflow-hidden border border-slate-700">
+            <div class="flex items-center justify-between bg-slate-900 px-4 py-3 border-b border-slate-700">
+                <div class="flex items-center gap-2">
+                    <div class="flex gap-1.5">
+                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                    </div>
+                    <span class="text-slate-400 text-sm ml-2">device-register-v4.2.js</span>
+                </div>
+                <button onclick="copyFullCode()" class="text-slate-400 hover:text-white text-sm flex items-center gap-1 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                    </svg>
+                    Copy
+                </button>
+            </div>
+            <div class="code-container p-4 bg-slate-900">
+                <pre id="codeContent" class="text-sm text-slate-300 whitespace-pre-wrap">// Loading code...</pre>
+            </div>
+        </div>
+
+        <!-- Endpoints Reference -->
+        <div class="mt-8 bg-slate-800/50 rounded-2xl p-6 border border-slate-700">
+            <h2 class="text-xl font-bold text-white mb-4">📡 API Endpoints</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-left text-slate-400 border-b border-slate-700">
+                            <th class="pb-3">Method</th>
+                            <th class="pb-3">Endpoint</th>
+                            <th class="pb-3">Description</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-slate-300">
+                        <tr class="border-b border-slate-700/50">
+                            <td class="py-3"><span class="bg-green-600/20 text-green-400 px-2 py-1 rounded text-xs font-mono">GET</span></td>
+                            <td class="py-3 font-mono text-blue-400">/health</td>
+                            <td class="py-3">Health check</td>
+                        </tr>
+                        <tr class="border-b border-slate-700/50">
+                            <td class="py-3"><span class="bg-blue-600/20 text-blue-400 px-2 py-1 rounded text-xs font-mono">POST</span></td>
+                            <td class="py-3 font-mono text-blue-400">/request-device</td>
+                            <td class="py-3">Gửi yêu cầu thêm device (trigger Telegram)</td>
+                        </tr>
+                        <tr class="border-b border-slate-700/50">
+                            <td class="py-3"><span class="bg-blue-600/20 text-blue-400 px-2 py-1 rounded text-xs font-mono">POST</span></td>
+                            <td class="py-3 font-mono text-blue-400">/approve/:deviceId</td>
+                            <td class="py-3">Duyệt device (từ Telegram/API)</td>
+                        </tr>
+                        <tr class="border-b border-slate-700/50">
+                            <td class="py-3"><span class="bg-blue-600/20 text-blue-400 px-2 py-1 rounded text-xs font-mono">POST</span></td>
+                            <td class="py-3 font-mono text-blue-400">/reject/:deviceId</td>
+                            <td class="py-3">Từ chối device</td>
+                        </tr>
+                        <tr class="border-b border-slate-700/50">
+                            <td class="py-3"><span class="bg-blue-600/20 text-blue-400 px-2 py-1 rounded text-xs font-mono">POST</span></td>
+                            <td class="py-3 font-mono text-blue-400">/telegram-webhook</td>
+                            <td class="py-3">Webhook nhận callback từ Telegram</td>
+                        </tr>
+                        <tr class="border-b border-slate-700/50">
+                            <td class="py-3"><span class="bg-green-600/20 text-green-400 px-2 py-1 rounded text-xs font-mono">GET</span></td>
+                            <td class="py-3 font-mono text-blue-400">/pending-requests</td>
+                            <td class="py-3">Danh sách yêu cầu đang chờ</td>
+                        </tr>
+                        <tr class="border-b border-slate-700/50">
+                            <td class="py-3"><span class="bg-green-600/20 text-green-400 px-2 py-1 rounded text-xs font-mono">GET</span></td>
+                            <td class="py-3 font-mono text-blue-400">/check/:deviceId</td>
+                            <td class="py-3">Kiểm tra device trong HA</td>
+                        </tr>
+                        <tr>
+                            <td class="py-3"><span class="bg-blue-600/20 text-blue-400 px-2 py-1 rounded text-xs font-mono">POST</span></td>
+                            <td class="py-3 font-mono text-blue-400">/register-integration</td>
+                            <td class="py-3">Đăng ký trực tiếp (cho approved)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-8 text-center text-slate-500 text-sm">
+            <p>Device Registration Worker v4.2 - Telegram Approval Flow</p>
+            <p class="mt-1">Bot: <a href="https://t.me/lumentreeebot" target="_blank" class="text-blue-400 hover:underline">@lumentreeebot</a></p>
+        </div>
+    </div>
+
+    <!-- Toast notification -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-xl transform translate-y-20 opacity-0 transition-all duration-300">
+        <span class="flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            <span id="toastText">Copied!</span>
+        </span>
+    </div>
+
+    <script>
+        // Full worker code - will be loaded
+        let workerCode = '';
+
+        // Load the worker code
+        async function loadWorkerCode() {
+            try {
+                const response = await fetch('workers/device-register-v4.2.js');
+                workerCode = await response.text();
+                document.getElementById('codeContent').textContent = workerCode;
+            } catch (error) {
+                console.error('Error loading worker code:', error);
+                document.getElementById('codeContent').textContent = '// Error loading code. Please download the file directly.';
+            }
+        }
+
+        // Copy full code
+        function copyFullCode() {
+            if (!workerCode) {
+                showToast('Code not loaded yet!', 'error');
+                return;
+            }
+            navigator.clipboard.writeText(workerCode).then(() => {
+                showToast('Đã copy toàn bộ code!');
+                document.getElementById('copyFullBtn').classList.add('copy-success');
+                setTimeout(() => {
+                    document.getElementById('copyFullBtn').classList.remove('copy-success');
+                }, 500);
+            }).catch(err => {
+                showToast('Copy failed!', 'error');
+            });
+        }
+
+        // Copy webhook command
+        function copyWebhookCmd() {
+            const cmd = 'curl "https://api.telegram.org/bot8596250778:AAES7mzb1WZrNHGAIapXXpIn_g_iKCmRETc/setWebhook?url=https://device-register.applike098.workers.dev/telegram-webhook"';
+            navigator.clipboard.writeText(cmd).then(() => {
+                showToast('Đã copy lệnh webhook!');
+            });
+        }
+
+        // Show toast notification
+        function showToast(text, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastText = document.getElementById('toastText');
+            toastText.textContent = text;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            if (type === 'error') {
+                toast.classList.add('bg-red-600');
+            } else {
+                toast.classList.remove('bg-red-600');
+            }
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2000);
+        }
+
+        // Load code on page load
+        document.addEventListener('DOMContentLoaded', loadWorkerCode);
+    </script>
+</body>
+</html>

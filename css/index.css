@@ -5400,3 +5400,24 @@ textarea:focus-visible {
         font-size: 12px;
     }
 }
+
+/* ========================================
+   DARK MODE DATE PICKER
+   ======================================== */
+
+/* Force dark color scheme for date inputs in dark mode */
+.dark input[type="date"],
+.dark input[type="datetime-local"],
+.dark input[type="time"] {
+    color-scheme: dark;
+}
+
+/* When system prefers dark mode */
+@media (prefers-color-scheme: dark) {
+
+    input[type="date"],
+    input[type="datetime-local"],
+    input[type="time"] {
+        color-scheme: dark;
+    }
+}

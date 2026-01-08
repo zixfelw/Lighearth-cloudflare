@@ -993,8 +993,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     const month = String(dateObj.getMonth() + 1).padStart(2, '0');
                     const year = dateObj.getFullYear();
                     compactDateDisplay.textContent = `${day}/${month}/${year}`;
+
+                    // Show date change notification
+                    showDateChangeNotification(`${day}/${month}/${year}`);
                 }
-                // Fetch data for new date
+                // Fetch data for new date (skip device notification)
+                window.skipDeviceNotification = true;
                 fetchData();
             }
         });
@@ -1867,6 +1871,12 @@ document.addEventListener('DOMContentLoaded', function () {
      * Show notification when device is registered
      */
     function showDeviceRegistrationNotification(deviceId, sensorCount, alreadyExists) {
+        // Skip notification if just switching dates
+        if (window.skipDeviceNotification) {
+            window.skipDeviceNotification = false;
+            return;
+        }
+
         // Create toast notification
         const toast = document.createElement('div');
         toast.className = 'fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 px-4 py-3 rounded-lg shadow-lg text-white text-sm font-medium transition-all duration-300';
@@ -1893,6 +1903,32 @@ document.addEventListener('DOMContentLoaded', function () {
             toast.style.transform = 'translateX(-50%) translateY(20px)';
             setTimeout(() => toast.remove(), 300);
         }, 4000);
+    }
+
+    /**
+     * Show notification when switching dates
+     */
+    function showDateChangeNotification(dateStr) {
+        const toast = document.createElement('div');
+        toast.className = 'fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 px-4 py-3 rounded-lg shadow-lg text-white text-sm font-medium transition-all duration-300 bg-teal-500';
+        toast.innerHTML = `<span class="mr-2">📅</span> Đang xem ngày ${dateStr}`;
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(-50%) translateY(20px)';
+
+        document.body.appendChild(toast);
+
+        // Animate in
+        setTimeout(() => {
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateX(-50%) translateY(0)';
+        }, 10);
+
+        // Remove after 2 seconds
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(-50%) translateY(20px)';
+            setTimeout(() => toast.remove(), 300);
+        }, 2000);
     }
 
     /**
@@ -6329,6 +6365,20 @@ Vui lòng kiểm tra:
         let currentDate = new Date(dateInput.value);
         currentDate.setDate(currentDate.getDate() + offset);
         dateInput.value = formatDate(currentDate);
+
+        // Update compact date display
+        const compactDateDisplay = document.getElementById('compactDateDisplay');
+        if (compactDateDisplay) {
+            const day = String(currentDate.getDate()).padStart(2, '0');
+            const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+            const year = currentDate.getFullYear();
+            const dateStr = `${day}/${month}/${year}`;
+            compactDateDisplay.textContent = dateStr;
+            showDateChangeNotification(dateStr);
+        }
+
+        // Skip device notification when just changing dates
+        window.skipDeviceNotification = true;
         fetchData();
     }
 

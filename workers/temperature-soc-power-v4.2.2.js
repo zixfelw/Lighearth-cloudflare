@@ -40,7 +40,7 @@
  */
 
 const VN_TIMEZONE_OFFSET = 7;
-const VERSION = '4.2.1';
+const VERSION = '4.2.2';
 
 function corsHeaders(origin) {
   return {
@@ -328,10 +328,26 @@ async function getTemperatureHistory(deviceId, date, env) {
   const deviceLower = deviceId.toLowerCase();
   const entityId = `sensor.device_${deviceLower}_device_temperature`;
 
+  // Vietnam timezone: UTC+7
+  // To get full day data for a Vietnam date, we need:
+  // Start: (date-1) 17:00 UTC = (date) 00:00 VN
+  // End: (date) 16:59:59 UTC = (date) 23:59:59 VN
+  // But if current date, extend to current time
+  const today = getVietnamToday();
   const startDate = new Date(date);
   startDate.setDate(startDate.getDate() - 1);
-  const startTime = `${startDate.toISOString().split('T')[0]}T17:00:00`;
-  const endTime = `${date}T16:59:59`;
+  const startTime = `${startDate.toISOString().split('T')[0]}T17:00:00Z`;
+
+  // If querying today, use current time; otherwise use end of day (16:59:59 UTC = 23:59:59 VN)
+  let endTime;
+  if (date === today) {
+    // Use current time for today's data
+    const now = new Date();
+    endTime = now.toISOString();
+  } else {
+    // For past dates, get full day
+    endTime = `${date}T16:59:59Z`;
+  }
 
   const data = await fetchHA(`/api/history/period/${startTime}?filter_entity_id=${entityId}&end_time=${endTime}`, env);
 

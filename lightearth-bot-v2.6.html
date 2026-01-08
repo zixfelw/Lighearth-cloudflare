@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LightEarth Bot v2.6 - Compact Notifications</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            color: #e2e8f0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            padding: 40px 20px;
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 20px;
+            margin-bottom: 30px;
+            border: 1px solid #334155;
+        }
+        h1 {
+            color: #22d3ee;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .version-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #059669, #10b981);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin: 10px 5px;
+        }
+        .feature-badge {
+            display: inline-block;
+            background: #3b82f6;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 12px;
+            font-size: 0.9em;
+            margin: 5px;
+        }
+        .section {
+            background: rgba(30, 41, 59, 0.8);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 1px solid #334155;
+        }
+        .section h2 {
+            color: #a78bfa;
+            border-bottom: 2px solid #334155;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+        }
+        .notification-examples {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+        }
+        .notif-card {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 15px;
+            border-left: 4px solid #22d3ee;
+        }
+        .notif-card.critical { border-left-color: #ef4444; }
+        .notif-card.warning { border-left-color: #f59e0b; }
+        .notif-card.success { border-left-color: #10b981; }
+        .notif-card h4 {
+            color: #f8fafc;
+            margin-bottom: 8px;
+        }
+        .notif-card pre {
+            background: #0f172a;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.85em;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            color: #94a3b8;
+        }
+        .code-section {
+            position: relative;
+        }
+        .code-area {
+            width: 100%;
+            height: 400px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 15px;
+            font-family: 'Fira Code', 'Monaco', monospace;
+            font-size: 13px;
+            color: #22d3ee;
+            resize: vertical;
+            outline: none;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .copy-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+        }
+        .copy-btn.copied {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .stat-card {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .stat-card .number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #22d3ee;
+        }
+        .stat-card .label {
+            color: #94a3b8;
+            font-size: 0.9em;
+        }
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .comparison-table th, .comparison-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #334155;
+        }
+        .comparison-table th {
+            background: #1e293b;
+            color: #a78bfa;
+        }
+        .comparison-table tr:hover {
+            background: rgba(34, 211, 238, 0.1);
+        }
+        .check { color: #10b981; }
+        .cross { color: #ef4444; }
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: #64748b;
+        }
+        @media (max-width: 768px) {
+            h1 { font-size: 1.8em; }
+            .code-area { height: 300px; font-size: 11px; }
+            .copy-btn { padding: 10px 15px; font-size: 0.9em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>LightEarth Bot v2.6</h1>
+            <div class="version-badge">COMPACT NOTIFICATIONS</div>
+            <div>
+                <span class="feature-badge">Thong bao gon</span>
+                <span class="feature-badge">Voltage Alerts</span>
+                <span class="feature-badge">Deep Link 64 chars</span>
+                <span class="feature-badge">Alert Once</span>
+            </div>
+        </header>
+
+        <div class="section">
+            <h2>Mau thong bao v2.6 (GON)</h2>
+            <div class="notification-examples">
+                <div class="notif-card critical">
+                    <h4>MAT DIEN</h4>
+                    <pre>MAT DIEN
+Device_ID
+
+Pin: 85%
+PV: 1200W
+Tai: 450W
+
+14:30:25 04/01/2026</pre>
+                </div>
+                <div class="notif-card success">
+                    <h4>CO DIEN LAI</h4>
+                    <pre>CO DIEN LAI
+Device_ID
+
+Grid: 2500W
+Pin: 75%
+Mat dien: 45p
+
+14:30:25 04/01/2026</pre>
+                </div>
+                <div class="notif-card success">
+                    <h4>PIN DAY</h4>
+                    <pre>PIN DAY
+Device_ID
+
+Pin: 97% (nguong: 95%)
+
+14:30:25 04/01/2026</pre>
+                </div>
+                <div class="notif-card warning">
+                    <h4>PIN THAP</h4>
+                    <pre>PIN THAP
+Device_ID
+
+Pin: 18% (nguong: 20%)
+
+14:30:25 04/01/2026</pre>
+                </div>
+                <div class="notif-card critical">
+                    <h4>DIEN AP CAO</h4>
+                    <pre>DIEN AP CAO
+Device_ID
+
+Dien ap: 54.5V (nguong: 54V)
+
+14:30:25 04/01/2026</pre>
+                </div>
+                <div class="notif-card warning">
+                    <h4>DIEN AP THAP</h4>
+                    <pre>DIEN AP THAP
+Device_ID
+
+Dien ap: 48.5V (nguong: 49V)
+
+14:30:25 04/01/2026</pre>
+                </div>
+                <div class="notif-card success">
+                    <h4>SAN LUONG PV</h4>
+                    <pre>SAN LUONG PV
+Device_ID
+
+PV: 25kWh (nguong: 20kWh)
+
+14:30:25 04/01/2026</pre>
+                </div>
+                <div class="notif-card warning">
+                    <h4>DIEN EVN</h4>
+                    <pre>DIEN EVN
+Device_ID
+
+EVN: 5.5kWh (nguong: 5kWh)
+
+14:30:25 04/01/2026</pre>
+                </div>
+                <div class="notif-card">
+                    <h4>TIEU THU</h4>
+                    <pre>TIEU THU
+Device_ID
+
+Tieu thu: 15kWh (nguong: 12kWh)
+
+14:30:25 04/01/2026</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>So sanh v2.4 vs v2.6</h2>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Tinh nang</th>
+                        <th>v2.4</th>
+                        <th>v2.6</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Format thong bao</td>
+                        <td>Dai, nhieu chi tiet</td>
+                        <td>Gon, 3-5 dong</td>
+                    </tr>
+                    <tr>
+                        <td>Voltage Alerts</td>
+                        <td class="check">Co</td>
+                        <td class="check">Co</td>
+                    </tr>
+                    <tr>
+                        <td>Alert Once/Day</td>
+                        <td class="check">Co</td>
+                        <td class="check">Co</td>
+                    </tr>
+                    <tr>
+                        <td>Deep Link 64 chars</td>
+                        <td class="check">Co</td>
+                        <td class="check">Co</td>
+                    </tr>
+                    <tr>
+                        <td>Weather Cache</td>
+                        <td class="check">Co</td>
+                        <td class="check">Co</td>
+                    </tr>
+                    <tr>
+                        <td>Batch KV</td>
+                        <td class="check">Co</td>
+                        <td class="check">Co</td>
+                    </tr>
+                    <tr>
+                        <td>Messages/thong bao</td>
+                        <td>~8-15 dong</td>
+                        <td>~3-5 dong</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>Thong ke Code</h2>
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="number">2.6</div>
+                    <div class="label">Version</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number">~72KB</div>
+                    <div class="label">File Size</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number">7</div>
+                    <div class="label">Alert Types</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number">64</div>
+                    <div class="label">Max Deep Link</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section code-section">
+            <h2>Full Code - Copy de Deploy len Cloudflare Workers</h2>
+            <button class="copy-btn" onclick="copyCode()">
+                <span id="copy-icon">📋</span>
+                <span id="copy-text">Copy Full Code</span>
+            </button>
+            <textarea id="code-area" class="code-area" readonly></textarea>
+        </div>
+
+        <div class="section">
+            <h2>Huong dan Deploy</h2>
+            <ol style="padding-left: 20px; line-height: 2;">
+                <li>Click nut <strong>"Copy Full Code"</strong> o tren</li>
+                <li>Vao <a href="https://dash.cloudflare.com/" target="_blank" style="color: #22d3ee;">Cloudflare Dashboard</a></li>
+                <li>Chon <strong>Workers & Pages</strong> -> <strong>lightearth-telegram-bot</strong></li>
+                <li>Click <strong>"Edit code"</strong> hoac <strong>"Quick edit"</strong></li>
+                <li>Xoa het code cu, dan code moi vao</li>
+                <li>Click <strong>"Deploy"</strong></li>
+                <li>Truy cap <code>/health</code> de kiem tra version 2.6</li>
+            </ol>
+        </div>
+
+        <footer>
+            <p>LightEarth Bot v2.6 - Compact Notifications Edition</p>
+            <p style="margin-top: 10px;">Made with 💚 for Lumentree Users</p>
+        </footer>
+    </div>
+
+    <script>
+        // Full code v2.6
+        const fullCode = `// LightEarth Telegram Bot - Cloudflare Worker with KV Storage
+// Version: 2.6 - COMPACT NOTIFICATIONS
+//
+// FEATURES:
+// - 📋 Thông báo gọn gàng: 1 dòng mỗi chỉ số
+// - 🔌 Voltage số thập phân: 50.5V thay vì làm tròn 51V
+// - 🔢 Hỗ trợ dấu phẩy: nhập 50,5 = 50.5
+// - 📊 Hiển thị chính xác trong mọi thông báo
+// - 🔋 Battery Voltage Alerts: batteryVoltHigh và batteryVoltLow
+// - 🔔 Alert Once: chỉ báo 1 lần/ngày/ngưỡng
+// - 🔗 Ultra Short Deep Link: ≤64 chars
+// - 🎉 Fun Messages + Serious Alerts
+// - ⚡ Weather Cache per cron run
+// - 📦 Batch KV operations
+//
+// DEPLOYMENT:
+// 1. Environment Variables: PI_URL, PI_TOKEN, BOT_TOKEN
+// 2. KV Namespace Binding: BOT_KV
+// 3. Cron Trigger: */5 * * * *
+//
+// SECURITY: BOT_TOKEN should be set as environment variable
+
+// ============================================
+// 🔑 TOKEN & API CONFIGURATION
+// ============================================
+// IMPORTANT: Replace YOUR_BOT_TOKEN_HERE with actual token in Cloudflare Dashboard
+// Or set BOT_TOKEN as environment variable (recommended for security)
+const BOT_TOKEN = typeof env !== 'undefined' && env.BOT_TOKEN ? env.BOT_TOKEN : '8471250396:AAGFvYBxwzmYQeivR0tBUPrDoqHHNnsfwdU';
+const TELEGRAM_API = 'https://api.telegram.org/bot' + BOT_TOKEN;
+
+// ============================================
+// 🌐 CORS CONFIGURATION
+// ============================================
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, X-API-Key',
+  'Access-Control-Max-Age': '86400'
+};
+
+function corsResponse(body, options = {}) {
+  const headers = { ...CORS_HEADERS, ...(options.headers || {}) };
+  return new Response(body, { ...options, headers });
+}
+
+function jsonResponse(data, status = 200) {
+  return corsResponse(JSON.stringify(data, null, 2), {
+    status, headers: { 'Content-Type': 'application/json' }
+  });
+}
+
+// ============================================
+// 📦 KV STORAGE CONFIGURATION
+// ============================================
+const KV_KEYS = { 
+  DEVICES: 'devices_data', 
+  DEVICE_STATES: 'device_states',
+  HA_CACHE: 'ha_cache',
+  THRESHOLD_ALERTS: 'threshold_alerts',
+  NOTIFICATION_FLAGS: 'notification_flags'
+};
+
+// Cache TTLs
+const HA_CACHE_TTL = 21600;      // 6 hours
+const WEATHER_CACHE_TTL = 3600;  // 1 hour
+
+// ============================================
+// ⚙️ DEFAULT CONFIGURATIONS
+// ============================================
+const DEFAULT_THRESHOLDS = {
+  batteryFull: 100,
+  batteryLow: 20,
+  pvDaily: 0,
+  gridUsage: 0,
+  loadDaily: 0,
+  batteryVoltHigh: 0,  // 0 = TẮT, VD: 55V
+  batteryVoltLow: 0    // 0 = TẮT, VD: 45V
+};
+
+const DEFAULT_DEVICES_DATA = [];
+
+// ============================================
+// 💾 KV STORAGE FUNCTIONS - OPTIMIZED BATCH
+// ============================================
+async function loadDevicesData(env) {
+  if (!env.BOT_KV) return [...DEFAULT_DEVICES_DATA];
+  try {
+    const data = await env.BOT_KV.get(KV_KEYS.DEVICES, { type: 'json' });
+    if (data && Array.isArray(data)) {
+      data.forEach(d => { if (!d.thresholds) d.thresholds = { ...DEFAULT_THRESHOLDS }; });
+      return data;
+    }
+    return [...DEFAULT_DEVICES_DATA];
+  } catch (e) { return [...DEFAULT_DEVICES_DATA]; }
+}
+
+async function saveDevicesData(env, data) {
+  if (!env.BOT_KV) return false;
+  try { await env.BOT_KV.put(KV_KEYS.DEVICES, JSON.stringify(data)); return true; } catch (e) { return false; }
+}
+
+async function loadDeviceStates(env) {
+  if (!env.BOT_KV) return {};
+  try { return (await env.BOT_KV.get(KV_KEYS.DEVICE_STATES, { type: 'json' })) || {}; } catch (e) { return {}; }
+}
+
+async function saveDeviceStates(env, states) {
+  if (!env.BOT_KV) return false;
+  try { await env.BOT_KV.put(KV_KEYS.DEVICE_STATES, JSON.stringify(states)); return true; } catch (e) { return false; }
+}
+
+// ============================================
+// 🎯 THRESHOLD ALERT MANAGEMENT - BATCH OPTIMIZED
+// ============================================
+async function loadAllThresholdAlerts(env) {
+  if (!env.BOT_KV) return {};
+  try { return (await env.BOT_KV.get(KV_KEYS.THRESHOLD_ALERTS, { type: 'json' })) || {}; } catch (e) { return {}; }
+}
+
+async function saveAllThresholdAlerts(env, alerts) {
+  if (!env.BOT_KV) return false;
+  try { await env.BOT_KV.put(KV_KEYS.THRESHOLD_ALERTS, JSON.stringify(alerts)); return true; } catch (e) { return false; }
+}
+
+function getThresholdAlertKey(alerts, type, chatId, deviceId) {
+  const key = \`\${type}_\${chatId}_\${deviceId}\`;
+  return alerts[key] || null;
+}
+
+function setThresholdAlertKey(alerts, type, chatId, deviceId, value) {
+  const key = \`\${type}_\${chatId}_\${deviceId}\`;
+  alerts[key] = String(value);
+}
+
+function clearThresholdAlertKey(alerts, type, chatId, deviceId) {
+  const key = \`\${type}_\${chatId}_\${deviceId}\`;
+  delete alerts[key];
+}
+
+function clearAllThresholdAlertsForDevice(alerts, chatId, deviceId) {
+  const types = ['full', 'low', 'pv', 'grid', 'load', 'bvhigh', 'bvlow'];
+  types.forEach(type => {
+    const key = \`\${type}_\${chatId}_\${deviceId}\`;
+    delete alerts[key];
+  });
+}
+
+// ============================================
+// 🚩 NOTIFICATION FLAGS - BATCH OPTIMIZED
+// ============================================
+async function loadNotificationFlags(env) {
+  if (!env.BOT_KV) return {};
+  try { return (await env.BOT_KV.get(KV_KEYS.NOTIFICATION_FLAGS, { type: 'json' })) || {}; } catch (e) { return {}; }
+}
+
+async function saveNotificationFlags(env, flags) {
+  if (!env.BOT_KV) return false;
+  try { await env.BOT_KV.put(KV_KEYS.NOTIFICATION_FLAGS, JSON.stringify(flags)); return true; } catch (e) { return false; }
+}
+
+// In-memory user conversation states
+const userStates = new Map();
+
+// In-memory weather cache (per cron run)
+let weatherCache = {};
+function resetWeatherCache() { weatherCache = {}; }
+
+
+// ============================================
+// 🗺️ VIETNAM CITIES DATABASE
+// ============================================
+const VIETNAM_CITIES = {
+  "TP. Ho Chi Minh": { lat: 10.8231, lon: 106.6297, region: "Mien Nam" },
+  "Ba Ria - Vung Tau": { lat: 10.4114, lon: 107.1362, region: "Mien Nam" },
+  "Binh Duong": { lat: 11.0753, lon: 106.6189, region: "Mien Nam" },
+  "Binh Phuoc": { lat: 11.7512, lon: 106.7235, region: "Mien Nam" },
+  "Dong Nai": { lat: 10.9574, lon: 106.8426, region: "Mien Nam" },
+  "Tay Ninh": { lat: 11.3555, lon: 106.1099, region: "Mien Nam" },
+  "Long An": { lat: 10.6956, lon: 106.2431, region: "Mien Nam" },
+  "Tien Giang": { lat: 10.4493, lon: 106.3420, region: "Mien Nam" },
+  "Ben Tre": { lat: 10.2433, lon: 106.3752, region: "Mien Nam" },
+  "Vinh Long": { lat: 10.2537, lon: 105.9722, region: "Mien Nam" },
+  "Tra Vinh": { lat: 9.8127, lon: 106.2993, region: "Mien Nam" },
+  "Dong Thap": { lat: 10.4937, lon: 105.6882, region: "Mien Nam" },
+  "An Giang": { lat: 10.5216, lon: 105.1259, region: "Mien Nam" },
+  "Kien Giang": { lat: 10.0125, lon: 105.0809, region: "Mien Nam" },
+  "Can Tho": { lat: 10.0452, lon: 105.7469, region: "Mien Nam" },
+  "Hau Giang": { lat: 9.7579, lon: 105.6413, region: "Mien Nam" },
+  "Soc Trang": { lat: 9.6037, lon: 105.9800, region: "Mien Nam" },
+  "Bac Lieu": { lat: 9.2940, lon: 105.7216, region: "Mien Nam" },
+  "Ca Mau": { lat: 9.1769, lon: 105.1524, region: "Mien Nam" },
+  "Da Nang": { lat: 16.0544, lon: 108.2022, region: "Mien Trung" },
+  "Thua Thien Hue": { lat: 16.4637, lon: 107.5909, region: "Mien Trung" },
+  "Quang Nam": { lat: 15.5394, lon: 108.0191, region: "Mien Trung" },
+  "Quang Ngai": { lat: 15.1214, lon: 108.8044, region: "Mien Trung" },
+  "Binh Dinh": { lat: 13.7765, lon: 109.2237, region: "Mien Trung" },
+  "Phu Yen": { lat: 13.0882, lon: 109.0929, region: "Mien Trung" },
+  "Khanh Hoa": { lat: 12.2388, lon: 109.1967, region: "Mien Trung" },
+  "Ninh Thuan": { lat: 11.5752, lon: 108.9890, region: "Mien Trung" },
+  "Binh Thuan": { lat: 10.9289, lon: 108.1021, region: "Mien Trung" },
+  "Quang Binh": { lat: 17.4656, lon: 106.6222, region: "Mien Trung" },
+  "Quang Tri": { lat: 16.7504, lon: 107.1856, region: "Mien Trung" },
+  "Ha Tinh": { lat: 18.3559, lon: 105.8877, region: "Mien Trung" },
+  "Nghe An": { lat: 18.6737, lon: 105.6922, region: "Mien Trung" },
+  "Thanh Hoa": { lat: 19.8067, lon: 105.7852, region: "Mien Trung" },
+  "Kon Tum": { lat: 14.3545, lon: 108.0005, region: "Tay Nguyen" },
+  "Gia Lai": { lat: 13.9833, lon: 108.0000, region: "Tay Nguyen" },
+  "Dak Lak": { lat: 12.6800, lon: 108.0378, region: "Tay Nguyen" },
+  "Dak Nong": { lat: 12.0033, lon: 107.6876, region: "Tay Nguyen" },
+  "Lam Dong": { lat: 11.9404, lon: 108.4583, region: "Tay Nguyen" },
+  "Ha Noi": { lat: 21.0285, lon: 105.8542, region: "Mien Bac" },
+  "Hai Phong": { lat: 20.8449, lon: 106.6881, region: "Mien Bac" },
+  "Quang Ninh": { lat: 21.0064, lon: 107.2925, region: "Mien Bac" },
+  "Bac Giang": { lat: 21.2819, lon: 106.1975, region: "Mien Bac" },
+  "Bac Ninh": { lat: 21.1861, lon: 106.0763, region: "Mien Bac" },
+  "Hai Duong": { lat: 20.9373, lon: 106.3146, region: "Mien Bac" },
+  "Hung Yen": { lat: 20.6464, lon: 106.0511, region: "Mien Bac" },
+  "Thai Binh": { lat: 20.4463, lon: 106.3365, region: "Mien Bac" },
+  "Nam Dinh": { lat: 20.4388, lon: 106.1621, region: "Mien Bac" },
+  "Ninh Binh": { lat: 20.2506, lon: 105.9745, region: "Mien Bac" },
+  "Ha Nam": { lat: 20.5835, lon: 105.9230, region: "Mien Bac" },
+  "Vinh Phuc": { lat: 21.3609, lon: 105.5474, region: "Mien Bac" },
+  "Phu Tho": { lat: 21.3227, lon: 105.2280, region: "Mien Bac" },
+  "Thai Nguyen": { lat: 21.5942, lon: 105.8482, region: "Mien Bac" },
+  "Bac Kan": { lat: 22.1470, lon: 105.8348, region: "Mien Bac" },
+  "Cao Bang": { lat: 22.6663, lon: 106.2522, region: "Mien Bac" },
+  "Lang Son": { lat: 21.8537, lon: 106.7615, region: "Mien Bac" },
+  "Tuyen Quang": { lat: 21.8233, lon: 105.2180, region: "Mien Bac" },
+  "Ha Giang": { lat: 22.8333, lon: 104.9833, region: "Mien Bac" },
+  "Yen Bai": { lat: 21.7168, lon: 104.8986, region: "Mien Bac" },
+  "Lao Cai": { lat: 22.4856, lon: 103.9707, region: "Mien Bac" },
+  "Lai Chau": { lat: 22.3864, lon: 103.4703, region: "Mien Bac" },
+  "Dien Bien": { lat: 21.3860, lon: 103.0230, region: "Mien Bac" },
+  "Son La": { lat: 21.3256, lon: 103.9188, region: "Mien Bac" },
+  "Hoa Binh": { lat: 20.8171, lon: 105.3376, region: "Mien Bac" }
+};
+
+// ============================================
+// 📍 SHORT LOCATION CODES
+// ============================================
+const LOCATION_CODES = {
+  'hcm': 'TP. Ho Chi Minh', 'hn': 'Ha Noi', 'dng': 'Da Nang', 'ct': 'Can Tho',
+  'bd': 'Binh Duong', 'tn': 'Tay Ninh', 'dn': 'Dong Nai', 'dl': 'Lam Dong',
+  'la': 'Long An', 'tg': 'Tien Giang', 'bt': 'Ben Tre', 'vl': 'Vinh Long',
+  'tv': 'Tra Vinh', 'dt': 'Dong Thap', 'ag': 'An Giang', 'kg': 'Kien Giang',
+  'hg': 'Hau Giang', 'st': 'Soc Trang', 'bl': 'Bac Lieu', 'cm': 'Ca Mau',
+  'brvt': 'Ba Ria - Vung Tau', 'bp': 'Binh Phuoc', 'tth': 'Thua Thien Hue',
+  'qna': 'Quang Nam', 'qng': 'Quang Ngai', 'bdi': 'Binh Dinh', 'py': 'Phu Yen',
+  'kh': 'Khanh Hoa', 'nt': 'Ninh Thuan', 'bth': 'Binh Thuan', 'qb': 'Quang Binh',
+  'qt': 'Quang Tri', 'hti': 'Ha Tinh', 'na': 'Nghe An', 'th': 'Thanh Hoa',
+  'kt': 'Kon Tum', 'gl': 'Gia Lai', 'dlk': 'Dak Lak', 'dno': 'Dak Nong',
+  'hp': 'Hai Phong', 'qni': 'Quang Ninh', 'bg': 'Bac Giang', 'bn': 'Bac Ninh',
+  'hdu': 'Hai Duong', 'hy': 'Hung Yen', 'tb': 'Thai Binh', 'nd': 'Nam Dinh',
+  'nb': 'Ninh Binh', 'hna': 'Ha Nam', 'vp': 'Vinh Phuc', 'pt': 'Phu Tho',
+  'tnu': 'Thai Nguyen', 'bk': 'Bac Kan', 'cb': 'Cao Bang', 'ls': 'Lang Son',
+  'tqu': 'Tuyen Quang', 'hgi': 'Ha Giang', 'yb': 'Yen Bai', 'lc': 'Lao Cai',
+  'lch': 'Lai Chau', 'db': 'Dien Bien', 'sla': 'Son La', 'hbi': 'Hoa Binh'
+};
+
+function decodeLocationCode(code) {
+  if (!code) return "TP. Ho Chi Minh";
+  const lowerCode = code.toLowerCase();
+  if (LOCATION_CODES[lowerCode]) return LOCATION_CODES[lowerCode];
+  for (const [short, full] of Object.entries(LOCATION_CODES)) {
+    if (lowerCode.includes(short) || short.includes(lowerCode)) return full;
+  }
+  const decoded = code.replace(/_/g, ' ').replace(/\\s+/g, ' ').trim();
+  for (const city of Object.keys(VIETNAM_CITIES)) {
+    if (city.toLowerCase().replace(/[^a-z0-9]/g, '') === decoded.toLowerCase().replace(/[^a-z0-9]/g, '')) return city;
+  }
+  return "TP. Ho Chi Minh";
+}
+
+function encodeLocationCode(cityName) {
+  if (!cityName) return 'hcm';
+  for (const [code, name] of Object.entries(LOCATION_CODES)) {
+    if (name === cityName) return code;
+  }
+  return 'hcm';
+}
+
+// ... (Code continues - Full code will be loaded from file)
+`;
+
+        // Load code on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load the actual full code via fetch
+            fetch('/LightEarth-Bot-v2.6.js')
+                .then(response => response.text())
+                .then(code => {
+                    document.getElementById('code-area').value = code;
+                })
+                .catch(error => {
+                    // If fetch fails, use placeholder
+                    document.getElementById('code-area').value = 'Loading code... Please refresh the page or access /LightEarth-Bot-v2.6.js directly';
+                });
+        });
+
+        function copyCode() {
+            const codeArea = document.getElementById('code-area');
+            const copyBtn = document.querySelector('.copy-btn');
+            const copyIcon = document.getElementById('copy-icon');
+            const copyText = document.getElementById('copy-text');
+            
+            // Select and copy
+            codeArea.select();
+            codeArea.setSelectionRange(0, 99999999);
+            
+            try {
+                document.execCommand('copy');
+                
+                // Visual feedback
+                copyBtn.classList.add('copied');
+                copyIcon.textContent = '✅';
+                copyText.textContent = 'Copied!';
+                
+                // Reset after 3 seconds
+                setTimeout(() => {
+                    copyBtn.classList.remove('copied');
+                    copyIcon.textContent = '📋';
+                    copyText.textContent = 'Copy Full Code';
+                }, 3000);
+            } catch (err) {
+                alert('Copy failed. Please manually select and copy.');
+            }
+        }
+    </script>
+</body>
+</html>

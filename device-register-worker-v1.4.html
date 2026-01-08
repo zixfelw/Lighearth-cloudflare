@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Device Register Worker v1.4 - Copy Code</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      color: #fff;
+      padding: 20px;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    h1 { text-align: center; margin-bottom: 10px; color: #4ade80; }
+    .subtitle { text-align: center; color: #94a3b8; margin-bottom: 30px; }
+    .version-badge {
+      display: inline-block;
+      background: #22c55e;
+      color: #000;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    .card {
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .card h2 { color: #4ade80; margin-bottom: 15px; font-size: 18px; }
+    .btn {
+      display: inline-block;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      font-size: 14px;
+      transition: all 0.2s;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    .btn-primary { background: #22c55e; color: #000; }
+    .btn-primary:hover { background: #16a34a; transform: translateY(-2px); }
+    .btn-secondary { background: #3b82f6; color: #fff; }
+    .btn-secondary:hover { background: #2563eb; }
+    .btn-warning { background: #f59e0b; color: #000; }
+    .btn-warning:hover { background: #d97706; }
+    .btn-danger { background: #ef4444; color: #fff; }
+    .btn-danger:hover { background: #dc2626; }
+    pre {
+      background: #0d1117;
+      border-radius: 8px;
+      padding: 15px;
+      overflow-x: auto;
+      font-size: 12px;
+      line-height: 1.5;
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid #30363d;
+    }
+    code { font-family: 'Fira Code', 'Monaco', 'Consolas', monospace; }
+    .endpoints { display: grid; gap: 10px; }
+    .endpoint {
+      background: rgba(0,0,0,0.3);
+      padding: 10px 15px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .method {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 12px;
+    }
+    .method-get { background: #22c55e; color: #000; }
+    .method-post { background: #3b82f6; color: #fff; }
+    .path { font-family: monospace; color: #e2e8f0; }
+    .desc { color: #94a3b8; font-size: 13px; }
+    .test-section { margin-top: 20px; }
+    .input-group { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+    .input-group input {
+      flex: 1;
+      min-width: 200px;
+      padding: 10px 15px;
+      border-radius: 8px;
+      border: 1px solid #30363d;
+      background: #0d1117;
+      color: #fff;
+      font-size: 14px;
+    }
+    .result {
+      background: #0d1117;
+      border-radius: 8px;
+      padding: 15px;
+      border: 1px solid #30363d;
+      min-height: 100px;
+      white-space: pre-wrap;
+      font-family: monospace;
+      font-size: 13px;
+    }
+    .success { color: #4ade80; }
+    .error { color: #ef4444; }
+    .changes-list { list-style: none; }
+    .changes-list li { 
+      padding: 8px 0; 
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .changes-list li:last-child { border-bottom: none; }
+    .change-icon { font-size: 18px; }
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 15px 25px;
+      border-radius: 8px;
+      background: #22c55e;
+      color: #000;
+      font-weight: 600;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Device Register Worker <span class="version-badge">v1.4</span></h1>
+    <p class="subtitle">Auto-register new devices to Home Assistant via MQTT Discovery</p>
+    
+    <!-- Changes -->
+    <div class="card">
+      <h2>What's New in v1.4</h2>
+      <ul class="changes-list">
+        <li><span class="change-icon">🧹</span> <span>NEW: <strong>/cleanup</strong> endpoint - Remove ALL entity formats (fix duplicate issues)</span></li>
+        <li><span class="change-icon">🔧</span> <span>Fixed syntax error in unregisterDevice function</span></li>
+        <li><span class="change-icon">📝</span> <span>Added 4 topic formats for cleanup: old_simple, middle_nested, duplicate_id, current_correct</span></li>
+        <li><span class="change-icon">✅</span> <span>Topic format: <code>homeassistant/sensor/lumentree_h250325151_pv_power/config</code></span></li>
+        <li><span class="change-icon">✅</span> <span>Entity ID: <code>sensor.lumentree_h250325151_pv_power</code> (no duplicates)</span></li>
+      </ul>
+    </div>
+    
+    <!-- Endpoints -->
+    <div class="card">
+      <h2>API Endpoints</h2>
+      <div class="endpoints">
+        <div class="endpoint">
+          <span class="method method-get">GET</span>
+          <span class="path">/health</span>
+          <span class="desc">- Health check & version info</span>
+        </div>
+        <div class="endpoint">
+          <span class="method method-get">GET</span>
+          <span class="path">/check/:deviceId</span>
+          <span class="desc">- Check if device exists in HA</span>
+        </div>
+        <div class="endpoint">
+          <span class="method method-post">POST</span>
+          <span class="path">/register</span>
+          <span class="desc">- Register new device (create 39 sensors)</span>
+        </div>
+        <div class="endpoint">
+          <span class="method method-post">POST</span>
+          <span class="path">/unregister</span>
+          <span class="desc">- Remove device sensors</span>
+        </div>
+        <div class="endpoint">
+          <span class="method method-post">POST</span>
+          <span class="path">/cleanup</span>
+          <span class="desc">- Remove ALL entity formats (fix duplicates)</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Required Environment Variables -->
+    <div class="card">
+      <h2>Required Environment Variables</h2>
+      <pre><code>HA_URL=https://your-ha-instance.trycloudflare.com
+HA_TOKEN=your_long_lived_access_token</code></pre>
+    </div>
+    
+    <!-- Copy Code -->
+    <div class="card">
+      <h2>Worker Code</h2>
+      <div style="margin-bottom: 15px;">
+        <button class="btn btn-primary" onclick="copyCode()">📋 Copy Worker Code</button>
+        <button class="btn btn-secondary" onclick="downloadCode()">⬇️ Download .js File</button>
+      </div>
+      <pre><code id="workerCode">/**
+ * Device Registration Worker v1.4
+ * Auto-register new devices to Home Assistant via MQTT Discovery
+ * 
+ * Features:
+ * - Check if device exists in HA
+ * - Auto-create sensors via MQTT Discovery if device is new
+ * - Cleanup old/broken entities with /cleanup endpoint
+ * - CORS support for Dashboard
+ * 
+ * Endpoints:
+ * - GET /health - Health check
+ * - GET /check/:deviceId - Check if device exists in HA
+ * - POST /register - Register new device (auto-create sensors)
+ * - POST /unregister - Remove device sensors
+ * - POST /cleanup - Remove ALL entity formats (for fixing duplicate issues)
+ */
+
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Content-Type': 'application/json'
+};
+
+// Sensor definitions for solar inverter
+const SENSOR_DEFINITIONS = [
+  // Power sensors (W)
+  { id: 'pv_power', name: 'PV Power', unit: 'W', deviceClass: 'power', stateClass: 'measurement' },
+  { id: 'pv1_power', name: 'PV1 Power', unit: 'W', deviceClass: 'power', stateClass: 'measurement' },
+  { id: 'pv2_power', name: 'PV2 Power', unit: 'W', deviceClass: 'power', stateClass: 'measurement' },
+  { id: 'battery_power', name: 'Battery Power', unit: 'W', deviceClass: 'power', stateClass: 'measurement' },
+  { id: 'load_power', name: 'Load Power', unit: 'W', deviceClass: 'power', stateClass: 'measurement' },
+  { id: 'grid_power', name: 'Grid Power', unit: 'W', deviceClass: 'power', stateClass: 'measurement' },
+  { id: 'total_load_power', name: 'Total Load Power', unit: 'W', deviceClass: 'power', stateClass: 'measurement' },
+  
+  // Battery sensors
+  { id: 'battery_soc', name: 'Battery SOC', unit: '%', deviceClass: 'battery', stateClass: 'measurement' },
+  { id: 'battery_voltage', name: 'Battery Voltage', unit: 'V', deviceClass: 'voltage', stateClass: 'measurement' },
+  { id: 'battery_current', name: 'Battery Current', unit: 'A', deviceClass: 'current', stateClass: 'measurement' },
+  
+  // Voltage sensors
+  { id: 'pv1_voltage', name: 'PV1 Voltage', unit: 'V', deviceClass: 'voltage', stateClass: 'measurement' },
+  { id: 'pv2_voltage', name: 'PV2 Voltage', unit: 'V', deviceClass: 'voltage', stateClass: 'measurement' },
+  { id: 'grid_voltage', name: 'Grid Voltage', unit: 'V', deviceClass: 'voltage', stateClass: 'measurement' },
+  
+  // Temperature
+  { id: 'device_temperature', name: 'Device Temperature', unit: '°C', deviceClass: 'temperature', stateClass: 'measurement' },
+  
+  // Energy sensors (kWh) - Today
+  { id: 'pv_today', name: 'PV Today', unit: 'kWh', deviceClass: 'energy', stateClass: 'total_increasing' },
+  { id: 'charge_today', name: 'Charge Today', unit: 'kWh', deviceClass: 'energy', stateClass: 'total_increasing' },
+  { id: 'discharge_today', name: 'Discharge Today', unit: 'kWh', deviceClass: 'energy', stateClass: 'total_increasing' },
+  { id: 'grid_in_today', name: 'Grid Import Today', unit: 'kWh', deviceClass: 'energy', stateClass: 'total_increasing' },
+  { id: 'load_today', name: 'Load Today', unit: 'kWh', deviceClass: 'energy', stateClass: 'total_increasing' },
+  { id: 'essential_today', name: 'Essential Today', unit: 'kWh', deviceClass: 'energy', stateClass: 'total_increasing' },
+  { id: 'total_load_today', name: 'Total Load Today', unit: 'kWh', deviceClass: 'energy', stateClass: 'total_increasing' },
+  
+  // Energy sensors (kWh) - Month
+  { id: 'pv_month', name: 'PV Month', unit: 'kWh', deviceClass: 'energy', stateClass: 'total' },
+  { id: 'charge_month', name: 'Charge Month', unit: 'kWh', deviceClass: 'energy', stateClass: 'total' },
+  { id: 'discharge_month', name: 'Discharge Month', unit: 'kWh', deviceClass: 'energy', stateClass: 'total' },
+  { id: 'grid_in_month', name: 'Grid Import Month', unit: 'kWh', deviceClass: 'energy', stateClass: 'total' },
+  { id: 'load_month', name: 'Load Month', unit: 'kWh', deviceClass: 'energy', stateClass: 'total' },
+  { id: 'total_load_month', name: 'Total Load Month', unit: 'kWh', deviceClass: 'energy', stateClass: 'total' },
+  
+  // Energy sensors (kWh) - Year
+  { id: 'pv_year', name: 'PV Year', unit: 'kWh', deviceClass: 'energy', stateClass: 'total' },
+  { id: 'charge_year', name: 'Charge Year', unit: 'kWh', deviceClass: 'energy', stateClass: 'total' },
+  { id: 'discharge_year', name: 'Discharge Year', unit: 'kWh', deviceClass: 'energy', stateClass: 'total' },
+  { id: 'grid_in_year', name: 'Grid Import Year', unit: 'kWh', deviceClass: 'energy', stateClass: 'total' },
+  { id: 'load_year', name: 'Load Year', unit: 'kWh', deviceClass: 'energy', stateClass: 'total' },
+  { id: 'total_load_year', name: 'Total Load Year', unit: 'kWh', deviceClass: 'energy', stateClass: 'total' },
+  
+  // Energy sensors (kWh) - Total
+  { id: 'pv_total', name: 'PV Total', unit: 'kWh', deviceClass: 'energy', stateClass: 'total_increasing' },
+  { id: 'charge_total', name: 'Charge Total', unit: 'kWh', deviceClass: 'energy', stateClass: 'total_increasing' },
+  { id: 'discharge_total', name: 'Discharge Total', unit: 'kWh', deviceClass: 'energy', stateClass: 'total_increasing' },
+  { id: 'grid_in_total', name: 'Grid Import Total', unit: 'kWh', deviceClass: 'energy', stateClass: 'total_increasing' },
+  { id: 'load_total', name: 'Load Total', unit: 'kWh', deviceClass: 'energy', stateClass: 'total_increasing' },
+  { id: 'total_load_total', name: 'Total Load Total', unit: 'kWh', deviceClass: 'energy', stateClass: 'total_increasing' }
+];
+
+// Validate device ID format (P/H + 6-12 digits)
+function isValidDeviceId(deviceId) {
+  if (!deviceId || typeof deviceId !== 'string') return false;
+  const cleaned = deviceId.trim().toUpperCase();
+  return /^[PH]\d{6,12}$/.test(cleaned);
+}
+
+// Normalize device ID
+function normalizeDeviceId(deviceId) {
+  return deviceId.trim().toUpperCase();
+}
+
+// Check if device exists in HA
+// Check both formats: sensor.device_xxx (lumentree integration) and sensor.lumentree_xxx (MQTT Discovery)
+async function checkDeviceExists(haUrl, haToken, deviceId) {
+  const normalizedId = normalizeDeviceId(deviceId).toLowerCase();
+  
+  // Try both entity formats
+  const entityFormats = [
+    `sensor.device_${normalizedId}_pv_power`,           // lumentree integration format
+    `sensor.lumentree_${normalizedId}_pv_power`         // MQTT Discovery format
+  ];
+  
+  for (const testEntity of entityFormats) {
+    try {
+      const response = await fetch(`${haUrl}/api/states/${testEntity}`, {
+        headers: {
+          'Authorization': `Bearer ${haToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        return {
+          exists: true,
+          state: data.state,
+          lastUpdated: data.last_updated,
+          entityFormat: testEntity.includes('lumentree_') ? 'mqtt_discovery' : 'lumentree_integration'
+        };
+      }
+    } catch (error) {
+      // Continue to next format
+    }
+  }
+  
+  return { exists: false };
+}
+
+// Count existing entities for a device
+// Check both formats: device_xxx (lumentree) and lumentree_xxx (MQTT Discovery)
+async function countDeviceEntities(haUrl, haToken, deviceId) {
+  const normalizedId = normalizeDeviceId(deviceId).toLowerCase();
+  
+  try {
+    const response = await fetch(`${haUrl}/api/states`, {
+      headers: {
+        'Authorization': `Bearer ${haToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      return { count: 0, error: `HTTP ${response.status}` };
+    }
+    
+    const states = await response.json();
+    // Check both entity formats
+    const deviceEntities = states.filter(s => 
+      s.entity_id.includes(`device_${normalizedId}`) || 
+      s.entity_id.includes(`lumentree_${normalizedId}`)
+    );
+    
+    return {
+      count: deviceEntities.length,
+      entities: deviceEntities.slice(0, 5).map(e => e.entity_id)
+    };
+  } catch (error) {
+    return { count: 0, error: error.message };
+  }
+}
+
+// Create MQTT Discovery config for a sensor
+function createMqttDiscoveryPayload(deviceId, sensor) {
+  const normalizedId = normalizeDeviceId(deviceId).toLowerCase();
+  const deviceName = `LumenTree ${deviceId}`;
+  
+  return {
+    name: `${deviceId} ${sensor.name}`,
+    unique_id: `lumentree_${normalizedId}_${sensor.id}`,
+    state_topic: `lumentree/${normalizedId}/${sensor.id}`,
+    device_class: sensor.deviceClass,
+    state_class: sensor.stateClass,
+    unit_of_measurement: sensor.unit,
+    device: {
+      identifiers: [`lumentree_${normalizedId}`],
+      name: deviceName,
+      manufacturer: 'LumenTree',
+      model: 'Solar Inverter'
+    }
+  };
+}
+
+// Register device via MQTT Discovery
+async function registerDevice(haUrl, haToken, deviceId) {
+  const normalizedId = normalizeDeviceId(deviceId).toLowerCase();
+  const results = [];
+  let successCount = 0;
+  let errorCount = 0;
+  
+  for (const sensor of SENSOR_DEFINITIONS) {
+    // Topic format: homeassistant/sensor/&lt;unique_id&gt;/config
+    // HA uses unique_id from payload to create entity_id
+    // unique_id in payload: lumentree_h250325151_pv_power
+    // This should create: sensor.lumentree_h250325151_pv_power
+    const uniqueId = `lumentree_${normalizedId}_${sensor.id}`;
+    const topic = `homeassistant/sensor/${uniqueId}/config`;
+    const payload = createMqttDiscoveryPayload(deviceId, sensor);
+    
+    try {
+      const response = await fetch(`${haUrl}/api/services/mqtt/publish`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${haToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          topic: topic,
+          payload: JSON.stringify(payload),
+          retain: true
+        })
+      });
+      
+      if (response.ok) {
+        successCount++;
+        results.push({ sensor: sensor.id, status: 'created' });
+      } else {
+        errorCount++;
+        results.push({ sensor: sensor.id, status: 'error', code: response.status });
+      }
+    } catch (error) {
+      errorCount++;
+      results.push({ sensor: sensor.id, status: 'error', message: error.message });
+    }
+  }
+  
+  return {
+    success: successCount > 0,
+    deviceId: normalizeDeviceId(deviceId),
+    sensorsCreated: successCount,
+    sensorsError: errorCount,
+    totalSensors: SENSOR_DEFINITIONS.length,
+    results: results.slice(0, 10) // Only return first 10 results
+  };
+}
+
+// Unregister device (remove MQTT Discovery configs)
+async function unregisterDevice(haUrl, haToken, deviceId) {
+  const normalizedId = normalizeDeviceId(deviceId).toLowerCase();
+  let successCount = 0;
+  
+  for (const sensor of SENSOR_DEFINITIONS) {
+    // Match the topic format used in registerDevice
+    const uniqueId = `lumentree_${normalizedId}_${sensor.id}`;
+    const topic = `homeassistant/sensor/${uniqueId}/config`;
+    
+    try {
+      const response = await fetch(`${haUrl}/api/services/mqtt/publish`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${haToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          topic: topic,
+          payload: '', // Empty payload removes the entity
+          retain: true
+        })
+      });
+      
+      if (response.ok) successCount++;
+    } catch (error) {
+      // Continue even if one fails
+    }
+  }
+  
+  return {
+    success: successCount > 0,
+    deviceId: normalizeDeviceId(deviceId),
+    sensorsRemoved: successCount
+  };
+}
+
+// Cleanup ALL topic formats (for removing old/broken entities)
+async function cleanupAllFormats(haUrl, haToken, deviceId) {
+  const normalizedId = normalizeDeviceId(deviceId).toLowerCase();
+  let totalRemoved = 0;
+  const formats = [];
+  
+  // All possible topic formats that may have been used in past versions
+  const topicFormats = [
+    // Format 1: Old format - homeassistant/sensor/h250325151_pv_power/config
+    (sensor) => `homeassistant/sensor/${normalizedId}_${sensor.id}/config`,
+    // Format 2: Middle format - homeassistant/sensor/h250325151/lumentree_h250325151_pv_power/config  
+    (sensor) => `homeassistant/sensor/${normalizedId}/lumentree_${normalizedId}_${sensor.id}/config`,
+    // Format 3: Duplicate ID format - homeassistant/sensor/lumentree_h250325151_h250325151_pv_power/config
+    (sensor) => `homeassistant/sensor/lumentree_${normalizedId}_${normalizedId}_${sensor.id}/config`,
+    // Format 4: Current correct format - homeassistant/sensor/lumentree_h250325151_pv_power/config
+    (sensor) => `homeassistant/sensor/lumentree_${normalizedId}_${sensor.id}/config`,
+  ];
+  
+  const formatNames = [
+    'old_simple',
+    'middle_nested', 
+    'duplicate_id',
+    'current_correct'
+  ];
+  
+  for (let i = 0; i &lt; topicFormats.length; i++) {
+    const formatFn = topicFormats[i];
+    let formatCount = 0;
+    
+    for (const sensor of SENSOR_DEFINITIONS) {
+      const topic = formatFn(sensor);
+      try {
+        const response = await fetch(`${haUrl}/api/services/mqtt/publish`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${haToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            topic: topic,
+            payload: '',
+            retain: true
+          })
+        });
+        if (response.ok) formatCount++;
+      } catch (error) {
+        // Continue
+      }
+    }
+    totalRemoved += formatCount;
+    formats.push({ 
+      name: formatNames[i],
+      example: formatFn({ id: 'pv_power' }), 
+      removed: formatCount 
+    });
+  }
+  
+  return {
+    success: totalRemoved > 0,
+    deviceId: normalizeDeviceId(deviceId),
+    totalRemoved,
+    formatsCleared: formats,
+    note: 'All MQTT Discovery topic formats have been cleared. You may need to restart HA or wait for MQTT to process.'
+  };
+}
+
+export default {
+  async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+    const path = url.pathname;
+    
+    // CORS preflight
+    if (request.method === 'OPTIONS') {
+      return new Response(null, { headers: CORS_HEADERS });
+    }
+    
+    const HA_URL = env.HA_URL;
+    const HA_TOKEN = env.HA_TOKEN;
+    
+    // Health check
+    if (path === '/' || path === '/health') {
+      return new Response(JSON.stringify({
+        status: 'ok',
+        version: '1.4',
+        service: 'Device Registration Worker',
+        haConfigured: !!(HA_URL &amp;&amp; HA_TOKEN),
+        endpoints: [
+          'GET /check/:deviceId - Check if device exists',
+          'POST /register - Register new device',
+          'POST /unregister - Remove device',
+          'POST /cleanup - Remove ALL entity formats (fix duplicates)'
+        ],
+        sensorsSupported: SENSOR_DEFINITIONS.length
+      }), { headers: CORS_HEADERS });
+    }
+    
+    // Check HA configuration
+    if (!HA_URL || !HA_TOKEN) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Home Assistant not configured'
+      }), { status: 503, headers: CORS_HEADERS });
+    }
+    
+    // GET /check/:deviceId - Check if device exists
+    if (path.match(/^\/check\/([^\/]+)$/) &amp;&amp; request.method === 'GET') {
+      const match = path.match(/^\/check\/([^\/]+)$/);
+      const deviceId = match[1];
+      
+      if (!isValidDeviceId(deviceId)) {
+        return new Response(JSON.stringify({
+          success: false,
+          error: 'Invalid device ID format. Expected: P/H followed by 6-12 digits'
+        }), { status: 400, headers: CORS_HEADERS });
+      }
+      
+      const existsResult = await checkDeviceExists(HA_URL, HA_TOKEN, deviceId);
+      const countResult = await countDeviceEntities(HA_URL, HA_TOKEN, deviceId);
+      
+      return new Response(JSON.stringify({
+        success: true,
+        deviceId: normalizeDeviceId(deviceId),
+        exists: existsResult.exists,
+        entityCount: countResult.count,
+        sampleEntities: countResult.entities || [],
+        state: existsResult.state,
+        lastUpdated: existsResult.lastUpdated
+      }), { headers: CORS_HEADERS });
+    }
+    
+    // POST /register - Register new device
+    if (path === '/register' &amp;&amp; request.method === 'POST') {
+      let body;
+      try {
+        body = await request.json();
+      } catch (e) {
+        return new Response(JSON.stringify({
+          success: false,
+          error: 'Invalid JSON body'
+        }), { status: 400, headers: CORS_HEADERS });
+      }
+      
+      const deviceId = body.deviceId;
+      
+      if (!isValidDeviceId(deviceId)) {
+        return new Response(JSON.stringify({
+          success: false,
+          error: 'Invalid device ID format. Expected: P/H followed by 6-12 digits'
+        }), { status: 400, headers: CORS_HEADERS });
+      }
+      
+      // Check if device already exists
+      const existsResult = await checkDeviceExists(HA_URL, HA_TOKEN, deviceId);
+      
+      if (existsResult.exists) {
+        const countResult = await countDeviceEntities(HA_URL, HA_TOKEN, deviceId);
+        return new Response(JSON.stringify({
+          success: true,
+          message: 'Device already exists in Home Assistant',
+          deviceId: normalizeDeviceId(deviceId),
+          alreadyExists: true,
+          entityCount: countResult.count
+        }), { headers: CORS_HEADERS });
+      }
+      
+      // Register new device
+      const registerResult = await registerDevice(HA_URL, HA_TOKEN, deviceId);
+      
+      return new Response(JSON.stringify({
+        success: registerResult.success,
+        message: registerResult.success 
+          ? `Device ${registerResult.deviceId} registered successfully. ${registerResult.sensorsCreated} sensors created.`
+          : 'Failed to register device',
+        deviceId: registerResult.deviceId,
+        alreadyExists: false,
+        sensorsCreated: registerResult.sensorsCreated,
+        sensorsError: registerResult.sensorsError,
+        note: 'Sensors are created but will show "unknown" until the inverter sends data via MQTT'
+      }), { 
+        status: registerResult.success ? 201 : 500, 
+        headers: CORS_HEADERS 
+      });
+    }
+    
+    // POST /unregister - Remove device
+    if (path === '/unregister' &amp;&amp; request.method === 'POST') {
+      let body;
+      try {
+        body = await request.json();
+      } catch (e) {
+        return new Response(JSON.stringify({
+          success: false,
+          error: 'Invalid JSON body'
+        }), { status: 400, headers: CORS_HEADERS });
+      }
+      
+      const deviceId = body.deviceId;
+      
+      if (!isValidDeviceId(deviceId)) {
+        return new Response(JSON.stringify({
+          success: false,
+          error: 'Invalid device ID format'
+        }), { status: 400, headers: CORS_HEADERS });
+      }
+      
+      const result = await unregisterDevice(HA_URL, HA_TOKEN, deviceId);
+      
+      return new Response(JSON.stringify({
+        success: result.success,
+        message: result.success 
+          ? `Device ${result.deviceId} removed. ${result.sensorsRemoved} sensors deleted.`
+          : 'Failed to remove device',
+        deviceId: result.deviceId,
+        sensorsRemoved: result.sensorsRemoved
+      }), { headers: CORS_HEADERS });
+    }
+    
+    // POST /cleanup - Remove ALL entity formats (for fixing duplicate issues)
+    if (path === '/cleanup' &amp;&amp; request.method === 'POST') {
+      let body;
+      try {
+        body = await request.json();
+      } catch (e) {
+        return new Response(JSON.stringify({
+          success: false,
+          error: 'Invalid JSON body'
+        }), { status: 400, headers: CORS_HEADERS });
+      }
+      
+      const deviceId = body.deviceId;
+      
+      if (!isValidDeviceId(deviceId)) {
+        return new Response(JSON.stringify({
+          success: false,
+          error: 'Invalid device ID format. Expected: P/H followed by 6-12 digits'
+        }), { status: 400, headers: CORS_HEADERS });
+      }
+      
+      const result = await cleanupAllFormats(HA_URL, HA_TOKEN, deviceId);
+      
+      return new Response(JSON.stringify({
+        success: result.success,
+        message: result.success 
+          ? `Cleanup completed for ${result.deviceId}. ${result.totalRemoved} topic formats cleared.`
+          : 'Cleanup failed',
+        deviceId: result.deviceId,
+        totalRemoved: result.totalRemoved,
+        formatsCleared: result.formatsCleared,
+        note: result.note
+      }), { headers: CORS_HEADERS });
+    }
+    
+    // 404 for unknown routes
+    return new Response(JSON.stringify({
+      error: 'Not found',
+      availableEndpoints: ['/health', '/check/:deviceId', '/register', '/unregister', '/cleanup']
+    }), { status: 404, headers: CORS_HEADERS });
+  }
+};</code></pre>
+    </div>
+    
+    <!-- Test Section -->
+    <div class="card">
+      <h2>Test API</h2>
+      <div class="test-section">
+        <div class="input-group">
+          <input type="text" id="deviceId" placeholder="Device ID (e.g., H250325151)" value="H250325151">
+        </div>
+        <div style="margin-bottom: 15px;">
+          <button class="btn btn-secondary" onclick="testHealth()">🔍 Health Check</button>
+          <button class="btn btn-secondary" onclick="testCheck()">📋 Check Device</button>
+          <button class="btn btn-primary" onclick="testRegister()">➕ Register</button>
+          <button class="btn btn-warning" onclick="testUnregister()">➖ Unregister</button>
+          <button class="btn btn-danger" onclick="testCleanup()">🧹 Cleanup ALL</button>
+        </div>
+        <div class="result" id="result">Click a button to test the API...</div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="toast" id="toast">Copied to clipboard!</div>
+  
+  <script>
+    const API_BASE = 'https://device-register.applike098.workers.dev';
+    
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+    
+    function copyCode() {
+      const code = document.getElementById('workerCode').textContent
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&amp;/g, '&');
+      navigator.clipboard.writeText(code).then(() => showToast('Copied to clipboard!'));
+    }
+    
+    function downloadCode() {
+      const code = document.getElementById('workerCode').textContent
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&amp;/g, '&');
+      const blob = new Blob([code], { type: 'text/javascript' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'device-register-worker-v1.4.js';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Downloaded!');
+    }
+    
+    async function showResult(promise) {
+      const result = document.getElementById('result');
+      result.textContent = 'Loading...';
+      try {
+        const res = await promise;
+        const data = await res.json();
+        result.innerHTML = `<span class="${data.success !== false ? 'success' : 'error'}">${JSON.stringify(data, null, 2)}</span>`;
+      } catch (e) {
+        result.innerHTML = `<span class="error">Error: ${e.message}</span>`;
+      }
+    }
+    
+    function testHealth() {
+      showResult(fetch(`${API_BASE}/health`));
+    }
+    
+    function testCheck() {
+      const deviceId = document.getElementById('deviceId').value;
+      showResult(fetch(`${API_BASE}/check/${deviceId}`));
+    }
+    
+    function testRegister() {
+      const deviceId = document.getElementById('deviceId').value;
+      showResult(fetch(`${API_BASE}/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deviceId })
+      }));
+    }
+    
+    function testUnregister() {
+      const deviceId = document.getElementById('deviceId').value;
+      showResult(fetch(`${API_BASE}/unregister`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deviceId })
+      }));
+    }
+    
+    function testCleanup() {
+      const deviceId = document.getElementById('deviceId').value;
+      if (!confirm(`Are you sure you want to cleanup ALL entity formats for ${deviceId}? This will remove all MQTT Discovery configs.`)) return;
+      showResult(fetch(`${API_BASE}/cleanup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deviceId })
+      }));
+    }
+  </script>
+</body>
+</html>

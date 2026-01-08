@@ -1,0 +1,64 @@
+{
+  "description": "LightEarth Device Configuration & Whitelist",
+  "lastUpdated": "2024-12-30",
+  
+  "whitelistedDevices": {
+    "P250801055": {
+      "name": "Main Device",
+      "owner": "Primary User",
+      "rateLimitBypass": true,
+      "geoRestrictionBypass": false,
+      "addedDate": "2024-12",
+      "notes": "Primary monitored device"
+    }
+  },
+  
+  "rateLimiting": {
+    "enabled": true,
+    "deviceLimit": {
+      "maxRequests": 50,
+      "windowMs": 60000,
+      "blockDurationMs": 300000,
+      "description": "50 requests per minute, 5 minute block on exceed"
+    },
+    "ipLimit": {
+      "maxRequests": 150,
+      "windowMs": 60000,
+      "description": "150 requests per minute per IP"
+    },
+    "whitelistExempt": true
+  },
+  
+  "geoRestriction": {
+    "enabled": true,
+    "allowedCountries": ["VN"],
+    "cloudflareBypass": true,
+    "railwayBypass": true
+  },
+  
+  "apiEndpoints": {
+    "realtime": {
+      "path": "/api/realtime/device/{deviceId}",
+      "cacheTTL": 3,
+      "description": "Direct Home Assistant realtime data"
+    },
+    "cloud": {
+      "path": "/api/cloud/device/{deviceId}",
+      "description": "Cloud-based device data"
+    },
+    "public": {
+      "path": "/api/public/{deviceId}",
+      "description": "Public API endpoint"
+    }
+  },
+  
+  "securityConfig": {
+    "allowedOrigins": [
+      "https://lumentree.pages.dev",
+      "https://temperature-soc-power.applike098.workers.dev",
+      "https://full-device.applike098.workers.dev",
+      "https://lightearth.applike098.workers.dev"
+    ],
+    "corsEnabled": true
+  }
+}

@@ -1,0 +1,116 @@
+{
+  "project": "LightEarth Cloudflare",
+  "version": "13291",
+  "lastUpdated": "2024-12-30",
+  "description": "LightEarth Solar Monitoring Dashboard - Cloudflare Pages & Workers",
+  
+  "workers": {
+    "telegram-bot": {
+      "name": "Telegram Bot",
+      "version": "1.4.0",
+      "file": "worker/worker-bot-v1.4.0.js",
+      "endpoint": "https://lightearth-telegram-bot.applike098.workers.dev",
+      "features": [
+        "Push notifications (mất điện, có điện lại, pin yếu, hết nắng)",
+        "Báo cáo hàng giờ + thời tiết",
+        "Bắt đầu PV",
+        "Device management (/add, /remove, /list)",
+        "User settings management"
+      ]
+    },
+    "api-gateway": {
+      "name": "LightEarth API Gateway",
+      "version": "3.9",
+      "file": "workers/lightearth-api-gateway-v3.9.js",
+      "endpoint": "https://lightearth.applike098.workers.dev",
+      "changelog": {
+        "v3.9": {
+          "date": "2024-12",
+          "features": [
+            "Battery cell info (16 cells) trong realtime API",
+            "Thêm batteryCells với num, avg, min, max, diff, cells",
+            "Cập nhật rate/geo-restriction và whitelist P250801055",
+            "Cache realtime 3 giây",
+            "Giới hạn 50 req/phút/device (không áp dụng cho whitelist)",
+            "Giới hạn 150 req/phút/IP",
+            "Bypass qua Railway cho endpoint realtime",
+            "/api/realtime/device/{deviceId} trực tiếp HA"
+          ]
+        },
+        "v3.8": {
+          "date": "2024-12",
+          "features": [
+            "Thêm Cloudflare Pages origins",
+            "Triển khai serverless 100%",
+            "Bỏ Railway"
+          ]
+        },
+        "v3.7": {
+          "date": "2024-12",
+          "features": [
+            "Rate limiting theo Device ID",
+            "Whitelist P250801055",
+            "50 req/phút",
+            "5 phút block",
+            "Giới hạn IP riêng 150 req/phút"
+          ]
+        },
+        "v3.6": {
+          "date": "2024-12",
+          "features": [
+            "/api/realtime/device/{deviceId} cho Direct HA",
+            "Cache realtime 3 giây",
+            "Railway có thể bypass geo-restriction",
+            "Cải thiện error handling"
+          ]
+        }
+      }
+    },
+    "temperature-soc-power": {
+      "name": "Temperature-SOC-Power Dashboard",
+      "version": "3.0",
+      "file": "workers/temperature-soc-power-v3.0.js",
+      "endpoint": "https://temperature-soc-power.applike098.workers.dev"
+    },
+    "full-device": {
+      "name": "Full Device Dashboard",
+      "version": "4.0",
+      "file": "workers/full-device-v4.0.js",
+      "endpoint": "https://full-device.applike098.workers.dev"
+    }
+  },
+  
+  "deployments": {
+    "cloudflarePages": {
+      "url": "https://lumentree.pages.dev",
+      "files": ["index.html", "calculator.html", "control-voanhphong.html", "private.html"]
+    },
+    "backup": {
+      "zip": "lightearth-v13291-final.zip"
+    }
+  },
+  
+  "constants": {
+    "VN_OFFSET_HOURS": 7,
+    "REALTIME_CACHE_TTL": 3,
+    "WHITELIST_DEVICE_IDS": ["P250801055"],
+    "DEVICE_RATE_LIMIT": {
+      "maxRequests": 50,
+      "windowMs": 60000,
+      "blockDurationMs": 300000
+    },
+    "IP_RATE_LIMIT": {
+      "maxRequests": 150,
+      "windowMs": 60000
+    }
+  },
+  
+  "links": {
+    "mainDashboard": "https://lumentree.pages.dev/?deviceId=P250801055",
+    "apiGateway": "https://lightearth.applike098.workers.dev",
+    "tempSocPower": "https://temperature-soc-power.applike098.workers.dev",
+    "fullDevice": "https://full-device.applike098.workers.dev",
+    "telegramBot": "https://t.me/LightearthBot",
+    "github": "https://github.com/zixfelw/Lighearth-cloudflare"
+  }
+}

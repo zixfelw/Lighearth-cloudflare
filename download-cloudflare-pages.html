@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download LightEarth v2.5 - Cloudflare Pages</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .download-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 40px rgba(16, 185, 129, 0.3); }
+        .download-btn { transition: all 0.3s ease; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 min-h-screen text-white">
+    <div class="container mx-auto px-4 py-8 max-w-3xl">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-extrabold bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent mb-2">
+                🔋 LightEarth Dashboard v2.5
+            </h1>
+            <p class="text-slate-400">Cloudflare Pages Deploy Package</p>
+            <p class="text-slate-500 text-sm mt-2">Cập nhật: Hiển thị điện áp pin (Voltage) cho 3 giao diện</p>
+        </div>
+
+        <!-- Main Download Button -->
+        <div class="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-2xl p-8 mb-8 text-center shadow-2xl">
+            <div class="text-6xl mb-4">📦</div>
+            <h2 class="text-2xl font-bold mb-2">Download ZIP Package</h2>
+            <p class="text-emerald-100 mb-6">Tất cả files để deploy lên Cloudflare Pages</p>
+            <a href="/lightearth-cloudflare-pages-v2.5.zip" download
+               class="download-btn inline-flex items-center gap-3 px-8 py-4 bg-white text-emerald-700 rounded-xl font-bold text-lg">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                </svg>
+                Download ZIP (5.6 MB)
+            </a>
+            <p class="text-emerald-200 text-sm mt-4">
+                <code class="bg-emerald-700/50 px-2 py-1 rounded">lightearth-cloudflare-pages-v2.5.zip</code>
+            </p>
+        </div>
+
+        <!-- What's Included -->
+        <div class="bg-slate-800/50 rounded-xl p-6 mb-6 border border-slate-700">
+            <h2 class="text-xl font-bold text-cyan-400 mb-4">📁 Nội dung trong ZIP</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                <div class="flex items-center gap-2">
+                    <span class="text-emerald-400">✓</span>
+                    <span>index.html - Dashboard chính</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-emerald-400">✓</span>
+                    <span>js/index.js - JavaScript logic</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-emerald-400">✓</span>
+                    <span>css/index.css - Styles</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-emerald-400">✓</span>
+                    <span>icons/ - Tất cả icons</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-emerald-400">✓</span>
+                    <span>images/ - 3D Home images</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-emerald-400">✓</span>
+                    <span>calculator.html - Tính tiền điện</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-emerald-400">✓</span>
+                    <span>PWA icons (72x72 → 512x512)</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-emerald-400">✓</span>
+                    <span>favicon.ico, logo.png</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- New Features -->
+        <div class="bg-slate-800/50 rounded-xl p-6 mb-6 border border-slate-700">
+            <h2 class="text-xl font-bold text-amber-400 mb-4">🆕 Tính năng mới v2.5</h2>
+            <div class="space-y-3">
+                <div class="flex items-start gap-3">
+                    <span class="text-2xl">⚡</span>
+                    <div>
+                        <h3 class="font-semibold text-white">Hiển thị Điện Áp Pin (Battery Voltage)</h3>
+                        <p class="text-slate-400 text-sm">Hiển thị real-time voltage (VD: 52.3V) trong card Pin cho cả 3 giao diện Pro, Basic, 3D Home</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3">
+                    <span class="text-2xl">🔄</span>
+                    <div>
+                        <h3 class="font-semibold text-white">Auto-Sync Giữa Các View</h3>
+                        <p class="text-slate-400 text-sm">Voltage tự động sync khi chuyển đổi giữa Pro ↔ Basic ↔ 3D Home</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Deploy Instructions -->
+        <div class="bg-slate-800/50 rounded-xl p-6 mb-6 border border-slate-700">
+            <h2 class="text-xl font-bold text-purple-400 mb-4">🚀 Hướng dẫn Deploy</h2>
+            <ol class="list-decimal list-inside space-y-3 text-slate-300">
+                <li>Tải file <code class="bg-slate-700 px-1 rounded">lightearth-cloudflare-pages-v2.5.zip</code></li>
+                <li>Giải nén để có folder <code class="bg-slate-700 px-1 rounded">cloudflare-pages-deploy/</code></li>
+                <li>Vào <a href="https://dash.cloudflare.com" class="text-cyan-400 hover:underline" target="_blank">Cloudflare Dashboard</a> → Workers & Pages</li>
+                <li>Chọn Project hoặc tạo mới → Upload Assets</li>
+                <li>Drag & drop tất cả files từ folder đã giải nén</li>
+                <li>Click Deploy và chờ hoàn thành</li>
+            </ol>
+        </div>
+
+        <!-- Live Preview -->
+        <div class="bg-emerald-900/30 border border-emerald-500/50 rounded-xl p-6 mb-6">
+            <h2 class="text-xl font-bold text-emerald-400 mb-3">👁️ Preview Live</h2>
+            <p class="text-slate-300 mb-4">Xem trước giao diện đã cập nhật với voltage display:</p>
+            <div class="flex flex-wrap gap-3">
+                <a href="/index.html?deviceId=H250325151" target="_blank"
+                   class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg font-medium transition-colors">
+                    🌐 Pro View
+                </a>
+                <a href="/index.html?deviceId=H250325151#basic" target="_blank"
+                   class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors">
+                    📊 Basic View
+                </a>
+                <a href="/index.html?deviceId=H250325151#3dhome" target="_blank"
+                   class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg font-medium transition-colors">
+                    🏠 3D Home View
+                </a>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center pt-6 border-t border-slate-700">
+            <p class="text-slate-500 text-sm">
+                LightEarth Solar Monitor | Version 2.5.0 | Build: 2026-01-04
+            </p>
+        </div>
+    </div>
+</body>
+</html>

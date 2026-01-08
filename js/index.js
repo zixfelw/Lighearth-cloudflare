@@ -5077,10 +5077,11 @@ Vui lòng kiểm tra:
                     barPercent = Math.max(0, Math.min(100, barPercent));
 
                     // Color based on LiFePO4 voltage thresholds
-                    let barColorClass = 'bar-full';
+                    let barColorClass = 'bar-premium'; // >= 3.35V VIP
                     if (voltage < 3.0) barColorClass = 'bar-critical';
-                    else if (voltage < 3.25) barColorClass = 'bar-low';
-                    else if (voltage < 3.30) barColorClass = 'bar-medium';
+                    else if (voltage < 3.1) barColorClass = 'bar-low';
+                    else if (voltage < 3.2) barColorClass = 'bar-medium';
+                    else if (voltage < 3.35) barColorClass = 'bar-full';
 
                     gridHtml += `
                         <div class="cell-item ${colorClass} ${blinkClass} ${highlightClass}">

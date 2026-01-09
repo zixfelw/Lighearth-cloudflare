@@ -3440,28 +3440,22 @@ body:has(#mainHeader.header-hidden) #compactSearch {
 */
 
 /* ========================================
-   BATTERY INNER FRAME COLOR SYNC
-   Sync current, voltage, status colors with charging/discharging state
+   BATTERY INNER FRAME COLOR SYNC - DISABLED
+   Let W/A/V use same color from HTML defaults
    ======================================== */
 
-/* CHARGING - Green tones for inner frame */
+/* DISABLED: Colors now unified
 .battery-heat-card.battery-charging-0 #battery-current-3d,
 .battery-heat-card.battery-charging-0 #battery-voltage-3d,
-.battery-heat-card.battery-charging-0 #battery-status-label-3d {
-    color: #4ade80;
-}
+.battery-heat-card.battery-charging-0 #battery-status-label-3d { color: #4ade80; }
 
 .battery-heat-card.battery-charging-1 #battery-current-3d,
 .battery-heat-card.battery-charging-1 #battery-voltage-3d,
-.battery-heat-card.battery-charging-1 #battery-status-label-3d {
-    color: #22c55e;
-}
+.battery-heat-card.battery-charging-1 #battery-status-label-3d { color: #22c55e; }
 
 .battery-heat-card.battery-charging-2 #battery-current-3d,
 .battery-heat-card.battery-charging-2 #battery-voltage-3d,
-.battery-heat-card.battery-charging-2 #battery-status-label-3d {
-    color: #16a34a;
-}
+.battery-heat-card.battery-charging-2 #battery-status-label-3d { color: #16a34a; }
 
 .battery-heat-card.battery-charging-3 #battery-current-3d,
 .battery-heat-card.battery-charging-3 #battery-voltage-3d,
@@ -3470,24 +3464,17 @@ body:has(#mainHeader.header-hidden) #compactSearch {
     text-shadow: 0 0 8px rgba(74, 222, 128, 0.6);
 }
 
-/* DISCHARGING - Red/orange tones for inner frame */
 .battery-heat-card.battery-discharging-0 #battery-current-3d,
 .battery-heat-card.battery-discharging-0 #battery-voltage-3d,
-.battery-heat-card.battery-discharging-0 #battery-status-label-3d {
-    color: #fca5a5;
-}
+.battery-heat-card.battery-discharging-0 #battery-status-label-3d { color: #fca5a5; }
 
 .battery-heat-card.battery-discharging-1 #battery-current-3d,
 .battery-heat-card.battery-discharging-1 #battery-voltage-3d,
-.battery-heat-card.battery-discharging-1 #battery-status-label-3d {
-    color: #f87171;
-}
+.battery-heat-card.battery-discharging-1 #battery-status-label-3d { color: #f87171; }
 
 .battery-heat-card.battery-discharging-2 #battery-current-3d,
 .battery-heat-card.battery-discharging-2 #battery-voltage-3d,
-.battery-heat-card.battery-discharging-2 #battery-status-label-3d {
-    color: #ef4444;
-}
+.battery-heat-card.battery-discharging-2 #battery-status-label-3d { color: #ef4444; }
 
 .battery-heat-card.battery-discharging-3 #battery-current-3d,
 .battery-heat-card.battery-discharging-3 #battery-voltage-3d,
@@ -3496,12 +3483,10 @@ body:has(#mainHeader.header-hidden) #compactSearch {
     text-shadow: 0 0 8px rgba(220, 38, 38, 0.5);
 }
 
-/* IDLE - Gray tones for inner frame */
 .battery-heat-card.battery-idle #battery-current-3d,
 .battery-heat-card.battery-idle #battery-voltage-3d,
-.battery-heat-card.battery-idle #battery-status-label-3d {
-    color: #94a3b8;
-}
+.battery-heat-card.battery-idle #battery-status-label-3d { color: #94a3b8; }
+*/
 
 /* Divider line (border-right) color sync - Dark Mode */
 /* CHARGING - Green divider */
@@ -3806,6 +3791,24 @@ html:not(.dark) .battery-heat-card.battery-charging-3 .battery-inner-frame {
     .battery-heat-card #battery-power-3d {
         animation: none !important;
     }
+}
+
+/* ========================================
+   UNIFIED BATTERY W/A/V COLORS
+   Override all heat effect colors to keep W/A/V unified
+   ======================================== */
+.battery-heat-card #battery-power-3d,
+.battery-heat-card #battery-current-3d,
+.battery-heat-card #battery-voltage-3d {
+    color: #10b981 !important;
+    /* Light mode: emerald-500 */
+}
+
+.dark .battery-heat-card #battery-power-3d,
+.dark .battery-heat-card #battery-current-3d,
+.dark .battery-heat-card #battery-voltage-3d {
+    color: #34d399 !important;
+    /* Dark mode: emerald-400 */
 }
 
 /* ========================================

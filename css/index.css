@@ -3159,9 +3159,11 @@ body:has(#mainHeader.header-hidden) #compactSearch {
     color: #059669;
 }
 
+/* DISABLED: Let SOC% control fill color
 .battery-heat-card.battery-charging-0 .battery-fill-3d {
     background: linear-gradient(90deg, #10b981, #34d399);
 }
+*/
 
 /* DARK MODE - Level 0 */
 .dark .battery-heat-card.battery-charging-0 {
@@ -3174,9 +3176,11 @@ body:has(#mainHeader.header-hidden) #compactSearch {
     color: #4ade80;
 }
 
+/* DISABLED: Let SOC% control fill color
 .dark .battery-heat-card.battery-charging-0 .battery-fill-3d {
     background: linear-gradient(90deg, #4ade80, #86efac);
 }
+*/
 
 /* Level 1: 1000-2000W - Medium green */
 /* LIGHT MODE - Default */
@@ -3191,10 +3195,12 @@ body:has(#mainHeader.header-hidden) #compactSearch {
     color: #047857;
 }
 
+/* DISABLED: Let SOC% control fill color
 .battery-heat-card.battery-charging-1 .battery-fill-3d {
     background: linear-gradient(90deg, #10b981, #34d399);
     animation: battery-charge-pulse-slow 3s ease-in-out infinite;
 }
+*/
 
 .battery-heat-card.battery-charging-1 .battery-body-3d {
     box-shadow: inset 0 0 8px rgba(16, 185, 129, 0.2);
@@ -3212,9 +3218,11 @@ body:has(#mainHeader.header-hidden) #compactSearch {
     color: #22c55e;
 }
 
+/* DISABLED: Let SOC% control fill color
 .dark .battery-heat-card.battery-charging-1 .battery-fill-3d {
     background: linear-gradient(90deg, #22c55e, #4ade80);
 }
+*/
 
 .dark .battery-heat-card.battery-charging-1 .battery-body-3d {
     box-shadow: inset 0 0 10px rgba(34, 197, 94, 0.3);
@@ -3233,10 +3241,12 @@ body:has(#mainHeader.header-hidden) #compactSearch {
     color: #047857;
 }
 
+/* DISABLED: Let SOC% control fill color
 .battery-heat-card.battery-charging-2 .battery-fill-3d {
     background: linear-gradient(90deg, #10b981, #34d399, #6ee7b7);
     animation: battery-charge-pulse-medium 2s ease-in-out infinite;
 }
+*/
 
 .battery-heat-card.battery-charging-2 .battery-body-3d {
     box-shadow: inset 0 0 10px rgba(16, 185, 129, 0.25);
@@ -3254,9 +3264,11 @@ body:has(#mainHeader.header-hidden) #compactSearch {
     color: #16a34a;
 }
 
+/* DISABLED: Let SOC% control fill color
 .dark .battery-heat-card.battery-charging-2 .battery-fill-3d {
     background: linear-gradient(90deg, #16a34a, #22c55e);
 }
+*/
 
 .dark .battery-heat-card.battery-charging-2 .battery-body-3d {
     box-shadow: inset 0 0 15px rgba(22, 163, 74, 0.4);
@@ -3278,11 +3290,13 @@ body:has(#mainHeader.header-hidden) #compactSearch {
     animation: none;
 }
 
+/* DISABLED: Let SOC% control fill color
 .battery-heat-card.battery-charging-3 .battery-fill-3d {
     background: linear-gradient(90deg, #10b981, #34d399, #6ee7b7);
     box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
     animation: battery-charge-pulse-fast 1.2s ease-in-out infinite;
 }
+*/
 
 .battery-heat-card.battery-charging-3 .battery-body-3d {
     border-color: #10b981;
@@ -3305,11 +3319,13 @@ body:has(#mainHeader.header-hidden) #compactSearch {
     animation: text-glow-green-intense 1.2s ease-in-out infinite alternate;
 }
 
+/* DISABLED: Let SOC% control fill color
 .dark .battery-heat-card.battery-charging-3 .battery-fill-3d {
     background: linear-gradient(90deg, #22c55e, #4ade80, #86efac);
     box-shadow: 0 0 15px rgba(74, 222, 128, 0.6);
     animation: battery-charge-pulse-fast 1.2s ease-in-out infinite;
 }
+*/
 
 .dark .battery-heat-card.battery-charging-3 .battery-body-3d {
     border-color: #4ade80;
@@ -3329,9 +3345,11 @@ body:has(#mainHeader.header-hidden) #compactSearch {
     color: #fca5a5;
 }
 
+/* DISABLED: Let SOC% control fill color
 .battery-heat-card.battery-discharging-0 .battery-fill-3d {
     background: linear-gradient(90deg, #fca5a5, #f87171);
 }
+*/
 
 /* Level 1: 1000-2000W - Medium red */
 .battery-heat-card.battery-discharging-1 {
@@ -3345,10 +3363,12 @@ body:has(#mainHeader.header-hidden) #compactSearch {
     color: #f87171;
 }
 
+/* DISABLED: Let SOC% control fill color
 .battery-heat-card.battery-discharging-1 .battery-fill-3d {
     background: linear-gradient(90deg, #f87171, #ef4444);
     animation: battery-discharge-pulse-slow 3s ease-in-out infinite;
 }
+*/
 
 .battery-heat-card.battery-discharging-1 .battery-body-3d {
     box-shadow: inset 0 0 10px rgba(248, 113, 113, 0.3);
@@ -3366,10 +3386,12 @@ body:has(#mainHeader.header-hidden) #compactSearch {
     color: #ef4444;
 }
 
+/* DISABLED: Let SOC% control fill color
 .battery-heat-card.battery-discharging-2 .battery-fill-3d {
     background: linear-gradient(90deg, #ef4444, #dc2626);
     animation: battery-discharge-pulse-medium 2s ease-in-out infinite;
 }
+*/
 
 .battery-heat-card.battery-discharging-2 .battery-body-3d {
     box-shadow: inset 0 0 15px rgba(239, 68, 68, 0.4);
@@ -3388,10 +3410,12 @@ body:has(#mainHeader.header-hidden) #compactSearch {
     animation: text-glow-red 1s ease-in-out infinite alternate;
 }
 
+/* DISABLED: Let SOC% control fill color
 .battery-heat-card.battery-discharging-3 .battery-fill-3d {
     background: linear-gradient(90deg, #dc2626, #b91c1c, #991b1b);
     animation: battery-discharge-pulse-fast 1s ease-in-out infinite;
 }
+*/
 
 .battery-heat-card.battery-discharging-3 .battery-body-3d {
     box-shadow: inset 0 0 20px rgba(220, 38, 38, 0.5);
@@ -3409,9 +3433,11 @@ body:has(#mainHeader.header-hidden) #compactSearch {
     color: #94a3b8;
 }
 
+/* DISABLED: Let SOC% control fill color
 .battery-heat-card.battery-idle .battery-fill-3d {
     background: linear-gradient(90deg, #64748b, #94a3b8);
 }
+*/
 
 /* ========================================
    BATTERY INNER FRAME COLOR SYNC

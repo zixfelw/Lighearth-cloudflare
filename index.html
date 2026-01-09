@@ -105,11 +105,33 @@
             opacity: 0;
             pointer-events: none;
             z-index: -1;
-            transition: opacity 0.5s ease;
+            transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.5s ease;
+            will-change: transform;
         }
 
         .dark .bg-blob {
             opacity: 1;
+        }
+
+        /* Floating animation */
+        @keyframes blob-float {
+
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            25% {
+                transform: translate(10px, -15px) scale(1.02);
+            }
+
+            50% {
+                transform: translate(-5px, 10px) scale(0.98);
+            }
+
+            75% {
+                transform: translate(-10px, -5px) scale(1.01);
+            }
         }
 
         .bg-blob-purple {
@@ -118,6 +140,7 @@
             height: 500px;
             top: -150px;
             left: -150px;
+            animation: blob-float 20s ease-in-out infinite;
         }
 
         .bg-blob-teal {
@@ -126,6 +149,7 @@
             height: 450px;
             bottom: -100px;
             right: -100px;
+            animation: blob-float 25s ease-in-out infinite reverse;
         }
 
         .bg-blob-indigo {
@@ -134,6 +158,36 @@
             height: 400px;
             top: 40%;
             right: -80px;
+            animation: blob-float 22s ease-in-out infinite;
+            animation-delay: -5s;
+        }
+
+        /* Mobile: Smaller blobs, adjusted positions */
+        @media (max-width: 768px) {
+            .bg-blob {
+                filter: blur(60px);
+            }
+
+            .bg-blob-purple {
+                width: 300px;
+                height: 300px;
+                top: -80px;
+                left: -80px;
+            }
+
+            .bg-blob-teal {
+                width: 280px;
+                height: 280px;
+                bottom: -60px;
+                right: -60px;
+            }
+
+            .bg-blob-indigo {
+                width: 250px;
+                height: 250px;
+                top: 50%;
+                right: -50px;
+            }
         }
 
         .shadow-brand {
@@ -1660,9 +1714,9 @@
 
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 min-h-screen">
     <!-- Background Gradient Blobs - Dark Mode Only -->
-    <div class="bg-blob bg-blob-purple" aria-hidden="true"></div>
-    <div class="bg-blob bg-blob-teal" aria-hidden="true"></div>
-    <div class="bg-blob bg-blob-indigo" aria-hidden="true"></div>
+    <div id="blob-purple" class="bg-blob bg-blob-purple" aria-hidden="true"></div>
+    <div id="blob-teal" class="bg-blob bg-blob-teal" aria-hidden="true"></div>
+    <div id="blob-indigo" class="bg-blob bg-blob-indigo" aria-hidden="true"></div>
 
     <!-- Header - Dark theme, Hide on scroll down, show on scroll up -->
     <header b-iwpun16f09 id="mainHeader"
@@ -5002,6 +5056,48 @@
 
             content.innerHTML = html;
         }
+    </script>
+
+    <!-- Blob Scroll Animation -->
+    <script>
+        (function () {
+            const blobPurple = document.getElementById('blob-purple');
+            const blobTeal = document.getElementById('blob-teal');
+            const blobIndigo = document.getElementById('blob-indigo');
+
+            if (!blobPurple || !blobTeal || !blobIndigo) return;
+
+            let ticking = false;
+            let lastScrollY = 0;
+
+            function updateBlobPositions() {
+                const scrollY = window.scrollY;
+                const scrollPercent = scrollY / (document.body.scrollHeight - window.innerHeight);
+
+                // Different movement speeds/directions for each blob
+                const purpleX = Math.sin(scrollPercent * Math.PI * 2) * 50;
+                const purpleY = scrollY * 0.15;
+
+                const tealX = Math.cos(scrollPercent * Math.PI * 3) * 40;
+                const tealY = -scrollY * 0.1;
+
+                const indigoX = Math.sin(scrollPercent * Math.PI * 2.5) * 60;
+                const indigoY = scrollY * 0.08;
+
+                blobPurple.style.transform = `translate(${purpleX}px, ${purpleY}px)`;
+                blobTeal.style.transform = `translate(${tealX}px, ${tealY}px)`;
+                blobIndigo.style.transform = `translate(${indigoX}px, ${indigoY}px)`;
+
+                ticking = false;
+            }
+
+            window.addEventListener('scroll', function () {
+                if (!ticking) {
+                    requestAnimationFrame(updateBlobPositions);
+                    ticking = true;
+                }
+            }, { passive: true });
+        })();
     </script>
 
 </body>

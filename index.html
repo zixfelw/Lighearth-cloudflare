@@ -3381,16 +3381,24 @@
                             <i data-lucide="zap" class="w-4 h-4 text-indigo-500"></i>
                             Công Suất Trong Ngày
                         </h2>
-                        <!-- Chart Toggle Buttons -->
+                        <!-- Chart Toggle Buttons - Scrollable on mobile -->
                         <div id="chartToggleBtns"
-                            class="flex items-center bg-slate-100 dark:bg-slate-700/50 rounded-lg p-0.5">
+                            class="flex items-center bg-slate-100 dark:bg-slate-700/50 rounded-lg p-0.5 overflow-x-auto no-scrollbar gap-0.5">
                             <button id="chart1Btn" onclick="switchPowerChart(1)"
-                                class="chart-tab-btn active px-2 py-1 rounded-md text-[10px] sm:text-xs font-semibold transition-all bg-indigo-500 text-white shadow">
-                                Chart 1
+                                class="chart-tab-btn active px-2 py-1 rounded-md text-[9px] sm:text-xs font-semibold transition-all bg-indigo-500 text-white shadow whitespace-nowrap">
+                                Chart tổng hợp
                             </button>
                             <button id="chart2Btn" onclick="switchPowerChart(2)"
-                                class="chart-tab-btn px-2 py-1 rounded-md text-[10px] sm:text-xs font-semibold transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600">
-                                Chart 2
+                                class="chart-tab-btn px-2 py-1 rounded-md text-[9px] sm:text-xs font-semibold transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 whitespace-nowrap">
+                                Tổng Nguồn điện
+                            </button>
+                            <button id="chart3Btn" onclick="switchPowerChart(3)"
+                                class="chart-tab-btn px-2 py-1 rounded-md text-[9px] sm:text-xs font-semibold transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 whitespace-nowrap">
+                                Chart Tổng PV
+                            </button>
+                            <button id="chart4Btn" onclick="switchPowerChart(4)"
+                                class="chart-tab-btn px-2 py-1 rounded-md text-[9px] sm:text-xs font-semibold transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 whitespace-nowrap">
+                                Sạc & Xả Pin
                             </button>
                         </div>
                     </div>
@@ -3532,51 +3540,77 @@
                     </div>
                 </div>
 
-                <!-- CHART 2: 3D Stacked Bar Chart (Hidden by default) -->
+                <!-- CHART 2: Tổng Nguồn điện (Hidden by default) -->
                 <div id="chart2Container"
                     class="hidden bg-slate-50/50 dark:bg-slate-900/30 rounded-xl p-2 sm:p-3 border border-slate-200/50 dark:border-slate-700/50">
-                    <!-- Chart 2 Header with Legend -->
+                    <!-- Chart Header with Legend -->
                     <div class="flex items-center justify-between gap-2 mb-2">
                         <div class="flex items-center gap-1.5">
-                            <i data-lucide="bar-chart-3" class="w-3.5 h-3.5 text-emerald-500"></i>
+                            <i data-lucide="plug-zap" class="w-3.5 h-3.5 text-blue-500"></i>
                             <span class="text-[10px] sm:text-xs font-semibold text-slate-600 dark:text-slate-300">Công
-                                Suất
-                                Stacked 3D</span>
+                                suất (W)</span>
                         </div>
-                        <!-- Compact Legend for 3D Stacked -->
-                        <div id="powerChart2Legend" class="flex flex-wrap gap-1 sm:gap-1.5">
+                        <!-- Legend -->
+                        <div class="flex flex-wrap gap-1 sm:gap-2">
                             <span
-                                class="flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] sm:text-[11px] font-semibold bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 shadow-sm">
-                                <span class="w-2 h-2 rounded-sm bg-amber-400"></span>PV
+                                class="flex items-center gap-1 text-[9px] sm:text-[11px] font-medium text-amber-600 dark:text-amber-400">
+                                <span class="w-2 h-2 rounded-full bg-amber-400"></span>CS mua từ lưới
                             </span>
                             <span
-                                class="flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] sm:text-[11px] font-semibold bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 shadow-sm">
-                                <span class="w-2 h-2 rounded-sm bg-purple-400"></span>Lưới
+                                class="flex items-center gap-1 text-[9px] sm:text-[11px] font-medium text-green-600 dark:text-green-400">
+                                <span class="w-2 h-2 rounded-full bg-green-500"></span>Công suất cổng load
                             </span>
                             <span
-                                class="flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] sm:text-[11px] font-semibold bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 shadow-sm">
-                                <span class="w-2 h-2 rounded-sm bg-emerald-400"></span>Pin
-                            </span>
-                            <span
-                                class="flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] sm:text-[11px] font-semibold bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 shadow-sm">
-                                <span class="w-2 h-2 rounded-sm bg-blue-400"></span>Tải
+                                class="flex items-center gap-1 text-[9px] sm:text-[11px] font-medium text-blue-600 dark:text-blue-400">
+                                <span class="w-2 h-2 rounded-full bg-blue-500"></span>Tải hòa lưới
                             </span>
                         </div>
                     </div>
-
-                    <!-- Chart 2 Canvas Container -->
+                    <!-- Chart Canvas -->
                     <div class="relative rounded-lg overflow-hidden" style="height: 280px;">
-                        <canvas id="powerStackedChart"></canvas>
-                        <!-- Loading Overlay for Chart 2 -->
-                        <div id="powerChart2Loading"
-                            class="hidden absolute inset-0 flex items-center justify-center bg-slate-50/90 dark:bg-slate-900/90 rounded-lg">
-                            <div class="flex flex-col items-center gap-1.5">
-                                <div
-                                    class="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin">
-                                </div>
-                                <span class="text-[10px] text-slate-500 dark:text-slate-400">Đang tải...</span>
-                            </div>
+                        <canvas id="gridSourceChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- CHART 3: Tổng PV hôm nay (Hidden by default) -->
+                <div id="chart3Container"
+                    class="hidden bg-slate-50/50 dark:bg-slate-900/30 rounded-xl p-2 sm:p-3 border border-slate-200/50 dark:border-slate-700/50">
+                    <!-- Chart Header with total kWh -->
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <div class="flex flex-col">
+                            <span id="pvTodayTotal"
+                                class="text-xl sm:text-2xl font-black text-cyan-500 dark:text-cyan-400">0.0 KWh</span>
+                            <span class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">Sản lượng điện
+                                PV</span>
                         </div>
+                        <span class="text-[10px] sm:text-xs text-slate-400">Công suất (W)</span>
+                    </div>
+                    <!-- Chart Canvas -->
+                    <div class="relative rounded-lg overflow-hidden" style="height: 280px;">
+                        <canvas id="pvTodayChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- CHART 4: Sạc & Xả Pin (Hidden by default) -->
+                <div id="chart4Container"
+                    class="hidden bg-slate-50/50 dark:bg-slate-900/30 rounded-xl p-2 sm:p-3 border border-slate-200/50 dark:border-slate-700/50">
+                    <!-- Chart Header with Charge/Discharge totals -->
+                    <div class="flex items-center justify-center gap-6 sm:gap-10 mb-2">
+                        <div class="text-center">
+                            <span id="chargeTotal"
+                                class="text-lg sm:text-xl font-black text-slate-600 dark:text-slate-300">0.0 KWh</span>
+                            <span class="block text-[10px] sm:text-xs text-slate-400">Sạc pin</span>
+                        </div>
+                        <div class="text-center">
+                            <span id="dischargeTotal"
+                                class="text-lg sm:text-xl font-black text-slate-600 dark:text-slate-300">0.0 KWh</span>
+                            <span class="block text-[10px] sm:text-xs text-slate-400">Xả pin</span>
+                        </div>
+                    </div>
+                    <div class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mb-2">Công suất (W)</div>
+                    <!-- Chart Canvas -->
+                    <div class="relative rounded-lg overflow-hidden" style="height: 280px;">
+                        <canvas id="batteryFlowChart"></canvas>
                     </div>
                 </div>
             </div>

@@ -89,6 +89,16 @@ body {
     background: linear-gradient(135deg, var(--bg-dark-900) 0%, var(--bg-dark-800) 100%);
 }
 
+/* Hide scrollbar but keep scroll functionality */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
 /* ========================================
    GLASSMORPHISM UTILITIES
    ======================================== */

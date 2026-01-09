@@ -2724,44 +2724,63 @@ Vui lòng kiểm tra:
         }
     };
 
-    // Switch between Chart 1 (Line) and Chart 2 (Stacked Bar)
+    // Switch between Charts (4 charts total)
     window.switchPowerChart = function (chartNum) {
-        const chart1Container = document.getElementById('chart1Container');
-        const chart2Container = document.getElementById('chart2Container');
-        const chart1Btn = document.getElementById('chart1Btn');
-        const chart2Btn = document.getElementById('chart2Btn');
+        const containers = [
+            document.getElementById('chart1Container'),
+            document.getElementById('chart2Container'),
+            document.getElementById('chart3Container'),
+            document.getElementById('chart4Container')
+        ];
+        const buttons = [
+            document.getElementById('chart1Btn'),
+            document.getElementById('chart2Btn'),
+            document.getElementById('chart3Btn'),
+            document.getElementById('chart4Btn')
+        ];
 
-        if (!chart1Container || !chart2Container) return;
+        // Validate
+        if (!containers[0]) return;
 
         activeChartNumber = chartNum;
 
-        if (chartNum === 1) {
-            // Show Chart 1, hide Chart 2
-            chart1Container.classList.remove('hidden');
-            chart2Container.classList.add('hidden');
+        // Haptic feedback on mobile
+        if (navigator.vibrate) {
+            navigator.vibrate(10);
+        }
 
-            // Update button styles
-            chart1Btn.classList.add('bg-indigo-500', 'text-white', 'shadow');
-            chart1Btn.classList.remove('text-slate-600', 'dark:text-slate-300');
-            chart2Btn.classList.remove('bg-indigo-500', 'text-white', 'shadow');
-            chart2Btn.classList.add('text-slate-600', 'dark:text-slate-300');
+        // Hide all containers, show selected
+        containers.forEach((container, index) => {
+            if (container) {
+                container.classList.toggle('hidden', index !== chartNum - 1);
+            }
+        });
 
-        } else {
-            // Show Chart 2, hide Chart 1
-            chart1Container.classList.add('hidden');
-            chart2Container.classList.remove('hidden');
+        // Update button styles
+        buttons.forEach((btn, index) => {
+            if (btn) {
+                if (index === chartNum - 1) {
+                    btn.classList.add('bg-indigo-500', 'text-white', 'shadow');
+                    btn.classList.remove('text-slate-600', 'dark:text-slate-300');
+                } else {
+                    btn.classList.remove('bg-indigo-500', 'text-white', 'shadow');
+                    btn.classList.add('text-slate-600', 'dark:text-slate-300');
+                }
+            }
+        });
 
-            // Update button styles
-            chart2Btn.classList.add('bg-indigo-500', 'text-white', 'shadow');
-            chart2Btn.classList.remove('text-slate-600', 'dark:text-slate-300');
-            chart1Btn.classList.remove('bg-indigo-500', 'text-white', 'shadow');
-            chart1Btn.classList.add('text-slate-600', 'dark:text-slate-300');
-
-            // Create/update Chart 2 with cached data if available
-            if (cachedChartData && cachedChartData.length > 0) {
-                updatePowerStackedChart(cachedChartData);
-            } else {
-                console.log('📊 No cached data for Chart 2 yet');
+        // Render appropriate chart with cached data
+        if (cachedChartData && cachedChartData.length > 0) {
+            switch (chartNum) {
+                case 2:
+                    renderGridSourceChart(cachedChartData);
+                    break;
+                case 3:
+                    renderPVTodayChart(cachedChartData);
+                    break;
+                case 4:
+                    renderBatteryFlowChart(cachedChartData);
+                    break;
             }
         }
 
@@ -3246,6 +3265,337 @@ Vui lòng kiểm tra:
         });
 
         console.log('✅ Power 3D Stacked Bar Chart (Chart 2) created - 24 hourly bars');
+    }
+
+    // ========================================
+    // CHART 2: Tổng Nguồn điện (Grid Source Chart)
+    // ========================================
+    let gridSourceChartInstance = null;
+
+    function renderGridSourceChart(timeline) {
+        const canvas = document.getElementById('gridSourceChart');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+
+        // Create full 24h timeline
+        const fullLabels = [];
+        for (let h = 0; h < 24; h++) {
+            for (let m = 0; m < 60; m += 5) {
+                fullLabels.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
+            }
+        }
+
+        // Initialize data arrays
+        const gridPurchase = new Array(288).fill(0);  // CS mua từ lưới
+        const loadPower = new Array(288).fill(0);     // Công suất cổng load  
+        const gridFeedIn = new Array(288).fill(0);    // Tải hòa lưới
+
+        // Fill data from timeline
+        timeline.forEach(point => {
+            const [hours, minutes] = point.time.split(':').map(Number);
+            const slotIndex = hours * 12 + Math.floor(minutes / 5);
+            if (slotIndex >= 0 && slotIndex < 288) {
+                // Grid purchase = EVN consumption (positive grid)
+                gridPurchase[slotIndex] = Math.max(0, point.gridPower || 0);
+                // Load power = Total consumption  
+                loadPower[slotIndex] = point.loadPower || 0;
+                // Grid feed-in (negative grid = selling to grid)
+                gridFeedIn[slotIndex] = Math.abs(Math.min(0, point.gridPower || 0));
+            }
+        });
+
+        if (gridSourceChartInstance) {
+            gridSourceChartInstance.destroy();
+        }
+
+        // Create gradient for grid feed-in area
+        const gradient = ctx.createLinearGradient(0, 0, 0, 280);
+        gradient.addColorStop(0, 'rgba(59, 130, 246, 0.6)');
+        gradient.addColorStop(1, 'rgba(59, 130, 246, 0.1)');
+
+        gridSourceChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: fullLabels,
+                datasets: [
+                    {
+                        label: 'Tải hòa lưới',
+                        data: gridFeedIn,
+                        borderColor: '#3b82f6',
+                        backgroundColor: gradient,
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 0,
+                        borderWidth: 2,
+                        order: 3
+                    },
+                    {
+                        label: 'Công suất cổng load',
+                        data: loadPower,
+                        borderColor: '#22c55e',
+                        backgroundColor: 'transparent',
+                        fill: false,
+                        tension: 0.3,
+                        pointRadius: 0,
+                        borderWidth: 1.5,
+                        order: 2
+                    },
+                    {
+                        label: 'CS mua từ lưới',
+                        data: gridPurchase,
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'transparent',
+                        fill: false,
+                        tension: 0.3,
+                        pointRadius: 0,
+                        borderWidth: 1.5,
+                        order: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(148, 163, 184, 0.15)', drawBorder: false },
+                        ticks: {
+                            callback: (value) => value >= 1000 ? (value / 1000).toFixed(1) + 'K' : value,
+                            font: { size: 10 },
+                            color: 'rgba(148, 163, 184, 0.8)'
+                        }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: {
+                            maxTicksLimit: 7,
+                            font: { size: 10 },
+                            color: 'rgba(148, 163, 184, 0.8)',
+                            callback: function (val, index) {
+                                const label = this.getLabelForValue(val);
+                                return label.endsWith(':00') ? label : '';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        console.log('✅ Grid Source Chart rendered');
+    }
+
+    // ========================================
+    // CHART 3: Tổng PV hôm nay (PV Today Chart)
+    // ========================================
+    let pvTodayChartInstance = null;
+
+    function renderPVTodayChart(timeline) {
+        const canvas = document.getElementById('pvTodayChart');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+
+        // Create full 24h timeline
+        const fullLabels = [];
+        for (let h = 0; h < 24; h++) {
+            for (let m = 0; m < 60; m += 5) {
+                fullLabels.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
+            }
+        }
+
+        // Initialize PV data
+        const pvData = new Array(288).fill(0);
+        let totalPVWh = 0;
+
+        // Fill data from timeline
+        timeline.forEach(point => {
+            const [hours, minutes] = point.time.split(':').map(Number);
+            const slotIndex = hours * 12 + Math.floor(minutes / 5);
+            if (slotIndex >= 0 && slotIndex < 288) {
+                pvData[slotIndex] = point.pvPower || 0;
+                totalPVWh += (point.pvPower || 0) / 12; // 5-minute interval = 1/12 hour
+            }
+        });
+
+        // Update total display
+        const totalEl = document.getElementById('pvTodayTotal');
+        if (totalEl) {
+            const totalKWh = (totalPVWh / 1000).toFixed(1);
+            totalEl.textContent = `${totalKWh} KWh`;
+        }
+
+        if (pvTodayChartInstance) {
+            pvTodayChartInstance.destroy();
+        }
+
+        // Create cyan gradient
+        const gradient = ctx.createLinearGradient(0, 0, 0, 280);
+        gradient.addColorStop(0, 'rgba(6, 182, 212, 0.7)');
+        gradient.addColorStop(1, 'rgba(6, 182, 212, 0.1)');
+
+        pvTodayChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: fullLabels,
+                datasets: [{
+                    label: 'PV Power',
+                    data: pvData,
+                    borderColor: '#06b6d4',
+                    backgroundColor: gradient,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 0,
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(148, 163, 184, 0.15)', drawBorder: false },
+                        ticks: {
+                            callback: (value) => value >= 1000 ? (value / 1000).toFixed(1) + 'K' : value,
+                            font: { size: 10 },
+                            color: 'rgba(148, 163, 184, 0.8)'
+                        }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: {
+                            maxTicksLimit: 7,
+                            font: { size: 10 },
+                            color: 'rgba(148, 163, 184, 0.8)',
+                            callback: function (val, index) {
+                                const label = this.getLabelForValue(val);
+                                return label.endsWith(':00') ? label : '';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        console.log('✅ PV Today Chart rendered');
+    }
+
+    // ========================================
+    // CHART 4: Sạc & Xả Pin (Battery Flow Chart)
+    // ========================================
+    let batteryFlowChartInstance = null;
+
+    function renderBatteryFlowChart(timeline) {
+        const canvas = document.getElementById('batteryFlowChart');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+
+        // Create full 24h timeline
+        const fullLabels = [];
+        for (let h = 0; h < 24; h++) {
+            for (let m = 0; m < 60; m += 5) {
+                fullLabels.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
+            }
+        }
+
+        // Battery flow data - positive = charge, negative = discharge
+        const batteryFlow = new Array(288).fill(0);
+        let totalChargeWh = 0;
+        let totalDischargeWh = 0;
+
+        // Fill data from timeline
+        timeline.forEach(point => {
+            const [hours, minutes] = point.time.split(':').map(Number);
+            const slotIndex = hours * 12 + Math.floor(minutes / 5);
+            if (slotIndex >= 0 && slotIndex < 288) {
+                const batteryPower = point.batteryPower || 0;
+                // Charge = positive, Discharge = negative (reversed for visual)
+                batteryFlow[slotIndex] = -batteryPower; // Invert: discharge shows below 0
+
+                if (batteryPower > 0) {
+                    totalChargeWh += batteryPower / 12;
+                } else {
+                    totalDischargeWh += Math.abs(batteryPower) / 12;
+                }
+            }
+        });
+
+        // Update totals display
+        const chargeEl = document.getElementById('chargeTotal');
+        const dischargeEl = document.getElementById('dischargeTotal');
+        if (chargeEl) chargeEl.textContent = `${(totalChargeWh / 1000).toFixed(1)} KWh`;
+        if (dischargeEl) dischargeEl.textContent = `${(totalDischargeWh / 1000).toFixed(1)} KWh`;
+
+        if (batteryFlowChartInstance) {
+            batteryFlowChartInstance.destroy();
+        }
+
+        // Create pink/salmon gradient
+        const gradient = ctx.createLinearGradient(0, 0, 0, 280);
+        gradient.addColorStop(0, 'rgba(244, 114, 182, 0.6)');
+        gradient.addColorStop(0.5, 'rgba(244, 114, 182, 0.3)');
+        gradient.addColorStop(1, 'rgba(244, 114, 182, 0.1)');
+
+        batteryFlowChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: fullLabels,
+                datasets: [{
+                    label: 'Battery Flow',
+                    data: batteryFlow,
+                    borderColor: '#f472b6',
+                    backgroundColor: gradient,
+                    fill: 'origin',
+                    tension: 0.3,
+                    pointRadius: 0,
+                    borderWidth: 1.5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        grid: {
+                            color: (context) => context.tick.value === 0 ? 'rgba(148, 163, 184, 0.5)' : 'rgba(148, 163, 184, 0.15)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            callback: (value) => {
+                                if (value >= 1000) return (value / 1000).toFixed(1) + 'K';
+                                if (value <= -1000) return (value / 1000).toFixed(1) + 'K';
+                                return value;
+                            },
+                            font: { size: 10 },
+                            color: 'rgba(148, 163, 184, 0.8)'
+                        }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: {
+                            maxTicksLimit: 7,
+                            font: { size: 10 },
+                            color: 'rgba(148, 163, 184, 0.8)',
+                            callback: function (val, index) {
+                                const label = this.getLabelForValue(val);
+                                return label.endsWith(':00') ? label : '';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        console.log('✅ Battery Flow Chart rendered');
     }
 
     // Update Power Timeline Chart with full day data (6 datasets, 24h full timeline)

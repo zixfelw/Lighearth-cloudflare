@@ -644,12 +644,8 @@
             transform: translateY(-100%);
         }
 
-        /* Default zoom 90% for all devices */
-        html {
-            zoom: 0.9;
-            -moz-transform: scale(0.9);
-            -moz-transform-origin: 0 0;
-        }
+        /* REMOVED: zoom: 0.9 was causing chart mouse coordinate mismatch */
+        /* Charts need 1:1 coordinate mapping to work correctly */
 
         /* ========================================
            3D Home View - Sun/Moon Animations

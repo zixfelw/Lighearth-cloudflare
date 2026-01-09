@@ -114,53 +114,114 @@
             opacity: 0.8;
         }
 
-        /* Floating animation */
-        @keyframes blob-float {
+        /* Organic floating animations - each blob moves differently */
+        @keyframes blob-drift-1 {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
 
-            0%,
+            15% {
+                transform: translate(80px, -50px) scale(1.05);
+            }
+
+            30% {
+                transform: translate(150px, 30px) scale(0.95);
+            }
+
+            45% {
+                transform: translate(100px, 100px) scale(1.02);
+            }
+
+            60% {
+                transform: translate(-50px, 80px) scale(0.98);
+            }
+
+            75% {
+                transform: translate(-100px, -30px) scale(1.03);
+            }
+
+            90% {
+                transform: translate(-60px, -80px) scale(0.97);
+            }
+
             100% {
+                transform: translate(0, 0) scale(1);
+            }
+        }
+
+        @keyframes blob-drift-2 {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            20% {
+                transform: translate(-100px, 60px) scale(0.95);
+            }
+
+            40% {
+                transform: translate(-150px, -40px) scale(1.05);
+            }
+
+            60% {
+                transform: translate(-30px, -120px) scale(0.98);
+            }
+
+            80% {
+                transform: translate(80px, -60px) scale(1.02);
+            }
+
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+        }
+
+        @keyframes blob-drift-3 {
+            0% {
                 transform: translate(0, 0) scale(1);
             }
 
             25% {
-                transform: translate(10px, -15px) scale(1.02);
+                transform: translate(60px, 80px) scale(1.03);
             }
 
             50% {
-                transform: translate(-5px, 10px) scale(0.98);
+                transform: translate(-80px, 100px) scale(0.97);
             }
 
             75% {
-                transform: translate(-10px, -5px) scale(1.01);
+                transform: translate(-120px, -50px) scale(1.02);
+            }
+
+            100% {
+                transform: translate(0, 0) scale(1);
             }
         }
 
         .bg-blob-purple {
-            background: radial-gradient(circle, rgba(139, 92, 246, 0.4) 0%, rgba(139, 92, 246, 0) 70%);
-            width: 500px;
-            height: 500px;
-            top: -150px;
-            left: -150px;
-            animation: blob-float 20s ease-in-out infinite;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.5) 0%, rgba(139, 92, 246, 0) 70%);
+            width: 600px;
+            height: 600px;
+            top: -200px;
+            left: -200px;
+            animation: blob-drift-1 30s ease-in-out infinite;
         }
 
         .bg-blob-teal {
-            background: radial-gradient(circle, rgba(20, 184, 166, 0.35) 0%, rgba(20, 184, 166, 0) 70%);
-            width: 450px;
-            height: 450px;
-            bottom: -100px;
-            right: -100px;
-            animation: blob-float 25s ease-in-out infinite reverse;
+            background: radial-gradient(circle, rgba(20, 184, 166, 0.45) 0%, rgba(20, 184, 166, 0) 70%);
+            width: 550px;
+            height: 550px;
+            bottom: -150px;
+            right: -150px;
+            animation: blob-drift-2 35s ease-in-out infinite;
         }
 
         .bg-blob-indigo {
-            background: radial-gradient(circle, rgba(99, 102, 241, 0.25) 0%, rgba(99, 102, 241, 0) 70%);
-            width: 400px;
-            height: 400px;
-            top: 40%;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.35) 0%, rgba(99, 102, 241, 0) 70%);
+            width: 500px;
+            height: 500px;
+            top: 30%;
             right: -80px;
-            animation: blob-float 22s ease-in-out infinite;
-            animation-delay: -5s;
+            animation: blob-drift-3 28s ease-in-out infinite;
         }
 
         /* Mobile: Smaller blobs, adjusted positions */

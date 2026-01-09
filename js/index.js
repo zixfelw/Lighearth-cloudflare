@@ -4318,50 +4318,7 @@ Vui lòng kiểm tra:
         gradient.addColorStop(0, 'rgba(20, 184, 166, 0.4)');
         gradient.addColorStop(1, 'rgba(20, 184, 166, 0.02)');
 
-        // External tooltip handler - zoom proof
-        const externalTooltipHandler = (context) => {
-            const { chart, tooltip } = context;
-            const tooltipEl = document.getElementById('soc-tooltip');
-
-            if (!tooltipEl) return;
-
-            if (tooltip.opacity === 0) {
-                tooltipEl.classList.add('hidden');
-                updateSOCCurrentValues();
-                return;
-            }
-
-            if (tooltip.dataPoints && tooltip.dataPoints.length > 0) {
-                const index = tooltip.dataPoints[0].dataIndex;
-                const item = socData[index];
-
-                if (!item) return;
-
-                // Update tooltip content - only time and SOC
-                const timeStr = item.t || (item.time ? new Date(item.time).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '');
-                const socValue = item.soc !== undefined ? item.soc : (item.value !== undefined ? item.value : 0);
-                document.getElementById('soc-tooltip-time').textContent = `⏰ ${timeStr}`;
-                document.getElementById('soc-tooltip-soc').textContent = `🔋 ${socValue}%`;
-
-                // Position using caretX/caretY (zoom-proof)
-                const chartArea = chart.chartArea;
-                let left = tooltip.caretX;
-                let top = tooltip.caretY - 10;
-
-                // Adjust boundaries
-                if (left + 180 > chartArea.right) {
-                    left = left - 190;
-                } else {
-                    left = left + 15;
-                }
-
-                if (top < chartArea.top) top = chartArea.top + 10;
-
-                tooltipEl.style.left = `${left}px`;
-                tooltipEl.style.top = `${top}px`;
-                tooltipEl.classList.remove('hidden');
-            }
-        };
+        // Use Chart.js built-in tooltip (better edge handling than external)
 
         socChartInstance = new Chart(canvas, {
             type: 'line',
@@ -4396,11 +4353,22 @@ Vui lòng kiểm tra:
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        enabled: false,
-                        external: externalTooltipHandler,
+                        enabled: true,
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        titleColor: '#14b8a6',
+                        bodyColor: '#f1f5f9',
+                        titleFont: { size: 12, weight: 'bold' },
+                        bodyFont: { size: 16, weight: 'bold' },
+                        padding: 12,
+                        cornerRadius: 10,
+                        displayColors: false,
                         mode: 'nearest',
                         intersect: false,
-                        axis: 'x'
+                        axis: 'x',
+                        callbacks: {
+                            title: (items) => `⏰ ${items[0].label}`,
+                            label: (context) => `🔋 ${context.parsed.y}%`
+                        }
                     }
                 },
                 scales: {
@@ -4440,56 +4408,7 @@ Vui lòng kiểm tra:
             }
         });
 
-        // Enhanced touch handling for mobile
-        let touchActive = false;
-
-        const handleTouchMove = (e) => {
-            if (!touchActive) return;
-            e.preventDefault();
-
-            const touch = e.touches[0];
-            const rect = canvas.getBoundingClientRect();
-            const x = touch.clientX - rect.left;
-            const y = touch.clientY - rect.top;
-
-            // Trigger Chart.js tooltip at touch position
-            const points = socChartInstance.getElementsAtEventForMode(
-                { x, y, type: 'touchmove' },
-                'index',
-                { intersect: false },
-                false
-            );
-
-            if (points.length > 0) {
-                const index = points[0].index;
-                socChartInstance.tooltip.setActiveElements([{ datasetIndex: 0, index }], { x, y });
-                socChartInstance.update('none');
-            }
-        };
-
-        const handleTouchStart = (e) => {
-            touchActive = true;
-            handleTouchMove(e);
-        };
-
-        const handleTouchEnd = () => {
-            touchActive = false;
-            const tooltipEl = document.getElementById('soc-tooltip');
-            if (tooltipEl) tooltipEl.classList.add('hidden');
-            updateSOCCurrentValues();
-        };
-
-        canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
-        canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
-        canvas.addEventListener('touchend', handleTouchEnd);
-        canvas.addEventListener('touchcancel', handleTouchEnd);
-
-        // Mouse leave handler
-        canvas.addEventListener('mouseleave', () => {
-            const tooltipEl = document.getElementById('soc-tooltip');
-            if (tooltipEl) tooltipEl.classList.add('hidden');
-            updateSOCCurrentValues();
-        });
+        console.log('✅ SOC Chart rendered with built-in tooltip');
 
         console.log('✅ SOC Chart rendered with enhanced touch support');
     }

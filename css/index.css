@@ -261,10 +261,10 @@ canvas:hover {
     background: linear-gradient(90deg, #3b82f6, #2563eb, #1d4ed8);
 }
 
-/* VIP Premium - Gold gradient with shimmer for >= 3.35V */
+/* VIP Premium - Cyan/Teal gradient with shimmer for >= 3.35V */
 .cell-voltage-bar-fill.bar-premium {
-    background: linear-gradient(90deg, #f59e0b, #d97706, #b45309);
-    box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+    background: linear-gradient(90deg, #06b6d4, #0891b2, #0e7490);
+    box-shadow: 0 0 8px rgba(6, 182, 212, 0.5);
     animation: premium-shimmer 2s ease-in-out infinite;
 }
 
@@ -272,11 +272,11 @@ canvas:hover {
 
     0%,
     100% {
-        box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+        box-shadow: 0 0 8px rgba(6, 182, 212, 0.5);
     }
 
     50% {
-        box-shadow: 0 0 15px rgba(245, 158, 11, 0.8), 0 0 25px rgba(217, 119, 6, 0.4);
+        box-shadow: 0 0 15px rgba(6, 182, 212, 0.8), 0 0 25px rgba(8, 145, 178, 0.4);
     }
 }
 

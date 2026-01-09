@@ -3443,8 +3443,16 @@ Vui lòng kiểm tra:
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                layout: {
+                    padding: { right: 20, left: 5 }
+                },
                 interaction: {
-                    mode: 'index',
+                    mode: 'nearest',
+                    intersect: false,
+                    axis: 'x'
+                },
+                hover: {
+                    mode: 'nearest',
                     intersect: false
                 },
                 plugins: {
@@ -4378,13 +4386,21 @@ Vui lòng kiểm tra:
                 responsive: true,
                 maintainAspectRatio: false,
                 animation: false,
+                // Add padding to extend chart area to edges
+                layout: {
+                    padding: {
+                        right: 20,
+                        left: 5
+                    }
+                },
                 plugins: {
                     legend: { display: false },
                     tooltip: {
                         enabled: false,
                         external: externalTooltipHandler,
-                        mode: 'index',
-                        intersect: false
+                        mode: 'nearest',
+                        intersect: false,
+                        axis: 'x'
                     }
                 },
                 scales: {
@@ -4411,18 +4427,15 @@ Vui lòng kiểm tra:
                     }
                 },
                 interaction: {
-                    mode: 'index',
+                    mode: 'nearest',
                     intersect: false,
-                    // Improve touch responsiveness
                     axis: 'x'
                 },
-                // Improve hover/touch detection
                 hover: {
-                    mode: 'index',
+                    mode: 'nearest',
                     intersect: false,
                     animationDuration: 0
                 },
-                // Better event handling
                 events: ['mousemove', 'mouseout', 'click', 'touchstart', 'touchmove', 'touchend']
             }
         });

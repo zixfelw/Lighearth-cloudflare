@@ -40,7 +40,7 @@
  */
 
 const VN_TIMEZONE_OFFSET = 7;
-const VERSION = '4.2.2';
+const VERSION = '4.2.3';
 
 function corsHeaders(origin) {
   return {
@@ -258,7 +258,20 @@ async function getSOCHistory(deviceId, date, env) {
   const startDate = new Date(date);
   startDate.setDate(startDate.getDate() - 1);
   const startTime = `${startDate.toISOString().split('T')[0]}T17:00:00`;
-  const endTime = `${date}T16:59:59`;
+
+  // Dynamic end time: current time for today, end of day for past dates
+  let endTime;
+  if (date === today) {
+    // For today: fetch up to current time
+    const now = new Date();
+    const vnNow = new Date(now.getTime() + VN_TIMEZONE_OFFSET * 60 * 60 * 1000);
+    const hours = vnNow.getUTCHours().toString().padStart(2, '0');
+    const mins = vnNow.getUTCMinutes().toString().padStart(2, '0');
+    endTime = `${date}T${hours}:${mins}:59`;
+  } else {
+    // For past dates: fetch entire day
+    endTime = `${date}T23:59:59`;
+  }
 
   const data = await fetchHA(`/api/history/period/${startTime}?filter_entity_id=${entityId}&end_time=${endTime}`, env);
 

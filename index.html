@@ -224,6 +224,100 @@
             animation: blob-drift-3 28s ease-in-out infinite;
         }
 
+        /* Additional 3 blobs */
+        @keyframes blob-drift-4 {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            20% {
+                transform: translate(-80px, -100px) scale(1.04);
+            }
+
+            40% {
+                transform: translate(50px, -60px) scale(0.96);
+            }
+
+            60% {
+                transform: translate(100px, 50px) scale(1.02);
+            }
+
+            80% {
+                transform: translate(-40px, 80px) scale(0.98);
+            }
+
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+        }
+
+        @keyframes blob-drift-5 {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            33% {
+                transform: translate(120px, -80px) scale(0.97);
+            }
+
+            66% {
+                transform: translate(-60px, 100px) scale(1.03);
+            }
+
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+        }
+
+        @keyframes blob-drift-6 {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            25% {
+                transform: translate(-100px, 60px) scale(1.05);
+            }
+
+            50% {
+                transform: translate(80px, 120px) scale(0.95);
+            }
+
+            75% {
+                transform: translate(60px, -80px) scale(1.02);
+            }
+
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+        }
+
+        .bg-blob-pink {
+            background: radial-gradient(circle, rgba(236, 72, 153, 0.4) 0%, rgba(236, 72, 153, 0) 70%);
+            width: 450px;
+            height: 450px;
+            top: 60%;
+            left: -100px;
+            animation: blob-drift-4 32s ease-in-out infinite;
+        }
+
+        .bg-blob-cyan {
+            background: radial-gradient(circle, rgba(6, 182, 212, 0.35) 0%, rgba(6, 182, 212, 0) 70%);
+            width: 400px;
+            height: 400px;
+            top: 10%;
+            right: 20%;
+            animation: blob-drift-5 26s ease-in-out infinite;
+        }
+
+        .bg-blob-amber {
+            background: radial-gradient(circle, rgba(245, 158, 11, 0.3) 0%, rgba(245, 158, 11, 0) 70%);
+            width: 380px;
+            height: 380px;
+            bottom: 20%;
+            left: 30%;
+            animation: blob-drift-6 33s ease-in-out infinite;
+        }
+
         /* Mobile: Smaller blobs, adjusted positions */
         @media (max-width: 768px) {
             .bg-blob {
@@ -249,6 +343,27 @@
                 height: 250px;
                 top: 50%;
                 right: -50px;
+            }
+
+            .bg-blob-pink {
+                width: 220px;
+                height: 220px;
+                top: 70%;
+                left: -50px;
+            }
+
+            .bg-blob-cyan {
+                width: 200px;
+                height: 200px;
+                top: 15%;
+                right: 10%;
+            }
+
+            .bg-blob-amber {
+                width: 180px;
+                height: 180px;
+                bottom: 30%;
+                left: 20%;
             }
         }
 
@@ -1775,10 +1890,13 @@
 </head>
 
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 min-h-screen">
-    <!-- Background Gradient Blobs - Dark Mode Only -->
+    <!-- Background Gradient Blobs - Dark Mode Only (6 blobs total) -->
     <div id="blob-purple" class="bg-blob bg-blob-purple" aria-hidden="true"></div>
     <div id="blob-teal" class="bg-blob bg-blob-teal" aria-hidden="true"></div>
     <div id="blob-indigo" class="bg-blob bg-blob-indigo" aria-hidden="true"></div>
+    <div id="blob-pink" class="bg-blob bg-blob-pink" aria-hidden="true"></div>
+    <div id="blob-cyan" class="bg-blob bg-blob-cyan" aria-hidden="true"></div>
+    <div id="blob-amber" class="bg-blob bg-blob-amber" aria-hidden="true"></div>
 
     <!-- Header - Dark theme, Hide on scroll down, show on scroll up -->
     <header b-iwpun16f09 id="mainHeader"

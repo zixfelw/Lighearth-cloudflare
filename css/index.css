@@ -3794,21 +3794,109 @@ html:not(.dark) .battery-heat-card.battery-charging-3 .battery-inner-frame {
 }
 
 /* ========================================
-   UNIFIED BATTERY W/A/V COLORS
-   Override all heat effect colors to keep W/A/V unified
+   UNIFIED BATTERY W/A/V COLORS + INNER FRAME
+   - W value: always emerald
+   - A/V + Inner frame: green when charging, red when discharging
    ======================================== */
-.battery-heat-card #battery-power-3d,
-.battery-heat-card #battery-current-3d,
-.battery-heat-card #battery-voltage-3d {
+
+/* Default: Emerald for W */
+.battery-heat-card #battery-power-3d {
     color: #10b981 !important;
-    /* Light mode: emerald-500 */
 }
 
-.dark .battery-heat-card #battery-power-3d,
-.dark .battery-heat-card #battery-current-3d,
-.dark .battery-heat-card #battery-voltage-3d {
+.dark .battery-heat-card #battery-power-3d {
     color: #34d399 !important;
-    /* Dark mode: emerald-400 */
+}
+
+/* Status label: green charging, red discharging */
+.battery-heat-card.battery-charging-0 #battery-status-label-3d,
+.battery-heat-card.battery-charging-1 #battery-status-label-3d,
+.battery-heat-card.battery-charging-2 #battery-status-label-3d,
+.battery-heat-card.battery-charging-3 #battery-status-label-3d {
+    color: #10b981 !important;
+}
+
+.dark .battery-heat-card.battery-charging-0 #battery-status-label-3d,
+.dark .battery-heat-card.battery-charging-1 #battery-status-label-3d,
+.dark .battery-heat-card.battery-charging-2 #battery-status-label-3d,
+.dark .battery-heat-card.battery-charging-3 #battery-status-label-3d {
+    color: #34d399 !important;
+}
+
+.battery-heat-card.battery-discharging-0 #battery-status-label-3d,
+.battery-heat-card.battery-discharging-1 #battery-status-label-3d,
+.battery-heat-card.battery-discharging-2 #battery-status-label-3d,
+.battery-heat-card.battery-discharging-3 #battery-status-label-3d {
+    color: #f87171 !important;
+}
+
+.dark .battery-heat-card.battery-discharging-0 #battery-status-label-3d,
+.dark .battery-heat-card.battery-discharging-1 #battery-status-label-3d,
+.dark .battery-heat-card.battery-discharging-2 #battery-status-label-3d,
+.dark .battery-heat-card.battery-discharging-3 #battery-status-label-3d {
+    color: #fca5a5 !important;
+}
+
+/* Inner Frame A|V: GREEN when CHARGING */
+.battery-heat-card.battery-charging-0 #battery-inner-frame-3d,
+.battery-heat-card.battery-charging-1 #battery-inner-frame-3d,
+.battery-heat-card.battery-charging-2 #battery-inner-frame-3d,
+.battery-heat-card.battery-charging-3 #battery-inner-frame-3d {
+    border-color: rgba(16, 185, 129, 0.6) !important;
+    background: rgba(16, 185, 129, 0.1) !important;
+}
+
+.battery-heat-card.battery-charging-0 #battery-current-3d,
+.battery-heat-card.battery-charging-0 #battery-voltage-3d,
+.battery-heat-card.battery-charging-1 #battery-current-3d,
+.battery-heat-card.battery-charging-1 #battery-voltage-3d,
+.battery-heat-card.battery-charging-2 #battery-current-3d,
+.battery-heat-card.battery-charging-2 #battery-voltage-3d,
+.battery-heat-card.battery-charging-3 #battery-current-3d,
+.battery-heat-card.battery-charging-3 #battery-voltage-3d {
+    color: #10b981 !important;
+}
+
+.dark .battery-heat-card.battery-charging-0 #battery-current-3d,
+.dark .battery-heat-card.battery-charging-0 #battery-voltage-3d,
+.dark .battery-heat-card.battery-charging-1 #battery-current-3d,
+.dark .battery-heat-card.battery-charging-1 #battery-voltage-3d,
+.dark .battery-heat-card.battery-charging-2 #battery-current-3d,
+.dark .battery-heat-card.battery-charging-2 #battery-voltage-3d,
+.dark .battery-heat-card.battery-charging-3 #battery-current-3d,
+.dark .battery-heat-card.battery-charging-3 #battery-voltage-3d {
+    color: #34d399 !important;
+}
+
+/* Inner Frame A|V: RED when DISCHARGING */
+.battery-heat-card.battery-discharging-0 #battery-inner-frame-3d,
+.battery-heat-card.battery-discharging-1 #battery-inner-frame-3d,
+.battery-heat-card.battery-discharging-2 #battery-inner-frame-3d,
+.battery-heat-card.battery-discharging-3 #battery-inner-frame-3d {
+    border-color: rgba(248, 113, 113, 0.6) !important;
+    background: rgba(248, 113, 113, 0.1) !important;
+}
+
+.battery-heat-card.battery-discharging-0 #battery-current-3d,
+.battery-heat-card.battery-discharging-0 #battery-voltage-3d,
+.battery-heat-card.battery-discharging-1 #battery-current-3d,
+.battery-heat-card.battery-discharging-1 #battery-voltage-3d,
+.battery-heat-card.battery-discharging-2 #battery-current-3d,
+.battery-heat-card.battery-discharging-2 #battery-voltage-3d,
+.battery-heat-card.battery-discharging-3 #battery-current-3d,
+.battery-heat-card.battery-discharging-3 #battery-voltage-3d {
+    color: #f87171 !important;
+}
+
+.dark .battery-heat-card.battery-discharging-0 #battery-current-3d,
+.dark .battery-heat-card.battery-discharging-0 #battery-voltage-3d,
+.dark .battery-heat-card.battery-discharging-1 #battery-current-3d,
+.dark .battery-heat-card.battery-discharging-1 #battery-voltage-3d,
+.dark .battery-heat-card.battery-discharging-2 #battery-current-3d,
+.dark .battery-heat-card.battery-discharging-2 #battery-voltage-3d,
+.dark .battery-heat-card.battery-discharging-3 #battery-current-3d,
+.dark .battery-heat-card.battery-discharging-3 #battery-voltage-3d {
+    color: #fca5a5 !important;
 }
 
 /* ========================================

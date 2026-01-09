@@ -86,6 +86,8 @@ let activeChartNumber = 1;     // 1 = Line Chart, 2 = Area Chart
 let cachedChartData = null;    // Cache timeline data to reuse between charts
 let tempChartInstance = null;  // Temperature Chart instance
 let activeSocTempTab = 'soc';  // 'soc' or 'temp' - current active tab
+let lastHapticTime = 0;        // Throttle haptic feedback
+const HAPTIC_THROTTLE_MS = 100; // Minimum time between haptic feedbacks
 let cachedTempData = null;     // Cache temperature timeline data
 let temperatureCache = {
     data: null,
@@ -108,6 +110,15 @@ let lastCellsFetch = 0;
 let socAutoReloadInterval = null;
 const CELLS_FETCH_INTERVAL = 5000; // Min 5s between fetches
 const LIGHTEARTH_PROXY_API = 'https://lightearth-proxy.minhlongt358.workers.dev';
+
+// Haptic feedback for chart interactions (throttled)
+function triggerHaptic(durationMs = 5) {
+    const now = Date.now();
+    if (navigator.vibrate && (now - lastHapticTime) > HAPTIC_THROTTLE_MS) {
+        navigator.vibrate(durationMs);
+        lastHapticTime = now;
+    }
+}
 
 // Get current API (round-robin with health check)
 function getNextHealthyApi() {
@@ -3358,6 +3369,7 @@ Vui lòng kiểm tra:
                 responsive: true,
                 maintainAspectRatio: false,
                 interaction: { mode: 'index', intersect: false },
+                onHover: (event, elements) => { if (elements.length) triggerHaptic(); },
                 plugins: { legend: { display: false } },
                 scales: {
                     y: {
@@ -3456,6 +3468,7 @@ Vui lòng kiểm tra:
                 responsive: true,
                 maintainAspectRatio: false,
                 interaction: { mode: 'index', intersect: false },
+                onHover: (event, elements) => { if (elements.length) triggerHaptic(); },
                 plugins: { legend: { display: false } },
                 scales: {
                     y: {
@@ -3562,6 +3575,7 @@ Vui lòng kiểm tra:
                 responsive: true,
                 maintainAspectRatio: false,
                 interaction: { mode: 'index', intersect: false },
+                onHover: (event, elements) => { if (elements.length) triggerHaptic(); },
                 plugins: { legend: { display: false } },
                 scales: {
                     y: {
@@ -3802,6 +3816,7 @@ Vui lòng kiểm tra:
                     mode: 'nearest',
                     intersect: false
                 },
+                onHover: (event, elements) => { if (elements.length) triggerHaptic(); },
                 plugins: {
                     legend: { display: false },
                     tooltip: {
@@ -4084,16 +4099,24 @@ Vui lòng kiểm tra:
         });
         updateEnergyChartPeakStatsFromTimeline(filteredTimeline);
 
-        // Cache timeline data for Chart 2 (Stacked Bar Chart)
+        // Cache timeline data for all charts
         cachedChartData = timeline;
-        console.log('💾 Timeline data cached for Chart 2:', timeline.length, 'points');
+        console.log('💾 Timeline data cached for all charts:', timeline.length, 'points');
 
         // NEW: Update Power Timeline Chart with full data
         updatePowerTimelineChart(timeline, cloudData.date);
 
-        // If Chart 2 is currently active, update it too
-        if (activeChartNumber === 2 && typeof updatePowerStackedChart === 'function') {
-            updatePowerStackedChart(timeline);
+        // Render the currently active chart
+        switch (activeChartNumber) {
+            case 2:
+                renderGridSourceChart(timeline);
+                break;
+            case 3:
+                renderPVTodayChart(timeline);
+                break;
+            case 4:
+                renderBatteryFlowChart(timeline);
+                break;
         }
     }
 

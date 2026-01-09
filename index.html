@@ -105,9 +105,12 @@
             opacity: 0;
             pointer-events: none;
             z-index: 0;
-            /* Above body bg, below content */
-            transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.5s ease;
-            will-change: transform;
+            will-change: transform, opacity;
+            transform: translateZ(0);
+            /* Force GPU layer */
+            backface-visibility: hidden;
+            /* Optimize compositing */
+            -webkit-backface-visibility: hidden;
         }
 
         .dark .bg-blob {
@@ -318,52 +321,48 @@
             animation: blob-drift-6 33s ease-in-out infinite;
         }
 
-        /* Mobile: Smaller blobs, adjusted positions */
+        /* Mobile: Optimize performance - only 3 blobs, smaller, less blur */
         @media (max-width: 768px) {
             .bg-blob {
-                filter: blur(60px);
+                filter: blur(40px);
+                /* Reduced blur for better performance */
+                animation-duration: 40s !important;
+                /* Slower = less CPU */
+            }
+
+            /* Keep only 3 blobs on mobile for performance */
+            .bg-blob-pink,
+            .bg-blob-cyan,
+            .bg-blob-amber {
+                display: none !important;
             }
 
             .bg-blob-purple {
-                width: 300px;
-                height: 300px;
-                top: -80px;
-                left: -80px;
+                width: 250px;
+                height: 250px;
+                top: -60px;
+                left: -60px;
             }
 
             .bg-blob-teal {
-                width: 280px;
-                height: 280px;
-                bottom: -60px;
-                right: -60px;
-            }
-
-            .bg-blob-indigo {
-                width: 250px;
-                height: 250px;
-                top: 50%;
+                width: 230px;
+                height: 230px;
+                bottom: -50px;
                 right: -50px;
             }
 
-            .bg-blob-pink {
-                width: 220px;
-                height: 220px;
-                top: 70%;
-                left: -50px;
-            }
-
-            .bg-blob-cyan {
+            .bg-blob-indigo {
                 width: 200px;
                 height: 200px;
-                top: 15%;
-                right: 10%;
+                top: 50%;
+                right: -40px;
             }
+        }
 
-            .bg-blob-amber {
-                width: 180px;
-                height: 180px;
-                bottom: 30%;
-                left: 20%;
+        /* Respect reduced motion preference */
+        @media (prefers-reduced-motion: reduce) {
+            .bg-blob {
+                animation: none !important;
             }
         }
 

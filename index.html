@@ -97,6 +97,45 @@
             background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
         }
 
+        /* Background Gradient Blobs - Dark Mode Only */
+        .bg-blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0;
+            pointer-events: none;
+            z-index: -1;
+            transition: opacity 0.5s ease;
+        }
+
+        .dark .bg-blob {
+            opacity: 1;
+        }
+
+        .bg-blob-purple {
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.4) 0%, rgba(139, 92, 246, 0) 70%);
+            width: 500px;
+            height: 500px;
+            top: -150px;
+            left: -150px;
+        }
+
+        .bg-blob-teal {
+            background: radial-gradient(circle, rgba(20, 184, 166, 0.35) 0%, rgba(20, 184, 166, 0) 70%);
+            width: 450px;
+            height: 450px;
+            bottom: -100px;
+            right: -100px;
+        }
+
+        .bg-blob-indigo {
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.25) 0%, rgba(99, 102, 241, 0) 70%);
+            width: 400px;
+            height: 400px;
+            top: 40%;
+            right: -80px;
+        }
+
         .shadow-brand {
             box-shadow: 0 4px 14px 0 rgba(139, 92, 246, 0.4);
         }
@@ -1620,6 +1659,11 @@
 </head>
 
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 min-h-screen">
+    <!-- Background Gradient Blobs - Dark Mode Only -->
+    <div class="bg-blob bg-blob-purple" aria-hidden="true"></div>
+    <div class="bg-blob bg-blob-teal" aria-hidden="true"></div>
+    <div class="bg-blob bg-blob-indigo" aria-hidden="true"></div>
+
     <!-- Header - Dark theme, Hide on scroll down, show on scroll up -->
     <header b-iwpun16f09 id="mainHeader"
         class="bg-slate-900 border-b border-slate-700/50 shadow-xl sticky top-0 z-50 transition-transform duration-300">

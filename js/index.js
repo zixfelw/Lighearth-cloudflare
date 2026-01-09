@@ -3443,9 +3443,6 @@ Vui lòng kiểm tra:
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                layout: {
-                    padding: { right: 20, left: 5 }
-                },
                 interaction: {
                     mode: 'nearest',
                     intersect: false,
@@ -4343,13 +4340,6 @@ Vui lòng kiểm tra:
                 responsive: true,
                 maintainAspectRatio: false,
                 animation: false,
-                // Add padding to extend chart area to edges
-                layout: {
-                    padding: {
-                        right: 20,
-                        left: 5
-                    }
-                },
                 plugins: {
                     legend: { display: false },
                     tooltip: {

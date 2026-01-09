@@ -3317,14 +3317,9 @@
                             </div>
 
                             <!-- SOC Chart Container -->
-                            <div class="chart-container relative overflow-visible pr-4" style="height: 200px;">
-                                <canvas id="socChart" style="touch-action: pan-y;"></canvas>
-                                <!-- External HTML Tooltip -->
-                                <div id="soc-tooltip"
-                                    class="hidden absolute z-50 bg-slate-900/95 text-white text-xs rounded-lg shadow-xl p-2.5 pointer-events-none backdrop-blur-sm border border-slate-700">
-                                    <div id="soc-tooltip-time" class="text-slate-300 text-xs font-medium"></div>
-                                    <div id="soc-tooltip-soc" class="text-xl font-black text-teal-400"></div>
-                                </div>
+                            <div class="chart-container relative" style="height: 200px; width: 100%;">
+                                <canvas id="socChart"
+                                    style="width: 100% !important; height: 100% !important; display: block;"></canvas>
                             </div>
                         </div>
 
@@ -3527,8 +3522,9 @@
                     </div>
 
                     <!-- Chart Container - Compact height -->
-                    <div class="relative rounded-lg overflow-visible pr-4" style="height: 280px;">
-                        <canvas id="powerTimelineChart" style="touch-action: pan-y;"></canvas>
+                    <div class="relative rounded-lg" style="height: 280px; width: 100%;">
+                        <canvas id="powerTimelineChart"
+                            style="width: 100% !important; height: 100% !important; display: block;"></canvas>
                         <!-- Loading Overlay -->
                         <div id="powerChartLoading"
                             class="absolute inset-0 flex items-center justify-center bg-slate-50/90 dark:bg-slate-900/90 rounded-lg">

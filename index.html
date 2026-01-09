@@ -5120,48 +5120,6 @@
         }
     </script>
 
-    <!-- Blob Scroll Animation -->
-    <script>
-        (function () {
-            const blobPurple = document.getElementById('blob-purple');
-            const blobTeal = document.getElementById('blob-teal');
-            const blobIndigo = document.getElementById('blob-indigo');
-
-            if (!blobPurple || !blobTeal || !blobIndigo) return;
-
-            let ticking = false;
-            let lastScrollY = 0;
-
-            function updateBlobPositions() {
-                const scrollY = window.scrollY;
-                const scrollPercent = scrollY / (document.body.scrollHeight - window.innerHeight);
-
-                // Different movement speeds/directions for each blob
-                const purpleX = Math.sin(scrollPercent * Math.PI * 2) * 50;
-                const purpleY = scrollY * 0.15;
-
-                const tealX = Math.cos(scrollPercent * Math.PI * 3) * 40;
-                const tealY = -scrollY * 0.1;
-
-                const indigoX = Math.sin(scrollPercent * Math.PI * 2.5) * 60;
-                const indigoY = scrollY * 0.08;
-
-                blobPurple.style.transform = `translate(${purpleX}px, ${purpleY}px)`;
-                blobTeal.style.transform = `translate(${tealX}px, ${tealY}px)`;
-                blobIndigo.style.transform = `translate(${indigoX}px, ${indigoY}px)`;
-
-                ticking = false;
-            }
-
-            window.addEventListener('scroll', function () {
-                if (!ticking) {
-                    requestAnimationFrame(updateBlobPositions);
-                    ticking = true;
-                }
-            }, { passive: true });
-        })();
-    </script>
-
 </body>
 
 </html>

@@ -644,8 +644,32 @@
             transform: translateY(-100%);
         }
 
-        /* REMOVED: zoom: 0.9 was causing chart mouse coordinate mismatch */
-        /* Charts need 1:1 coordinate mapping to work correctly */
+        /* Page zoom 80% - makes content appear smaller for better overview */
+        html {
+            zoom: 0.8;
+            -moz-transform: scale(0.8);
+            -moz-transform-origin: 0 0;
+        }
+
+        /* Counter-zoom for chart containers - restores 1:1 mouse coordinate mapping */
+        /* 1/0.8 = 1.25 to counteract parent zoom */
+        .chart-container,
+        #socChart,
+        #powerTimelineChart,
+        #tempChart,
+        #powerStackedChart,
+        #summaryMonthlyChart {
+            zoom: 1.25;
+        }
+
+        /* Firefox uses transform, need to counter with scale */
+        @-moz-document url-prefix() {
+            .chart-container {
+                -moz-transform: scale(1.25);
+                -moz-transform-origin: 0 0;
+            }
+        }
+
 
         /* ========================================
            3D Home View - Sun/Moon Animations

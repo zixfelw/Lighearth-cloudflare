@@ -129,10 +129,9 @@ body {
     margin-bottom: 1.5rem;
     background: white;
     border-radius: var(--radius-xl);
-    /* FIXED: Use uniform padding to prevent mouse coordinate mismatch */
     padding: 12px;
     box-shadow: var(--shadow-md);
-    overflow: visible !important;
+    overflow: hidden;
     transition: var(--transition-normal);
 }
 
@@ -141,17 +140,13 @@ body {
 }
 
 .chart-container canvas {
-    /* Ensure canvas fills container properly for accurate coordinates */
-    width: 100% !important;
-    height: 100% !important;
     display: block;
 }
 
 #soc-section {
-    overflow: visible !important;
+    overflow: visible;
 }
 
-/* REMOVED: #soc-section .chart-container padding-right override */
 
 .dark .chart-container {
     background: var(--bg-dark-800);

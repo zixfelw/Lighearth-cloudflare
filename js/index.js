@@ -649,6 +649,12 @@ document.addEventListener('DOMContentLoaded', function () {
         dateInput.value = formatDate(today);
     }
 
+    // Initialize energy chart date picker with today's date
+    const energyDatePicker = document.getElementById('energy-chart-date-picker');
+    if (energyDatePicker) {
+        energyDatePicker.value = today.toISOString().split('T')[0];
+    }
+
     // Get deviceId from URL parameter
     const urlParams = new URLSearchParams(window.location.search);
     const deviceIdParam = urlParams.get('deviceId');
@@ -2796,6 +2802,119 @@ Vui lòng kiểm tra:
         }
 
         console.log(`📊 Switched to Chart ${chartNum}`);
+    };
+
+    // ========================================
+    // REFRESH ALL DATA FOR DATE
+    // ========================================
+
+    // Global function to refresh all APIs when date changes
+    window.refreshAllDataForDate = async function (date) {
+        const deviceId = deviceIdFromUrl || 'P250801055';
+        const formattedDate = date || new Date().toISOString().split('T')[0];
+
+        console.log(`🔄 Refreshing ALL data for date: ${formattedDate}`);
+
+        // Show loading indicators
+        const loadingEl = document.getElementById('powerChartLoading');
+        if (loadingEl) loadingEl.classList.remove('hidden');
+
+        try {
+            // API 1: Solar Dashboard (summary data)
+            const dashboardUrl = `https://temperature-soc-power.applike098.workers.dev/api/solar/dashboard/${deviceId}`;
+
+            // API 2: Daily Energy
+            const dailyEnergyUrl = `https://lightearth.applike098.workers.dev/api/realtime/daily-energy/${deviceId}`;
+
+            // API 3: SOC History
+            const socHistoryUrl = `https://temperature-soc-power.applike098.workers.dev/api/realtime/soc-history/${deviceId}?date=${formattedDate}`;
+
+            // API 4: Temperature
+            const temperatureUrl = `https://temperature-soc-power.minhlongt358.workers.dev/api/cloud/temperature/${deviceId}/${formattedDate}`;
+
+            // API 5: Power History (main data for charts)
+            const powerHistoryUrl = `https://temperature-soc-power.applike098.workers.dev/api/realtime/power-history/${deviceId}?date=${formattedDate}`;
+
+            // Fetch all in parallel
+            const [dashboardRes, dailyEnergyRes, socHistoryRes, temperatureRes, powerHistoryRes] = await Promise.allSettled([
+                fetch(dashboardUrl),
+                fetch(dailyEnergyUrl),
+                fetch(socHistoryUrl),
+                fetch(temperatureUrl),
+                fetch(powerHistoryUrl)
+            ]);
+
+            console.log('✅ All API requests completed');
+
+            // Process Power History (main timeline data for charts 1-4)
+            if (powerHistoryRes.status === 'fulfilled' && powerHistoryRes.value.ok) {
+                const powerData = await powerHistoryRes.value.json();
+                if (powerData && powerData.data && powerData.data.timeline) {
+                    const timeline = powerData.data.timeline;
+                    cachedChartData = timeline;
+
+                    // Update all power charts
+                    updatePowerTimelineChart(timeline, formattedDate);
+
+                    // Update currently active chart
+                    switch (activeChartNumber) {
+                        case 2:
+                            renderGridSourceChart(timeline);
+                            break;
+                        case 3:
+                            renderPVTodayChart(timeline);
+                            break;
+                        case 4:
+                            renderBatteryFlowChart(timeline);
+                            break;
+                    }
+
+                    console.log('✅ Power charts updated with', timeline.length, 'data points');
+                }
+            }
+
+            // Process SOC History
+            if (socHistoryRes.status === 'fulfilled' && socHistoryRes.value.ok) {
+                const socData = await socHistoryRes.value.json();
+                if (socData && socData.data) {
+                    // Update SOC chart if available
+                    if (typeof renderSOCChart === 'function') {
+                        renderSOCChart(socData.data);
+                    }
+                    console.log('✅ SOC chart updated');
+                }
+            }
+
+            // Process Temperature
+            if (temperatureRes.status === 'fulfilled' && temperatureRes.value.ok) {
+                const tempData = await temperatureRes.value.json();
+                if (tempData && tempData.data) {
+                    cachedTempData = tempData.data;
+                    if (typeof renderTemperatureChart === 'function' && activeSocTempTab === 'temp') {
+                        renderTemperatureChart(tempData.data);
+                    }
+                    console.log('✅ Temperature data cached');
+                }
+            }
+
+            // Update date display
+            const dateEl = document.getElementById('energy-chart-date');
+            if (dateEl) {
+                const displayDate = new Date(formattedDate);
+                dateEl.textContent = displayDate.toLocaleDateString('vi-VN', {
+                    weekday: 'short', day: 'numeric', month: 'numeric', year: 'numeric'
+                });
+            }
+
+            // Haptic feedback on success
+            if (navigator.vibrate) navigator.vibrate(50);
+
+        } catch (error) {
+            console.error('❌ Error refreshing data:', error);
+        } finally {
+            // Hide loading
+            if (loadingEl) loadingEl.classList.add('hidden');
+        }
     };
 
     // ========================================

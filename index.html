@@ -101,13 +101,9 @@
                 box-shadow 0.3s ease !important;
         }
 
-        /* Theme switch circular reveal overlay */
+        /* Theme switch - Water ripple overlay */
         .theme-transition-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
             z-index: 99999;
             pointer-events: none;
             border-radius: 50%;
@@ -116,17 +112,29 @@
         }
 
         .theme-transition-overlay.expanding {
-            animation: circle-expand 0.8s ease-out forwards;
+            animation: ripple-expand 2s ease-out forwards;
         }
 
-        @keyframes circle-expand {
+        @keyframes ripple-expand {
             0% {
                 transform: scale(0);
-                opacity: 0.5;
+                opacity: 0.4;
             }
 
-            50% {
-                opacity: 0.3;
+            20% {
+                opacity: 0.35;
+            }
+
+            40% {
+                opacity: 0.25;
+            }
+
+            60% {
+                opacity: 0.15;
+            }
+
+            80% {
+                opacity: 0.08;
             }
 
             100% {
@@ -135,22 +143,28 @@
             }
         }
 
-        /* Dark mode overlay - Dark/Black (soft) */
+        /* Dark mode overlay - like water ripple spreading dark ink */
         .theme-overlay-dark {
             background: radial-gradient(circle,
-                    rgba(15, 23, 42, 0.6) 0%,
-                    rgba(15, 23, 42, 0.4) 40%,
-                    rgba(15, 23, 42, 0.2) 70%,
-                    transparent 90%);
+                    transparent 0%,
+                    transparent 30%,
+                    rgba(15, 23, 42, 0.15) 40%,
+                    rgba(15, 23, 42, 0.3) 50%,
+                    rgba(15, 23, 42, 0.15) 60%,
+                    transparent 70%,
+                    transparent 100%);
         }
 
-        /* Light mode overlay - Light/White (soft) */
+        /* Light mode overlay - like water ripple spreading light */
         .theme-overlay-light {
             background: radial-gradient(circle,
-                    rgba(255, 255, 255, 0.6) 0%,
-                    rgba(255, 255, 255, 0.4) 40%,
-                    rgba(255, 255, 255, 0.2) 70%,
-                    transparent 90%);
+                    transparent 0%,
+                    transparent 30%,
+                    rgba(255, 255, 255, 0.2) 40%,
+                    rgba(255, 255, 255, 0.4) 50%,
+                    rgba(255, 255, 255, 0.2) 60%,
+                    transparent 70%,
+                    transparent 100%);
         }
 
         .gradient-brand {
@@ -4334,18 +4348,18 @@
                 overlay.classList.add('expanding');
             });
 
-            // Toggle theme after a short delay (during animation)
+            // Toggle theme when ripple reaches middle of screen (~800ms)
             setTimeout(() => {
                 html.classList.toggle('dark');
                 localStorage.theme = html.classList.contains('dark') ? 'dark' : 'light';
                 updateHouse3DImage();
-            }, 150);
+            }, 800);
 
-            // Cleanup after animation
+            // Cleanup after animation completes (2s + buffer)
             setTimeout(() => {
                 overlay.remove();
                 html.classList.remove('theme-transitioning');
-            }, 700);
+            }, 2200);
         });
 
         // Update calculator links with current deviceId

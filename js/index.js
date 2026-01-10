@@ -2979,6 +2979,11 @@ Vui lòng kiểm tra:
                 titleIcon.classList.add('text-teal-500');
             }
 
+            // Re-render SOC chart to ensure haptic works (fix for initial load issue)
+            if (typeof renderSOCChart === 'function' && socData && socData.length > 0) {
+                setTimeout(() => renderSOCChart(), 100);
+            }
+
         } else {
             // Show Temperature, hide SOC
             socContainer.classList.add('hidden');

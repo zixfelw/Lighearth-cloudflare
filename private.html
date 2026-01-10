@@ -294,6 +294,21 @@
                         </button>
                     </div>
 
+                    <!-- Sort/Filter Dropdown -->
+                    <select id="sortFilter" onchange="setSortFilter(this.value)"
+                        class="text-[11px] px-2 py-1.5 rounded-lg dark:bg-slate-700/60 light:bg-slate-100 border dark:border-slate-600/30 light:border-slate-200 dark:text-white light:text-slate-700 cursor-pointer">
+                        <option value="default">📊 Mặc định</option>
+                        <optgroup label="📅 Theo ngày add">
+                            <option value="today">Hôm nay</option>
+                            <option value="7days">7 ngày gần đây</option>
+                            <option value="30days">30 ngày gần đây</option>
+                        </optgroup>
+                        <optgroup label="⚡ Xếp hạng">
+                            <option value="highestPV">🌞 PV cao nhất</option>
+                            <option value="highestSavings">💰 Tiết kiệm nhiều nhất</option>
+                        </optgroup>
+                    </select>
+
                     <!-- Sync Yearly Data - Prominent on mobile -->
                     <button id="syncYearlyBtn" onclick="syncYearlyData()"
                         class="flex items-center gap-1.5 px-3 py-2 text-xs sm:text-[11px] rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors text-white font-semibold shadow-lg shadow-emerald-500/30"
@@ -530,9 +545,59 @@
         let refreshInterval = null;
         let allDevices = [];
         let currentFilter = 'all';
+        let currentSortFilter = 'default'; // New: for sort/filter dropdown
         let searchQuery = '';
         let isDarkMode = true;
         let yearlyDataCache = {}; // {deviceId: {year2025: {...}, year2026: {...}, months: [...], lastSync: timestamp}}
+
+        // Set sort/filter from dropdown
+        function setSortFilter(value) {
+            currentSortFilter = value;
+            renderDevices(allDevices);
+        }
+
+        // Get device creation/add date (from deviceId pattern or cache)
+        function getDeviceAddedDate(device) {
+            // Try to parse date from deviceId like P250801055 -> 2025-08-01
+            const match = device.deviceId.match(/P(\d{2})(\d{2})(\d{2})/);
+            if (match) {
+                const year = 2000 + parseInt(match[1]);
+                const month = parseInt(match[2]);
+                const day = parseInt(match[3]);
+                return new Date(year, month - 1, day);
+            }
+            // Fallback: use lastSync from cache or return old date
+            return new Date(2020, 0, 1);
+        }
+
+        // Check if device was added within N days
+        function isWithinDays(device, days) {
+            const addedDate = getDeviceAddedDate(device);
+            const now = new Date();
+            const diffMs = now - addedDate;
+            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            return diffDays <= days;
+        }
+
+        // Get device's total PV (for sorting)
+        function getDeviceTotalPV(device) {
+            const cached = getDeviceYearlyData(device.deviceId);
+            if (!cached) return (device.dailyEnergy?.pv || 0);
+            let total = 0;
+            if (cached.year2025) total += cached.year2025.pv || 0;
+            if (cached.year2026) total += cached.year2026.pv || 0;
+            return total;
+        }
+
+        // Get device's total savings (for sorting)
+        function getDeviceTotalSavings(device) {
+            const cached = getDeviceYearlyData(device.deviceId);
+            if (!cached) return 0;
+            let total = 0;
+            if (cached.year2025) total += cached.year2025.totalSavings || 0;
+            if (cached.year2026) total += cached.year2026.totalSavings || 0;
+            return total;
+        }
 
         // Load yearly data from localStorage
         function loadYearlyCache() {
@@ -839,10 +904,30 @@
                 filtered = filtered.filter(d => d.deviceId.toLowerCase().includes(searchQuery));
             }
 
-            filtered.sort((a, b) => {
-                if (a.isOnline !== b.isOnline) return b.isOnline ? 1 : -1;
-                return a.deviceId.localeCompare(b.deviceId);
-            });
+            // Apply sort/filter from dropdown
+            switch (currentSortFilter) {
+                case 'today':
+                    filtered = filtered.filter(d => isWithinDays(d, 0));
+                    break;
+                case '7days':
+                    filtered = filtered.filter(d => isWithinDays(d, 7));
+                    break;
+                case '30days':
+                    filtered = filtered.filter(d => isWithinDays(d, 30));
+                    break;
+                case 'highestPV':
+                    filtered = [...filtered].sort((a, b) => getDeviceTotalPV(b) - getDeviceTotalPV(a));
+                    break;
+                case 'highestSavings':
+                    filtered = [...filtered].sort((a, b) => getDeviceTotalSavings(b) - getDeviceTotalSavings(a));
+                    break;
+                default:
+                    // Default sort: online first, then by deviceId
+                    filtered.sort((a, b) => {
+                        if (a.isOnline !== b.isOnline) return b.isOnline ? 1 : -1;
+                        return a.deviceId.localeCompare(b.deviceId);
+                    });
+            }
 
             if (filtered.length === 0) {
                 grid.classList.add('hidden');

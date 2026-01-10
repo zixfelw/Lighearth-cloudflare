@@ -141,6 +141,11 @@
             background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
         }
 
+        /* Light mode only: Move SOC % up slightly */
+        html:not(.dark) #soc-3d-position {
+            top: 49% !important;
+        }
+
         /* Background Gradient Blobs - Dark Mode Only */
         .bg-blob {
             position: fixed;
@@ -2982,7 +2987,7 @@
                                 class="w-full h-auto object-contain transition-opacity duration-300" loading="lazy">
 
                             <!-- Battery SOC % (on battery) - light mode: cao hơn xíu -->
-                            <div class="absolute left-[8%] top-[49%] dark:top-[52%] z-20">
+                            <div id="soc-3d-position" class="absolute left-[8%] top-[52%] z-20">
                                 <div class="flex items-center gap-1">
                                     <div id="battery-status-icon-3d" class="hidden">
                                         <svg id="battery-charging-3d"

@@ -76,8 +76,8 @@ function htmlResponse(html, origin, status = 200) {
 }
 
 async function fetchHA(endpoint, env) {
-  const haUrl = env.HA_URL;
-  const haToken = env.HA_TOKEN;
+  const haUrl = env.HA_URL || env.PI_URL;
+  const haToken = env.HA_TOKEN || env.PI_TOKEN;
 
   if (!haUrl || !haToken) {
     throw new Error('HA_URL or HA_TOKEN not configured');

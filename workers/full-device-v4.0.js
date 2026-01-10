@@ -132,8 +132,8 @@ export default {
     if (request.method === 'OPTIONS') return new Response(null, { headers });
     if (isRateLimited(clientIP)) return new Response(JSON.stringify({ error: 'Too many requests', code: 'RATE_LIMITED', retryAfter: 300 }), { status: 429, headers });
 
-    const PI_URL = env.HA_URL || '';
-    const PI_TOKEN = env.HA_TOKEN || '';
+    const PI_URL = env.PI_URL || env.HA_URL || '';
+    const PI_TOKEN = env.PI_TOKEN || env.HA_TOKEN || '';
 
     if (path === '/' || path === '/health') {
       return new Response(JSON.stringify({ status: 'ok', version: '4.0', features: ['realtime', 'devices-full', 'power-history', 'temperature'] }), { headers });

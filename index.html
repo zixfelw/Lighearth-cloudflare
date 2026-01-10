@@ -91,80 +91,59 @@
 
         /* Theme Transition Effect - Smooth fade when switching */
         html {
-            transition: background-color 0.4s ease, color 0.3s ease;
+            transition: none;
         }
 
         html.theme-transitioning * {
-            transition: background-color 0.4s ease,
-                border-color 0.3s ease,
-                color 0.3s ease,
-                box-shadow 0.3s ease !important;
+            transition: none !important;
         }
 
-        /* Theme switch - Water ripple overlay */
-        .theme-transition-overlay {
+        /* Theme switch - Circular wipe reveal */
+        .theme-wipe-overlay {
             position: fixed;
-            z-index: 99999;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 99998;
             pointer-events: none;
-            border-radius: 50%;
-            transform: scale(0);
-            opacity: 0;
+            clip-path: circle(0% at var(--wipe-x, 50%) var(--wipe-y, 50%));
         }
 
-        .theme-transition-overlay.expanding {
-            animation: ripple-expand 2s ease-out forwards;
+        .theme-wipe-overlay.expanding {
+            animation: wipe-expand 3s ease-in-out forwards;
         }
 
-        @keyframes ripple-expand {
+        @keyframes wipe-expand {
             0% {
-                transform: scale(0);
-                opacity: 0.4;
-            }
-
-            20% {
-                opacity: 0.35;
-            }
-
-            40% {
-                opacity: 0.25;
-            }
-
-            60% {
-                opacity: 0.15;
-            }
-
-            80% {
-                opacity: 0.08;
+                clip-path: circle(0% at var(--wipe-x, 50%) var(--wipe-y, 50%));
             }
 
             100% {
-                transform: scale(3);
-                opacity: 0;
+                clip-path: circle(150% at var(--wipe-x, 50%) var(--wipe-y, 50%));
             }
         }
 
-        /* Dark mode overlay - like water ripple spreading dark ink */
-        .theme-overlay-dark {
-            background: radial-gradient(circle,
-                    transparent 0%,
-                    transparent 30%,
-                    rgba(15, 23, 42, 0.15) 40%,
-                    rgba(15, 23, 42, 0.3) 50%,
-                    rgba(15, 23, 42, 0.15) 60%,
-                    transparent 70%,
-                    transparent 100%);
+        /* Dark theme wipe background */
+        .theme-wipe-dark {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
         }
 
-        /* Light mode overlay - like water ripple spreading light */
-        .theme-overlay-light {
-            background: radial-gradient(circle,
-                    transparent 0%,
-                    transparent 30%,
-                    rgba(255, 255, 255, 0.2) 40%,
-                    rgba(255, 255, 255, 0.4) 50%,
-                    rgba(255, 255, 255, 0.2) 60%,
-                    transparent 70%,
-                    transparent 100%);
+        /* Light theme wipe background */
+        .theme-wipe-light {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
+        }
+
+        /* Soft ring border on the edge of wipe */
+        .theme-wipe-overlay::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            box-shadow: inset 0 0 100px 50px rgba(255, 255, 255, 0.1);
+            pointer-events: none;
         }
 
         .gradient-brand {
@@ -4316,31 +4295,22 @@
         updateHouse3DImage();
 
         themeToggle.addEventListener('click', (e) => {
-            // Get button position for circle origin
+            // Get button position for wipe origin (as percentage)
             const rect = themeToggle.getBoundingClientRect();
-            const centerX = rect.left + rect.width / 2;
-            const centerY = rect.top + rect.height / 2;
-
-            // Calculate max radius needed to cover entire screen
-            const maxX = Math.max(centerX, window.innerWidth - centerX);
-            const maxY = Math.max(centerY, window.innerHeight - centerY);
-            const maxRadius = Math.sqrt(maxX * maxX + maxY * maxY) * 2;
+            const wipeX = ((rect.left + rect.width / 2) / window.innerWidth) * 100;
+            const wipeY = ((rect.top + rect.height / 2) / window.innerHeight) * 100;
 
             // Determine which theme we're switching TO
             const switchingToDark = !html.classList.contains('dark');
 
-            // Create overlay for the animation
+            // Create wipe overlay - this shows the NEW theme color
             const overlay = document.createElement('div');
-            overlay.className = `theme-transition-overlay ${switchingToDark ? 'theme-overlay-dark' : 'theme-overlay-light'}`;
-            overlay.style.cssText = `
-                left: ${centerX - maxRadius}px;
-                top: ${centerY - maxRadius}px;
-                width: ${maxRadius * 2}px;
-                height: ${maxRadius * 2}px;
-            `;
+            overlay.className = `theme-wipe-overlay ${switchingToDark ? 'theme-wipe-dark' : 'theme-wipe-light'}`;
+            overlay.style.setProperty('--wipe-x', wipeX + '%');
+            overlay.style.setProperty('--wipe-y', wipeY + '%');
             document.body.appendChild(overlay);
 
-            // Add transitioning class for smooth color changes
+            // Add transitioning class
             html.classList.add('theme-transitioning');
 
             // Start expanding animation
@@ -4348,18 +4318,18 @@
                 overlay.classList.add('expanding');
             });
 
-            // Toggle theme when ripple reaches middle of screen (~800ms)
+            // Toggle actual theme near the end of animation (when wipe covers screen)
             setTimeout(() => {
                 html.classList.toggle('dark');
                 localStorage.theme = html.classList.contains('dark') ? 'dark' : 'light';
                 updateHouse3DImage();
-            }, 800);
+            }, 2800);
 
-            // Cleanup after animation completes (2s + buffer)
+            // Cleanup after animation completes
             setTimeout(() => {
                 overlay.remove();
                 html.classList.remove('theme-transitioning');
-            }, 2200);
+            }, 3200);
         });
 
         // Update calculator links with current deviceId

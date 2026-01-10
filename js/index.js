@@ -3542,7 +3542,21 @@ Vui lòng kiểm tra:
                 maintainAspectRatio: false,
                 interaction: { mode: 'index', intersect: false },
                 onHover: (event, elements) => { if (elements.length) triggerHaptic(); },
-                plugins: { legend: { display: false } },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        position: 'topRight',
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        titleColor: '#f8fafc',
+                        bodyColor: '#e2e8f0',
+                        padding: 12,
+                        cornerRadius: 10,
+                        displayColors: true,
+                        boxWidth: 10,
+                        titleFont: { size: 12, weight: 'bold' },
+                        bodyFont: { size: 11 }
+                    }
+                },
                 scales: {
                     y: {
                         beginAtZero: true,
@@ -3619,10 +3633,10 @@ Vui lòng kiểm tra:
             pvTodayChartInstance.destroy();
         }
 
-        // Create cyan gradient
+        // Create amber gradient (matching Chart tổng hợp PV color)
         const gradient = ctx.createLinearGradient(0, 0, 0, 280);
-        gradient.addColorStop(0, 'rgba(6, 182, 212, 0.7)');
-        gradient.addColorStop(1, 'rgba(6, 182, 212, 0.1)');
+        gradient.addColorStop(0, 'rgba(251, 191, 36, 0.6)');
+        gradient.addColorStop(1, 'rgba(251, 191, 36, 0.1)');
 
         pvTodayChartInstance = new Chart(ctx, {
             type: 'line',
@@ -3631,7 +3645,7 @@ Vui lòng kiểm tra:
                 datasets: [{
                     label: 'PV Power',
                     data: pvData,
-                    borderColor: '#06b6d4',
+                    borderColor: '#fbbf24',
                     backgroundColor: gradient,
                     fill: true,
                     tension: 0.4,
@@ -3644,7 +3658,23 @@ Vui lòng kiểm tra:
                 maintainAspectRatio: false,
                 interaction: { mode: 'index', intersect: false },
                 onHover: (event, elements) => { if (elements.length) triggerHaptic(); },
-                plugins: { legend: { display: false } },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        position: 'topRight',
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        titleColor: '#f8fafc',
+                        bodyColor: '#fbbf24',
+                        padding: 12,
+                        cornerRadius: 10,
+                        displayColors: false,
+                        titleFont: { size: 12, weight: 'bold' },
+                        bodyFont: { size: 14, weight: 'bold' },
+                        callbacks: {
+                            label: (context) => `☀️ ${context.parsed.y} W`
+                        }
+                    }
+                },
                 scales: {
                     y: {
                         beginAtZero: true,
@@ -3755,7 +3785,28 @@ Vui lòng kiểm tra:
                 maintainAspectRatio: false,
                 interaction: { mode: 'index', intersect: false },
                 onHover: (event, elements) => { if (elements.length) triggerHaptic(); },
-                plugins: { legend: { display: false } },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        position: 'topRight',
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        titleColor: '#f8fafc',
+                        bodyColor: '#34d399',
+                        padding: 12,
+                        cornerRadius: 10,
+                        displayColors: false,
+                        titleFont: { size: 12, weight: 'bold' },
+                        bodyFont: { size: 14, weight: 'bold' },
+                        callbacks: {
+                            label: (context) => {
+                                const val = context.parsed.y;
+                                if (val > 0) return `⚡ Sạc: ${val} W`;
+                                if (val < 0) return `🔋 Xả: ${Math.abs(val)} W`;
+                                return `🔋 0 W`;
+                            }
+                        }
+                    }
+                },
                 scales: {
                     y: {
                         grid: {

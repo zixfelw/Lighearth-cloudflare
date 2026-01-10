@@ -72,7 +72,7 @@ let currentApiSuccessCount = 0;  // Track consecutive successes on current API
 let lastSuccessfulApiName = null;  // Track which API was last successful
 
 // Primary API for daily-energy (has proper CORS headers)
-const DAILY_ENERGY_API = 'https://lightearth.applike098.workers.dev';
+const DAILY_ENERGY_API = 'https://temperature-soc-power.applike098.workers.dev';
 
 // Global state for realtime data - MUST be declared early to avoid TDZ errors
 let latestRealtimeData = {};
@@ -2429,10 +2429,10 @@ Vui lòng kiểm tra:
             clearInterval(window.dailyEnergyRefreshInterval);
         }
         window.dailyEnergyRefreshInterval = setInterval(() => {
-            console.log('🔄 [Auto-refresh] Fetching daily-energy data (3 min interval)...');
+            console.log('🔄 [Auto-refresh] Fetching daily-energy data (5 min interval)...');
             fetchRealtimeDataForSummary(deviceId);
-        }, 180000); // 3 minutes = 180,000ms
-        console.log('✅ [Auto-refresh] Daily-energy interval set: every 3 minutes');
+        }, 300000); // 5 minutes = 300,000ms
+        console.log('✅ [Auto-refresh] Daily-energy interval set: every 5 minutes');
     }
 
     // Helper to apply summary data to UI

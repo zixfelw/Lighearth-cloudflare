@@ -112,19 +112,16 @@ const CELLS_FETCH_INTERVAL = 5000; // Min 5s between fetches
 const LIGHTEARTH_PROXY_API = 'https://lightearth-proxy.minhlongt358.workers.dev';
 
 // Haptic feedback for chart interactions (throttled)
-// Note: Mobile browsers require user gesture (tap/click) before navigator.vibrate works
-let hapticEnabled = false;
-
-// Enable haptic on first user gesture (tap/click anywhere)
-document.addEventListener('touchstart', () => { hapticEnabled = true; }, { once: true, passive: true });
-document.addEventListener('click', () => { hapticEnabled = true; }, { once: true });
-
+// Browser will silently ignore vibrate() until user gesture, then it works
 function triggerHaptic(durationMs = 5) {
-    if (!hapticEnabled) return; // Wait for user gesture first
     const now = Date.now();
     if (navigator.vibrate && (now - lastHapticTime) > HAPTIC_THROTTLE_MS) {
-        navigator.vibrate(durationMs);
-        lastHapticTime = now;
+        try {
+            navigator.vibrate(durationMs);
+            lastHapticTime = now;
+        } catch (e) {
+            // Silently ignore if vibrate fails (no user gesture yet)
+        }
     }
 }
 

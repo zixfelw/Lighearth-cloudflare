@@ -2955,6 +2955,9 @@ Vui lòng kiểm tra:
 
         if (!socContainer || !tempContainer) return;
 
+        // Haptic feedback on mobile
+        if (navigator.vibrate) navigator.vibrate(10);
+
         activeSocTempTab = tab;
 
         if (tab === 'soc') {
@@ -3125,6 +3128,7 @@ Vui lòng kiểm tra:
                     mode: 'index',
                     intersect: false
                 },
+                onHover: (event, elements) => { if (elements.length) triggerHaptic(); },
                 plugins: {
                     legend: { display: false },
                     tooltip: {
@@ -4868,9 +4872,11 @@ Vui lòng kiểm tra:
                 responsive: true,
                 maintainAspectRatio: false,
                 animation: false,
+                onHover: (event, elements) => { if (elements.length) triggerHaptic(); },
                 plugins: {
                     legend: { display: false },
                     tooltip: {
+                        position: 'topRight',
                         enabled: true,
                         backgroundColor: 'rgba(15, 23, 42, 0.95)',
                         titleColor: '#14b8a6',

@@ -89,6 +89,62 @@
             font-family: 'Inter', sans-serif;
         }
 
+        /* Theme Transition Effect - Smooth fade when switching */
+        html {
+            transition: background-color 0.4s ease, color 0.3s ease;
+        }
+
+        html.theme-transitioning * {
+            transition: background-color 0.4s ease,
+                border-color 0.3s ease,
+                color 0.3s ease,
+                box-shadow 0.3s ease !important;
+        }
+
+        /* Theme switch ripple effect overlay */
+        .theme-transition-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 99999;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .theme-transition-overlay.active {
+            opacity: 1;
+            animation: theme-fade 0.5s ease forwards;
+        }
+
+        @keyframes theme-fade {
+            0% {
+                opacity: 0;
+            }
+
+            30% {
+                opacity: 0.15;
+            }
+
+            100% {
+                opacity: 0;
+            }
+        }
+
+        .dark .theme-transition-overlay {
+            background: radial-gradient(circle at var(--ripple-x, 50%) var(--ripple-y, 50%),
+                    rgba(99, 102, 241, 0.3) 0%,
+                    transparent 70%);
+        }
+
+        :not(.dark) .theme-transition-overlay {
+            background: radial-gradient(circle at var(--ripple-x, 50%) var(--ripple-y, 50%),
+                    rgba(251, 191, 36, 0.3) 0%,
+                    transparent 70%);
+        }
+
         .gradient-brand {
             background: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 50%, #ec4899 100%);
         }
@@ -1941,12 +1997,19 @@
                         <span b-iwpun16f09 class="text-sm font-medium">Tính Tiết Kiệm</span>
                     </a>
 
-                    <!-- Theme Toggle -->
+                    <!-- Theme Toggle - Redesigned with text label -->
                     <button b-iwpun16f09 id="themeToggle"
-                        class="w-8 h-8 sm:w-9 sm:h-9 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg flex items-center justify-center transition-all">
-                        <i b-iwpun16f09 data-lucide="moon" class="w-4 h-4 sm:w-5 sm:h-5 text-slate-300 dark:hidden"></i>
+                        class="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-full px-2.5 sm:px-3 py-1.5 transition-all duration-300 group">
+                        <!-- Dark mode icon & text (shown in dark mode) -->
+                        <i b-iwpun16f09 data-lucide="moon"
+                            class="w-4 h-4 text-indigo-400 hidden dark:block transition-transform duration-300 group-hover:rotate-12"></i>
+                        <span b-iwpun16f09
+                            class="text-[10px] sm:text-xs font-medium text-slate-300 hidden dark:block">Dark</span>
+                        <!-- Light mode icon & text (shown in light mode) -->
                         <i b-iwpun16f09 data-lucide="sun"
-                            class="w-4 h-4 sm:w-5 sm:h-5 text-amber-400 hidden dark:block"></i>
+                            class="w-4 h-4 text-amber-400 block dark:hidden transition-transform duration-300 group-hover:rotate-45"></i>
+                        <span b-iwpun16f09
+                            class="text-[10px] sm:text-xs font-medium text-slate-600 block dark:hidden">Light</span>
                     </button>
                 </div>
             </div>
@@ -4230,11 +4293,40 @@
         // Initial update for house image
         updateHouse3DImage();
 
-        themeToggle.addEventListener('click', () => {
+        themeToggle.addEventListener('click', (e) => {
+            // Create transition overlay if not exists
+            let overlay = document.querySelector('.theme-transition-overlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.className = 'theme-transition-overlay';
+                document.body.appendChild(overlay);
+            }
+
+            // Set ripple origin from button position
+            const rect = themeToggle.getBoundingClientRect();
+            const x = ((rect.left + rect.width / 2) / window.innerWidth) * 100;
+            const y = ((rect.top + rect.height / 2) / window.innerHeight) * 100;
+            document.documentElement.style.setProperty('--ripple-x', x + '%');
+            document.documentElement.style.setProperty('--ripple-y', y + '%');
+
+            // Add transitioning class for smooth color changes
+            html.classList.add('theme-transitioning');
+
+            // Trigger overlay animation
+            overlay.classList.add('active');
+
+            // Toggle theme
             html.classList.toggle('dark');
             localStorage.theme = html.classList.contains('dark') ? 'dark' : 'light';
+
             // Update 3D house image when theme changes
             updateHouse3DImage();
+
+            // Cleanup after animation
+            setTimeout(() => {
+                overlay.classList.remove('active');
+                html.classList.remove('theme-transitioning');
+            }, 500);
         });
 
         // Update calculator links with current deviceId

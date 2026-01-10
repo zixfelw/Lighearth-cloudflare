@@ -4945,6 +4945,10 @@ Vui lòng kiểm tra:
         console.log('✅ SOC Chart rendered with built-in tooltip');
 
         console.log('✅ SOC Chart rendered with enhanced touch support');
+
+        // Direct touch event for haptic - ensures it works on first load
+        canvas.addEventListener('touchmove', () => triggerHaptic(), { passive: true });
+        canvas.addEventListener('mousemove', () => triggerHaptic());
     }
 
     // Update current values (latest data point) - no-op after removing power cards

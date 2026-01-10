@@ -5634,4 +5634,43 @@ input[type="time"] {
     .animate-bounce {
         animation-duration: 2s !important;
     }
+
+    /* Disable cell voltage bar shimmer on mobile */
+    .cell-voltage-bar-fill::after {
+        animation: none !important;
+        opacity: 0 !important;
+    }
+
+    /* Reduce sun-3d level 4 intensity (0.8s is too fast) */
+    .sun-3d-container.sun-level-4 .sun-3d-core {
+        animation-duration: 2s !important;
+    }
+
+    .sun-3d-container.sun-level-4 .sun-3d-rays {
+        animation-duration: 8s !important;
+    }
+
+    .sun-3d-container.sun-level-4 .sun-3d-glow {
+        animation-duration: 3s !important;
+    }
+
+    /* Disable corona animation on mobile (extra layer) */
+    .sun-3d-container.sun-level-4::before,
+    .sun-3d-container.sun-level-3::before {
+        animation: none !important;
+        opacity: 0.5 !important;
+    }
+
+    /* Slow down all sun levels on mobile */
+    .sun-3d-container .sun-3d-core {
+        animation-duration: 3s !important;
+    }
+
+    .sun-3d-container .sun-3d-rays {
+        animation-duration: 20s !important;
+    }
+
+    .sun-3d-container .sun-3d-glow {
+        animation-duration: 5s !important;
+    }
 }

@@ -5541,3 +5541,97 @@ input[type="time"] {
 .dark input[type="time"] {
     color-scheme: dark;
 }
+
+/* ========================================
+   MOBILE ANIMATION PERFORMANCE OPTIMIZATIONS
+   ======================================== */
+
+/* GPU Acceleration for animated elements */
+.energy-dot,
+.icon-glow-aura,
+.sun-icon {
+    will-change: transform, opacity;
+}
+
+/* Respect user preference for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    .energy-dot,
+    .icon-glow-aura,
+    .sun-animated {
+        animation: none !important;
+    }
+}
+
+/* Mobile-specific optimizations (under 768px) */
+@media (max-width: 768px) {
+
+    /* Hide extra energy flow dots - keep only 2 per flow */
+    .energy-dot-pv-3,
+    .energy-dot-pv-4,
+    .energy-dot-pv-5,
+    .energy-dot-evn-3,
+    .energy-dot-evn-4,
+    .energy-dot-evn-5,
+    .energy-dot-battery-3,
+    .energy-dot-essential-3,
+    .energy-dot-load-3 {
+        display: none !important;
+    }
+
+    /* Reduce blur intensity for glow effects (GPU heavy) */
+    .icon-glow-aura {
+        filter: blur(8px) !important;
+        animation-duration: 8s !important;
+    }
+
+    /* Disable heat wave animations entirely on mobile */
+    .heat-wave-slow,
+    .heat-wave-medium,
+    .heat-wave-fast,
+    .heat-wave-intense,
+    [class*="heat-wave"] {
+        animation: none !important;
+        opacity: 0.3 !important;
+    }
+
+    /* Slow down flow animations to reduce CPU usage */
+    .energy-dot-pv,
+    .energy-dot-pv-2 {
+        animation-duration: 2.5s !important;
+    }
+
+    .energy-dot-evn,
+    .energy-dot-evn-2 {
+        animation-duration: 2.5s !important;
+    }
+
+    .energy-dot-battery,
+    .energy-dot-battery-2 {
+        animation-duration: 3s !important;
+    }
+
+    /* Reduce sun animation intensity */
+    .sun-icon {
+        filter: drop-shadow(0 0 2px rgba(251, 191, 36, 0.4)) !important;
+        animation-duration: 5s !important;
+    }
+
+    /* Simplify pulse animations */
+    .animate-pulse {
+        animation-duration: 3s !important;
+    }
+
+    .animate-bounce {
+        animation-duration: 2s !important;
+    }
+}

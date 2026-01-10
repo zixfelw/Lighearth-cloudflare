@@ -1068,6 +1068,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
             return { x: x, y: y };
         };
+
+        // Fixed top-right corner tooltip positioner - never covers chart data
+        Chart.Tooltip.positioners.topRight = function (elements, eventPosition) {
+            const chart = this.chart;
+            const chartArea = chart.chartArea;
+
+            // Position at fixed top-right corner
+            return {
+                x: chartArea.right - 10,  // 10px from right edge
+                y: chartArea.top + 10     // 10px from top
+            };
+        };
     }
 
     // ========================================
@@ -2849,8 +2861,12 @@ Vui lòng kiểm tra:
             // Process Power History (main timeline data for charts 1-4)
             if (powerHistoryRes.status === 'fulfilled' && powerHistoryRes.value.ok) {
                 const powerData = await powerHistoryRes.value.json();
-                if (powerData && powerData.data && powerData.data.timeline) {
-                    const timeline = powerData.data.timeline;
+                console.log('📊 Power History response:', powerData);
+
+                // API returns timeline directly, not inside data object
+                const timeline = powerData.timeline || (powerData.data && powerData.data.timeline) || [];
+
+                if (timeline.length > 0) {
                     cachedChartData = timeline;
 
                     // Update all power charts
@@ -2858,6 +2874,9 @@ Vui lòng kiểm tra:
 
                     // Update currently active chart
                     switch (activeChartNumber) {
+                        case 1:
+                            // Chart 1 already updated by updatePowerTimelineChart
+                            break;
                         case 2:
                             renderGridSourceChart(timeline);
                             break;
@@ -2870,6 +2889,8 @@ Vui lòng kiểm tra:
                     }
 
                     console.log('✅ Power charts updated with', timeline.length, 'data points');
+                } else {
+                    console.warn('⚠️ No timeline data in power history response');
                 }
             }
 
@@ -3105,6 +3126,7 @@ Vui lòng kiểm tra:
                 plugins: {
                     legend: { display: false },
                     tooltip: {
+                        position: 'topRight',
                         backgroundColor: 'rgba(15, 23, 42, 0.95)',
                         titleColor: '#f8fafc',
                         bodyColor: '#fb923c',
@@ -3334,6 +3356,7 @@ Vui lòng kiểm tra:
                 plugins: {
                     legend: { display: false },
                     tooltip: {
+                        position: 'topRight',
                         backgroundColor: 'rgba(15, 23, 42, 0.95)',
                         titleColor: '#f8fafc',
                         bodyColor: '#e2e8f0',
@@ -3949,6 +3972,7 @@ Vui lòng kiểm tra:
                 plugins: {
                     legend: { display: false },
                     tooltip: {
+                        position: 'topRight',
                         backgroundColor: 'rgba(15, 23, 42, 0.95)',
                         titleColor: '#f8fafc',
                         bodyColor: '#e2e8f0',

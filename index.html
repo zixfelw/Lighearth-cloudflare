@@ -98,8 +98,8 @@
             transition: none !important;
         }
 
-        /* Theme switch - Circular wipe using clip-path on body clone */
-        .theme-wipe-clone {
+        /* Theme switch - Shrinking overlay reveals new theme */
+        .theme-reveal-overlay {
             position: fixed;
             top: 0;
             left: 0;
@@ -107,22 +107,30 @@
             height: 100vh;
             z-index: 99998;
             pointer-events: none;
-            overflow: hidden;
-            clip-path: circle(0% at var(--wipe-x, 50%) var(--wipe-y, 50%));
+            clip-path: circle(150% at var(--wipe-x, 50%) var(--wipe-y, 50%));
         }
 
-        .theme-wipe-clone.expanding {
-            animation: wipe-expand 2.5s ease-in-out forwards;
+        .theme-reveal-overlay.shrinking {
+            animation: wipe-shrink 2.5s ease-in-out forwards;
         }
 
-        @keyframes wipe-expand {
+        @keyframes wipe-shrink {
             0% {
-                clip-path: circle(0% at var(--wipe-x, 50%) var(--wipe-y, 50%));
+                clip-path: circle(150% at var(--wipe-x, 50%) var(--wipe-y, 50%));
             }
 
             100% {
-                clip-path: circle(150% at var(--wipe-x, 50%) var(--wipe-y, 50%));
+                clip-path: circle(0% at var(--wipe-x, 50%) var(--wipe-y, 50%));
             }
+        }
+
+        /* Old theme backgrounds */
+        .theme-overlay-was-dark {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+        }
+
+        .theme-overlay-was-light {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
         }
 
         .gradient-brand {
@@ -4279,52 +4287,34 @@
             const wipeX = ((rect.left + rect.width / 2) / window.innerWidth) * 100;
             const wipeY = ((rect.top + rect.height / 2) / window.innerHeight) * 100;
 
-            // Determine which theme we're switching TO
-            const switchingToDark = !html.classList.contains('dark');
+            // Remember current theme (before toggle)
+            const wasDark = html.classList.contains('dark');
 
-            // Create a clone container that will show the NEW theme
-            const clone = document.createElement('div');
-            clone.className = 'theme-wipe-clone';
-            clone.style.setProperty('--wipe-x', wipeX + '%');
-            clone.style.setProperty('--wipe-y', wipeY + '%');
+            // Create overlay with OLD theme color (this will shrink away)
+            const overlay = document.createElement('div');
+            overlay.className = `theme-reveal-overlay ${wasDark ? 'theme-overlay-was-dark' : 'theme-overlay-was-light'}`;
+            overlay.style.setProperty('--wipe-x', wipeX + '%');
+            overlay.style.setProperty('--wipe-y', wipeY + '%');
+            document.body.appendChild(overlay);
 
-            // Create an iframe-like snapshot: clone the body content
-            const snapshot = document.body.cloneNode(true);
-            snapshot.style.cssText = 'position: absolute; top: 0; left: 0; width: 100vw; min-height: 100vh; margin: 0; pointer-events: none;';
-
-            // Remove any existing clone from snapshot to avoid recursion
-            const existingClones = snapshot.querySelectorAll('.theme-wipe-clone');
-            existingClones.forEach(c => c.remove());
-
-            // Apply the NEW theme to the snapshot wrapper
-            const snapshotHtml = document.createElement('div');
-            snapshotHtml.className = switchingToDark ? 'dark' : '';
-            // Set proper background for the theme
-            snapshotHtml.style.cssText = switchingToDark
-                ? 'width: 100%; min-height: 100vh; background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);'
-                : 'width: 100%; min-height: 100vh; background: #f8fafc;';
-            snapshotHtml.appendChild(snapshot);
-            clone.appendChild(snapshotHtml);
-
-            document.body.appendChild(clone);
+            // Toggle theme IMMEDIATELY (new theme is underneath overlay)
+            html.classList.toggle('dark');
+            localStorage.theme = html.classList.contains('dark') ? 'dark' : 'light';
+            updateHouse3DImage();
 
             // Add transitioning class
             html.classList.add('theme-transitioning');
 
-            // Start expanding animation
+            // Start shrinking animation - overlay shrinks to reveal new theme
             requestAnimationFrame(() => {
-                clone.classList.add('expanding');
+                overlay.classList.add('shrinking');
             });
 
-            // Toggle actual theme when animation is 95% complete, then remove clone immediately
+            // Cleanup after animation completes
             setTimeout(() => {
-                html.classList.toggle('dark');
-                localStorage.theme = html.classList.contains('dark') ? 'dark' : 'light';
-                updateHouse3DImage();
-                // Remove clone immediately after theme toggle to prevent flash
-                clone.remove();
+                overlay.remove();
                 html.classList.remove('theme-transitioning');
-            }, 2400);
+            }, 2600);
         });
 
         // Update calculator links with current deviceId

@@ -3713,7 +3713,7 @@ Vui lòng kiểm tra:
     // ========================================
     let batteryFlowChartInstance = null;
 
-    function renderBatteryFlowChart(timeline) {
+    async function renderBatteryFlowChart(timeline) {
         const canvas = document.getElementById('batteryFlowChart');
         if (!canvas) return;
 
@@ -3727,12 +3727,10 @@ Vui lòng kiểm tra:
             }
         }
 
-        // Battery flow data - positive = charge, negative = discharge
-        const batteryFlow = new Array(288).fill(0);
-        let totalChargeWh = 0;
-        let totalDischargeWh = 0;
+        // Battery flow data - use Map to automatically merge duplicates (last value wins)
+        const batteryFlowMap = new Map();
 
-        // Fill data from timeline
+        // Fill data from timeline - duplicates will be overwritten with latest value
         timeline.forEach(point => {
             const timeStr = point.t || point.time;
             if (!timeStr) return;
@@ -3741,23 +3739,54 @@ Vui lòng kiểm tra:
             if (slotIndex >= 0 && slotIndex < 288) {
                 // API returns bat: negative = discharge, positive = charge
                 const batPower = point.bat ?? point.batteryPower ?? 0;
-                // For chart: positive = charge (above 0), negative = discharge (below 0)
-                // API bat is already correct sign, just use directly
-                batteryFlow[slotIndex] = batPower;
+                // Last value for this slot wins (merges duplicates)
+                batteryFlowMap.set(slotIndex, batPower);
+            }
+        });
 
+        // Convert Map to array
+        const batteryFlow = new Array(288).fill(0);
+        batteryFlowMap.forEach((value, index) => {
+            batteryFlow[index] = value;
+        });
+
+        // Fetch accurate totals from daily-energy API
+        const deviceId = window.CURRENT_DEVICE_ID || new URLSearchParams(window.location.search).get('id') || 'P250801055';
+        try {
+            const dailyEnergyUrl = `${DAILY_ENERGY_API}/api/realtime/daily-energy/${deviceId}`;
+            const response = await fetch(dailyEnergyUrl);
+            if (response.ok) {
+                const data = await response.json();
+                const summary = data.summary || data.today || {};
+
+                // Update totals display with accurate API values
+                const chargeEl = document.getElementById('chargeTotal');
+                const dischargeEl = document.getElementById('dischargeTotal');
+                const charge = summary.charge ?? summary.charge_day ?? 0;
+                const discharge = summary.discharge ?? summary.discharge_day ?? 0;
+
+                if (chargeEl) chargeEl.textContent = `${charge.toFixed(1)} KWh`;
+                if (dischargeEl) dischargeEl.textContent = `${discharge.toFixed(1)} KWh`;
+
+                console.log('✅ Battery totals updated from daily-energy API:', { charge, discharge });
+            }
+        } catch (err) {
+            console.warn('⚠️ Failed to fetch daily-energy for battery totals:', err);
+            // Fallback: calculate from timeline data
+            let totalChargeWh = 0;
+            let totalDischargeWh = 0;
+            batteryFlowMap.forEach(batPower => {
                 if (batPower > 0) {
                     totalChargeWh += batPower / 12;
                 } else {
                     totalDischargeWh += Math.abs(batPower) / 12;
                 }
-            }
-        });
-
-        // Update totals display
-        const chargeEl = document.getElementById('chargeTotal');
-        const dischargeEl = document.getElementById('dischargeTotal');
-        if (chargeEl) chargeEl.textContent = `${(totalChargeWh / 1000).toFixed(1)} KWh`;
-        if (dischargeEl) dischargeEl.textContent = `${(totalDischargeWh / 1000).toFixed(1)} KWh`;
+            });
+            const chargeEl = document.getElementById('chargeTotal');
+            const dischargeEl = document.getElementById('dischargeTotal');
+            if (chargeEl) chargeEl.textContent = `${(totalChargeWh / 1000).toFixed(1)} KWh`;
+            if (dischargeEl) dischargeEl.textContent = `${(totalDischargeWh / 1000).toFixed(1)} KWh`;
+        }
 
         if (batteryFlowChartInstance) {
             batteryFlowChartInstance.destroy();

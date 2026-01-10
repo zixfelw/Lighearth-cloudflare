@@ -3423,15 +3423,18 @@ Vui lòng kiểm tra:
 
         // Fill data from timeline
         timeline.forEach(point => {
-            const [hours, minutes] = point.time.split(':').map(Number);
+            const timeStr = point.t || point.time;
+            if (!timeStr) return;
+            const [hours, minutes] = timeStr.split(':').map(Number);
             const slotIndex = hours * 12 + Math.floor(minutes / 5);
             if (slotIndex >= 0 && slotIndex < 288) {
                 // Grid purchase = EVN consumption (positive grid)
-                gridPurchase[slotIndex] = Math.max(0, point.gridPower || 0);
+                const gridVal = point.grid ?? point.gridPower ?? 0;
+                gridPurchase[slotIndex] = Math.max(0, gridVal);
                 // Load power = Total consumption  
-                loadPower[slotIndex] = point.loadPower || 0;
+                loadPower[slotIndex] = point.load ?? point.loadPower ?? 0;
                 // Grid feed-in (negative grid = selling to grid)
-                gridFeedIn[slotIndex] = Math.abs(Math.min(0, point.gridPower || 0));
+                gridFeedIn[slotIndex] = Math.abs(Math.min(0, gridVal));
             }
         });
 
@@ -3544,11 +3547,14 @@ Vui lòng kiểm tra:
 
         // Fill data from timeline
         timeline.forEach(point => {
-            const [hours, minutes] = point.time.split(':').map(Number);
+            const timeStr = point.t || point.time;
+            if (!timeStr) return;
+            const [hours, minutes] = timeStr.split(':').map(Number);
             const slotIndex = hours * 12 + Math.floor(minutes / 5);
             if (slotIndex >= 0 && slotIndex < 288) {
-                pvData[slotIndex] = point.pvPower || 0;
-                totalPVWh += (point.pvPower || 0) / 12; // 5-minute interval = 1/12 hour
+                const pvVal = point.pv ?? point.pvPower ?? 0;
+                pvData[slotIndex] = pvVal;
+                totalPVWh += pvVal / 12; // 5-minute interval = 1/12 hour
             }
         });
 
@@ -3644,17 +3650,21 @@ Vui lòng kiểm tra:
 
         // Fill data from timeline
         timeline.forEach(point => {
-            const [hours, minutes] = point.time.split(':').map(Number);
+            const timeStr = point.t || point.time;
+            if (!timeStr) return;
+            const [hours, minutes] = timeStr.split(':').map(Number);
             const slotIndex = hours * 12 + Math.floor(minutes / 5);
             if (slotIndex >= 0 && slotIndex < 288) {
-                const batteryPower = point.batteryPower || 0;
-                // Charge = positive, Discharge = negative (reversed for visual)
-                batteryFlow[slotIndex] = -batteryPower; // Invert: discharge shows below 0
+                // API returns bat: negative = discharge, positive = charge
+                const batPower = point.bat ?? point.batteryPower ?? 0;
+                // For chart: positive = charge (above 0), negative = discharge (below 0)
+                // API bat is already correct sign, just use directly
+                batteryFlow[slotIndex] = batPower;
 
-                if (batteryPower > 0) {
-                    totalChargeWh += batteryPower / 12;
+                if (batPower > 0) {
+                    totalChargeWh += batPower / 12;
                 } else {
-                    totalDischargeWh += Math.abs(batteryPower) / 12;
+                    totalDischargeWh += Math.abs(batPower) / 12;
                 }
             }
         });

@@ -3755,10 +3755,11 @@ Vui lòng kiểm tra:
 
         console.log(`📊 Battery chart compressed: ${sortedTimeline.length} points → ${compressedLabels.length} unique values`);
 
-        // Fetch accurate totals from daily-energy API
+        // Fetch accurate totals from daily-energy API (temperature-soc-power worker)
         const deviceId = window.CURRENT_DEVICE_ID || new URLSearchParams(window.location.search).get('id') || 'P250801055';
         try {
-            const dailyEnergyUrl = `${DAILY_ENERGY_API}/api/realtime/daily-energy/${deviceId}`;
+            // Use temperature-soc-power API directly for accurate charge/discharge data
+            const dailyEnergyUrl = `https://temperature-soc-power.applike098.workers.dev/api/realtime/daily-energy/${deviceId}`;
             const response = await fetch(dailyEnergyUrl);
             if (response.ok) {
                 const data = await response.json();

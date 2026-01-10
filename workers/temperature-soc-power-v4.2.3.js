@@ -284,17 +284,41 @@ async function getSOCHistory(deviceId, date, env) {
   let minTime = null, maxTime = null;
   let currentSOC = null;
 
+  // Debug counters
+  let debugCounts = {
+    total: data[0]?.length || 0,
+    dateMismatch: 0,
+    invalidState: 0,
+    outOfRange: 0,
+    passed: 0,
+    sampleRejected: []
+  };
+
   data[0].forEach(item => {
     const vnDateStr = getVietnamDateString(item.last_changed);
-    if (vnDateStr !== date) return;
+    if (vnDateStr !== date) {
+      debugCounts.dateMismatch++;
+      if (debugCounts.sampleRejected.length < 3) {
+        debugCounts.sampleRejected.push({ reason: 'date', vnDate: vnDateStr, expectedDate: date, raw: item.last_changed });
+      }
+      return;
+    }
 
     // Skip invalid states
     const state = item.state;
-    if (state === 'unavailable' || state === 'unknown' || state === null || state === '') return;
+    if (state === 'unavailable' || state === 'unknown' || state === null || state === '') {
+      debugCounts.invalidState++;
+      return;
+    }
 
     const soc = parseFloat(state);
     // Filter: must be valid number AND in reasonable range (0-100%)
-    if (isNaN(soc) || soc < 0 || soc > 100) return;
+    if (isNaN(soc) || soc < 0 || soc > 100) {
+      debugCounts.outOfRange++;
+      return;
+    }
+
+    debugCounts.passed++;
 
     const vnTime = toVietnamTime(item.last_changed);
     const hours = vnTime.getUTCHours();
@@ -334,11 +358,7 @@ async function getSOCHistory(deviceId, date, env) {
     maxTime,
     version: VERSION,
     source: 'history_api',
-    debug: {
-      rawRecordsFromHA: data[0]?.length || 0,
-      queryStart: `${new Date(date).toISOString().split('T')[0].replace(/-/g, '-').slice(0, -3)}T17:00:00`,
-      queryEnd: date === getVietnamToday() ? `${date}T${new Date().getUTCHours() + 7}:${new Date().getUTCMinutes()}` : `${date}T23:59:59`,
-    }
+    debug: debugCounts
   };
 }
 

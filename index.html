@@ -89,7 +89,7 @@
             font-family: 'Inter', sans-serif;
         }
 
-        /* Theme Transition Effect - Smooth fade when switching */
+        /* Theme Transition Effect */
         html {
             transition: none;
         }
@@ -98,8 +98,8 @@
             transition: none !important;
         }
 
-        /* Theme switch - Circular wipe reveal */
-        .theme-wipe-overlay {
+        /* Theme switch - Circular wipe using clip-path on body clone */
+        .theme-wipe-clone {
             position: fixed;
             top: 0;
             left: 0;
@@ -107,11 +107,12 @@
             height: 100vh;
             z-index: 99998;
             pointer-events: none;
+            overflow: hidden;
             clip-path: circle(0% at var(--wipe-x, 50%) var(--wipe-y, 50%));
         }
 
-        .theme-wipe-overlay.expanding {
-            animation: wipe-expand 3s ease-in-out forwards;
+        .theme-wipe-clone.expanding {
+            animation: wipe-expand 2.5s ease-in-out forwards;
         }
 
         @keyframes wipe-expand {
@@ -122,28 +123,6 @@
             100% {
                 clip-path: circle(150% at var(--wipe-x, 50%) var(--wipe-y, 50%));
             }
-        }
-
-        /* Dark theme wipe background */
-        .theme-wipe-dark {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
-        }
-
-        /* Light theme wipe background */
-        .theme-wipe-light {
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
-        }
-
-        /* Soft ring border on the edge of wipe */
-        .theme-wipe-overlay::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            box-shadow: inset 0 0 100px 50px rgba(255, 255, 255, 0.1);
-            pointer-events: none;
         }
 
         .gradient-brand {
@@ -4303,33 +4282,45 @@
             // Determine which theme we're switching TO
             const switchingToDark = !html.classList.contains('dark');
 
-            // Create wipe overlay - this shows the NEW theme color
-            const overlay = document.createElement('div');
-            overlay.className = `theme-wipe-overlay ${switchingToDark ? 'theme-wipe-dark' : 'theme-wipe-light'}`;
-            overlay.style.setProperty('--wipe-x', wipeX + '%');
-            overlay.style.setProperty('--wipe-y', wipeY + '%');
-            document.body.appendChild(overlay);
+            // Create a clone container that will show the NEW theme
+            const clone = document.createElement('div');
+            clone.className = 'theme-wipe-clone';
+            clone.style.setProperty('--wipe-x', wipeX + '%');
+            clone.style.setProperty('--wipe-y', wipeY + '%');
+
+            // Create an iframe-like snapshot: clone the body content
+            const snapshot = document.body.cloneNode(true);
+            snapshot.style.cssText = 'position: absolute; top: 0; left: 0; width: 100vw; min-height: 100vh; margin: 0; pointer-events: none;';
+
+            // Apply the NEW theme to the snapshot
+            const snapshotHtml = document.createElement('div');
+            snapshotHtml.className = switchingToDark ? 'dark' : '';
+            snapshotHtml.style.cssText = 'width: 100%; min-height: 100vh;';
+            snapshotHtml.appendChild(snapshot);
+            clone.appendChild(snapshotHtml);
+
+            document.body.appendChild(clone);
 
             // Add transitioning class
             html.classList.add('theme-transitioning');
 
             // Start expanding animation
             requestAnimationFrame(() => {
-                overlay.classList.add('expanding');
+                clone.classList.add('expanding');
             });
 
-            // Toggle actual theme near the end of animation (when wipe covers screen)
+            // Toggle actual theme near the end of animation
             setTimeout(() => {
                 html.classList.toggle('dark');
                 localStorage.theme = html.classList.contains('dark') ? 'dark' : 'light';
                 updateHouse3DImage();
-            }, 2800);
+            }, 2300);
 
             // Cleanup after animation completes
             setTimeout(() => {
-                overlay.remove();
+                clone.remove();
                 html.classList.remove('theme-transitioning');
-            }, 3200);
+            }, 2600);
         });
 
         // Update calculator links with current deviceId

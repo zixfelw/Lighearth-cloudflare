@@ -1096,34 +1096,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 y: chartArea.top + 10     // 10px from top
             };
         };
-
-        // Custom crosshair plugin - draws vertical line from hover point to bottom
-        const crosshairPlugin = {
-            id: 'crosshair',
-            afterDraw: (chart) => {
-                if (chart.tooltip._active && chart.tooltip._active.length) {
-                    const activePoint = chart.tooltip._active[0];
-                    const ctx = chart.ctx;
-                    const x = activePoint.element.x;
-                    const topY = chart.chartArea.top;
-                    const bottomY = chart.chartArea.bottom;
-
-                    // Draw vertical line
-                    ctx.save();
-                    ctx.beginPath();
-                    ctx.moveTo(x, topY);
-                    ctx.lineTo(x, bottomY);
-                    ctx.lineWidth = 2;
-                    ctx.strokeStyle = 'rgba(148, 163, 184, 0.5)';
-                    ctx.setLineDash([5, 5]);
-                    ctx.stroke();
-                    ctx.restore();
-                }
-            }
-        };
-
-        // Register crosshair plugin globally
-        Chart.register(crosshairPlugin);
     }
 
     // ========================================

@@ -101,48 +101,52 @@
                 box-shadow 0.3s ease !important;
         }
 
-        /* Theme switch ripple effect overlay */
+        /* Theme switch circular reveal overlay */
         .theme-transition-overlay {
             position: fixed;
             top: 0;
             left: 0;
-            right: 0;
-            bottom: 0;
+            width: 100vw;
+            height: 100vh;
             z-index: 99999;
             pointer-events: none;
+            border-radius: 50%;
+            transform: scale(0);
             opacity: 0;
-            transition: opacity 0.3s ease;
         }
 
-        .theme-transition-overlay.active {
-            opacity: 1;
-            animation: theme-fade 0.5s ease forwards;
+        .theme-transition-overlay.expanding {
+            animation: circle-expand 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
 
-        @keyframes theme-fade {
+        @keyframes circle-expand {
             0% {
-                opacity: 0;
-            }
-
-            30% {
-                opacity: 0.15;
+                transform: scale(0);
+                opacity: 1;
             }
 
             100% {
+                transform: scale(3);
                 opacity: 0;
             }
         }
 
-        .dark .theme-transition-overlay {
-            background: radial-gradient(circle at var(--ripple-x, 50%) var(--ripple-y, 50%),
-                    rgba(99, 102, 241, 0.3) 0%,
-                    transparent 70%);
+        /* Dark mode overlay - Indigo/Purple glow */
+        .theme-overlay-dark {
+            background: radial-gradient(circle,
+                    rgba(99, 102, 241, 0.9) 0%,
+                    rgba(79, 70, 229, 0.7) 30%,
+                    rgba(55, 48, 163, 0.4) 60%,
+                    transparent 80%);
         }
 
-        :not(.dark) .theme-transition-overlay {
-            background: radial-gradient(circle at var(--ripple-x, 50%) var(--ripple-y, 50%),
-                    rgba(251, 191, 36, 0.3) 0%,
-                    transparent 70%);
+        /* Light mode overlay - Amber/Yellow glow */
+        .theme-overlay-light {
+            background: radial-gradient(circle,
+                    rgba(251, 191, 36, 0.9) 0%,
+                    rgba(245, 158, 11, 0.7) 30%,
+                    rgba(217, 119, 6, 0.4) 60%,
+                    transparent 80%);
         }
 
         .gradient-brand {
@@ -4294,39 +4298,50 @@
         updateHouse3DImage();
 
         themeToggle.addEventListener('click', (e) => {
-            // Create transition overlay if not exists
-            let overlay = document.querySelector('.theme-transition-overlay');
-            if (!overlay) {
-                overlay = document.createElement('div');
-                overlay.className = 'theme-transition-overlay';
-                document.body.appendChild(overlay);
-            }
-
-            // Set ripple origin from button position
+            // Get button position for circle origin
             const rect = themeToggle.getBoundingClientRect();
-            const x = ((rect.left + rect.width / 2) / window.innerWidth) * 100;
-            const y = ((rect.top + rect.height / 2) / window.innerHeight) * 100;
-            document.documentElement.style.setProperty('--ripple-x', x + '%');
-            document.documentElement.style.setProperty('--ripple-y', y + '%');
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+
+            // Calculate max radius needed to cover entire screen
+            const maxX = Math.max(centerX, window.innerWidth - centerX);
+            const maxY = Math.max(centerY, window.innerHeight - centerY);
+            const maxRadius = Math.sqrt(maxX * maxX + maxY * maxY) * 2;
+
+            // Determine which theme we're switching TO
+            const switchingToDark = !html.classList.contains('dark');
+
+            // Create overlay for the animation
+            const overlay = document.createElement('div');
+            overlay.className = `theme-transition-overlay ${switchingToDark ? 'theme-overlay-dark' : 'theme-overlay-light'}`;
+            overlay.style.cssText = `
+                left: ${centerX - maxRadius}px;
+                top: ${centerY - maxRadius}px;
+                width: ${maxRadius * 2}px;
+                height: ${maxRadius * 2}px;
+            `;
+            document.body.appendChild(overlay);
 
             // Add transitioning class for smooth color changes
             html.classList.add('theme-transitioning');
 
-            // Trigger overlay animation
-            overlay.classList.add('active');
+            // Start expanding animation
+            requestAnimationFrame(() => {
+                overlay.classList.add('expanding');
+            });
 
-            // Toggle theme
-            html.classList.toggle('dark');
-            localStorage.theme = html.classList.contains('dark') ? 'dark' : 'light';
-
-            // Update 3D house image when theme changes
-            updateHouse3DImage();
+            // Toggle theme after a short delay (during animation)
+            setTimeout(() => {
+                html.classList.toggle('dark');
+                localStorage.theme = html.classList.contains('dark') ? 'dark' : 'light';
+                updateHouse3DImage();
+            }, 150);
 
             // Cleanup after animation
             setTimeout(() => {
-                overlay.classList.remove('active');
+                overlay.remove();
                 html.classList.remove('theme-transitioning');
-            }, 500);
+            }, 700);
         });
 
         // Update calculator links with current deviceId

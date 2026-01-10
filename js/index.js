@@ -3791,7 +3791,6 @@ Vui lòng kiểm tra:
                         position: 'topRight',
                         backgroundColor: 'rgba(15, 23, 42, 0.95)',
                         titleColor: '#f8fafc',
-                        bodyColor: '#34d399',
                         padding: 12,
                         cornerRadius: 10,
                         displayColors: false,
@@ -3803,6 +3802,12 @@ Vui lòng kiểm tra:
                                 if (val > 0) return `⚡ Sạc: ${val} W`;
                                 if (val < 0) return `🔋 Xả: ${Math.abs(val)} W`;
                                 return `🔋 0 W`;
+                            },
+                            labelTextColor: (context) => {
+                                const val = context.parsed.y;
+                                if (val > 0) return '#22c55e'; // Green for charge
+                                if (val < 0) return '#ef4444'; // Red for discharge
+                                return '#e2e8f0'; // Default
                             }
                         }
                     }

@@ -3719,10 +3719,10 @@ Vui lòng kiểm tra:
 
         const ctx = canvas.getContext('2d');
 
-        // Create full 24h timeline
+        // Create full 24h timeline with 10-minute intervals (144 slots instead of 288)
         const fullLabels = [];
         for (let h = 0; h < 24; h++) {
-            for (let m = 0; m < 60; m += 5) {
+            for (let m = 0; m < 60; m += 10) {
                 fullLabels.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
             }
         }
@@ -3730,13 +3730,14 @@ Vui lòng kiểm tra:
         // Battery flow data - use Map to automatically merge duplicates (last value wins)
         const batteryFlowMap = new Map();
 
-        // Fill data from timeline - duplicates will be overwritten with latest value
+        // Fill data from timeline - map to 10-minute slots, duplicates will be overwritten
         timeline.forEach(point => {
             const timeStr = point.t || point.time;
             if (!timeStr) return;
             const [hours, minutes] = timeStr.split(':').map(Number);
-            const slotIndex = hours * 12 + Math.floor(minutes / 5);
-            if (slotIndex >= 0 && slotIndex < 288) {
+            // 10-minute slot: 6 slots per hour, 144 total
+            const slotIndex = hours * 6 + Math.floor(minutes / 10);
+            if (slotIndex >= 0 && slotIndex < 144) {
                 // API returns bat: negative = discharge, positive = charge
                 const batPower = point.bat ?? point.batteryPower ?? 0;
                 // Last value for this slot wins (merges duplicates)
@@ -3744,8 +3745,8 @@ Vui lòng kiểm tra:
             }
         });
 
-        // Convert Map to array
-        const batteryFlow = new Array(288).fill(0);
+        // Convert Map to array (144 slots for 10-minute intervals)
+        const batteryFlow = new Array(144).fill(0);
         batteryFlowMap.forEach((value, index) => {
             batteryFlow[index] = value;
         });

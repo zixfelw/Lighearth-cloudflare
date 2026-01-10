@@ -40,8 +40,8 @@
     </script>
 
     <!-- Preload critical resources -->
-    <link rel="preload" href="css/index.css" as="style" crossorigin>
-    <link rel="preload" href="logo.png" as="image">
+    <link rel="preload" href="css/index.min.css" as="style" crossorigin>
+    <link rel="preload" href="logo.webp" as="image">
 
     <!-- Tailwind CSS with custom config -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -2927,8 +2927,8 @@
 
                         <!-- 3D House Image with battery overlay -->
                         <div class="relative -mt-24 sm:-mt-28">
-                            <img id="house3dImage" src="/images/3dhome/house-3d-dark.png" alt="3D Solar Home"
-                                class="w-full h-auto object-contain transition-opacity duration-300">
+                            <img id="house3dImage" src="/images/3dhome/house-3d-dark.webp" alt="3D Solar Home"
+                                class="w-full h-auto object-contain transition-opacity duration-300" loading="lazy">
 
                             <!-- Battery SOC % (on battery) - dịch xuống 1 chút -->
                             <div class="absolute left-[8%] top-[52%] z-20">
@@ -4216,7 +4216,7 @@
             const house3dImg = document.getElementById('house3dImage');
             if (house3dImg) {
                 const isDark = html.classList.contains('dark');
-                const newSrc = isDark ? '/images/3dhome/house-3d-dark.png' : '/images/3dhome/house-3d-light.png';
+                const newSrc = isDark ? '/images/3dhome/house-3d-dark.webp' : '/images/3dhome/house-3d-light.webp';
                 if (house3dImg.src !== newSrc) {
                     house3dImg.style.opacity = '0.5';
                     house3dImg.src = newSrc;

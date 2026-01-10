@@ -3630,7 +3630,7 @@ Vui lòng kiểm tra:
     // ========================================
     let pvTodayChartInstance = null;
 
-    function renderPVTodayChart(timeline) {
+    async function renderPVTodayChart(timeline) {
         const canvas = document.getElementById('pvTodayChart');
         if (!canvas) return;
 
@@ -3646,7 +3646,6 @@ Vui lòng kiểm tra:
 
         // Initialize PV data
         const pvData = new Array(288).fill(0);
-        let totalPVWh = 0;
 
         // Fill data from timeline
         timeline.forEach(point => {
@@ -3657,15 +3656,30 @@ Vui lòng kiểm tra:
             if (slotIndex >= 0 && slotIndex < 288) {
                 const pvVal = point.pv ?? point.pvPower ?? 0;
                 pvData[slotIndex] = pvVal;
-                totalPVWh += pvVal / 12; // 5-minute interval = 1/12 hour
             }
         });
 
-        // Update total display
+        // Fetch accurate PV total from daily-energy API
+        const deviceId = window.CURRENT_DEVICE_ID || new URLSearchParams(window.location.search).get('id') || 'P250801055';
         const totalEl = document.getElementById('pvTodayTotal');
-        if (totalEl) {
-            const totalKWh = (totalPVWh / 1000).toFixed(1);
-            totalEl.textContent = `${totalKWh} KWh`;
+
+        try {
+            const dailyEnergyUrl = `https://temperature-soc-power.applike098.workers.dev/api/realtime/daily-energy/${deviceId}`;
+            const response = await fetch(dailyEnergyUrl);
+            if (response.ok) {
+                const data = await response.json();
+                const summary = data.summary || data.today || {};
+                const pvKwh = summary.pv ?? 0;
+
+                if (totalEl) totalEl.textContent = `${pvKwh.toFixed(1)} KWh`;
+                console.log('✅ PV total updated from daily-energy API:', pvKwh);
+            }
+        } catch (err) {
+            console.warn('⚠️ Failed to fetch daily-energy for PV total:', err);
+            // Fallback: calculate from timeline
+            let totalPVWh = 0;
+            pvData.forEach(val => totalPVWh += val / 12);
+            if (totalEl) totalEl.textContent = `${(totalPVWh / 1000).toFixed(1)} KWh`;
         }
 
         if (pvTodayChartInstance) {

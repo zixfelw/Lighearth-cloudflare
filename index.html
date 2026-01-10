@@ -4292,10 +4292,17 @@
             const snapshot = document.body.cloneNode(true);
             snapshot.style.cssText = 'position: absolute; top: 0; left: 0; width: 100vw; min-height: 100vh; margin: 0; pointer-events: none;';
 
-            // Apply the NEW theme to the snapshot
+            // Remove any existing clone from snapshot to avoid recursion
+            const existingClones = snapshot.querySelectorAll('.theme-wipe-clone');
+            existingClones.forEach(c => c.remove());
+
+            // Apply the NEW theme to the snapshot wrapper
             const snapshotHtml = document.createElement('div');
             snapshotHtml.className = switchingToDark ? 'dark' : '';
-            snapshotHtml.style.cssText = 'width: 100%; min-height: 100vh;';
+            // Set proper background for the theme
+            snapshotHtml.style.cssText = switchingToDark
+                ? 'width: 100%; min-height: 100vh; background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);'
+                : 'width: 100%; min-height: 100vh; background: #f8fafc;';
             snapshotHtml.appendChild(snapshot);
             clone.appendChild(snapshotHtml);
 
@@ -4309,18 +4316,15 @@
                 clone.classList.add('expanding');
             });
 
-            // Toggle actual theme near the end of animation
+            // Toggle actual theme when animation is 95% complete, then remove clone immediately
             setTimeout(() => {
                 html.classList.toggle('dark');
                 localStorage.theme = html.classList.contains('dark') ? 'dark' : 'light';
                 updateHouse3DImage();
-            }, 2300);
-
-            // Cleanup after animation completes
-            setTimeout(() => {
+                // Remove clone immediately after theme toggle to prevent flash
                 clone.remove();
                 html.classList.remove('theme-transitioning');
-            }, 2600);
+            }, 2400);
         });
 
         // Update calculator links with current deviceId

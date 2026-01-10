@@ -333,7 +333,12 @@ async function getSOCHistory(deviceId, date, env) {
     minTime,
     maxTime,
     version: VERSION,
-    source: 'history_api'
+    source: 'history_api',
+    debug: {
+      rawRecordsFromHA: data[0]?.length || 0,
+      queryStart: `${new Date(date).toISOString().split('T')[0].replace(/-/g, '-').slice(0, -3)}T17:00:00`,
+      queryEnd: date === getVietnamToday() ? `${date}T${new Date().getUTCHours() + 7}:${new Date().getUTCMinutes()}` : `${date}T23:59:59`,
+    }
   };
 }
 

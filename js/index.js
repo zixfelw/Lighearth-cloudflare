@@ -1096,6 +1096,34 @@ document.addEventListener('DOMContentLoaded', function () {
                 y: chartArea.top + 10     // 10px from top
             };
         };
+
+        // Custom crosshair plugin - draws vertical line from hover point to bottom
+        const crosshairPlugin = {
+            id: 'crosshair',
+            afterDraw: (chart) => {
+                if (chart.tooltip._active && chart.tooltip._active.length) {
+                    const activePoint = chart.tooltip._active[0];
+                    const ctx = chart.ctx;
+                    const x = activePoint.element.x;
+                    const topY = chart.chartArea.top;
+                    const bottomY = chart.chartArea.bottom;
+
+                    // Draw vertical line
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.moveTo(x, topY);
+                    ctx.lineTo(x, bottomY);
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = 'rgba(148, 163, 184, 0.5)';
+                    ctx.setLineDash([5, 5]);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            }
+        };
+
+        // Register crosshair plugin globally
+        Chart.register(crosshairPlugin);
     }
 
     // ========================================
@@ -3136,7 +3164,7 @@ Vui lòng kiểm tra:
                     fill: true,
                     tension: 0.4,
                     pointRadius: 0,
-                    pointHoverRadius: 6,
+                    pointHoverRadius: 12,
                     pointHoverBackgroundColor: '#f97316',
                     pointHoverBorderColor: '#fff',
                     pointHoverBorderWidth: 2
@@ -3956,7 +3984,7 @@ Vui lòng kiểm tra:
                         fill: true,
                         tension: 0.3,
                         pointRadius: 0,
-                        pointHoverRadius: 10,
+                        pointHoverRadius: 12,
                         pointHoverBorderWidth: 3,
                         pointHoverBackgroundColor: '#f59e0b',
                         pointHoverBorderColor: '#fff',
@@ -3971,7 +3999,7 @@ Vui lòng kiểm tra:
                         fill: true,
                         tension: 0.3,
                         pointRadius: 0,
-                        pointHoverRadius: 10,
+                        pointHoverRadius: 12,
                         pointHoverBorderWidth: 3,
                         pointHoverBackgroundColor: '#3b82f6',
                         pointHoverBorderColor: '#fff',
@@ -3986,7 +4014,7 @@ Vui lòng kiểm tra:
                         fill: true,
                         tension: 0.3,
                         pointRadius: 0,
-                        pointHoverRadius: 10,
+                        pointHoverRadius: 12,
                         pointHoverBorderWidth: 3,
                         pointHoverBackgroundColor: '#a855f7',
                         pointHoverBorderColor: '#fff',
@@ -4001,7 +4029,7 @@ Vui lòng kiểm tra:
                         fill: true,
                         tension: 0.3,
                         pointRadius: 0,
-                        pointHoverRadius: 10,
+                        pointHoverRadius: 12,
                         pointHoverBorderWidth: 3,
                         pointHoverBackgroundColor: '#22c55e',
                         pointHoverBorderColor: '#fff',
@@ -4016,7 +4044,7 @@ Vui lòng kiểm tra:
                         fill: true,
                         tension: 0.3,
                         pointRadius: 0,
-                        pointHoverRadius: 10,
+                        pointHoverRadius: 12,
                         pointHoverBorderWidth: 3,
                         pointHoverBackgroundColor: '#ef4444',
                         pointHoverBorderColor: '#fff',
@@ -4031,7 +4059,7 @@ Vui lòng kiểm tra:
                         fill: true,
                         tension: 0.3,
                         pointRadius: 0,
-                        pointHoverRadius: 10,
+                        pointHoverRadius: 12,
                         pointHoverBorderWidth: 3,
                         pointHoverBackgroundColor: '#06b6d4',
                         pointHoverBorderColor: '#fff',
@@ -4939,7 +4967,7 @@ Vui lòng kiểm tra:
                     fill: true,
                     tension: 0.3,
                     pointRadius: 0,
-                    pointHoverRadius: 8,
+                    pointHoverRadius: 12,
                     pointHoverBackgroundColor: 'rgb(20, 184, 166)',
                     pointHoverBorderColor: '#fff',
                     pointHoverBorderWidth: 3
@@ -5933,7 +5961,7 @@ Vui lòng kiểm tra:
                         tension: 0.4,
                         pointRadius: 0,
                         pointHitRadius: 10,
-                        pointHoverRadius: 8,
+                        pointHoverRadius: 12,
                         pointHoverBackgroundColor: 'rgb(245, 158, 11)',
                         pointHoverBorderColor: '#fff',
                         pointHoverBorderWidth: 3,
@@ -5949,7 +5977,7 @@ Vui lòng kiểm tra:
                         tension: 0.4,
                         pointRadius: 0,
                         pointHitRadius: 10,
-                        pointHoverRadius: 8,
+                        pointHoverRadius: 12,
                         pointHoverBackgroundColor: 'rgb(34, 197, 94)',
                         pointHoverBorderColor: '#fff',
                         pointHoverBorderWidth: 3,
@@ -5965,7 +5993,7 @@ Vui lòng kiểm tra:
                         tension: 0.4,
                         pointRadius: 0,
                         pointHitRadius: 10,
-                        pointHoverRadius: 8,
+                        pointHoverRadius: 12,
                         pointHoverBackgroundColor: 'rgb(239, 68, 68)',
                         pointHoverBorderColor: '#fff',
                         pointHoverBorderWidth: 3,
@@ -5981,7 +6009,7 @@ Vui lòng kiểm tra:
                         tension: 0.4,
                         pointRadius: 0,
                         pointHitRadius: 10,
-                        pointHoverRadius: 8,
+                        pointHoverRadius: 12,
                         pointHoverBackgroundColor: 'rgb(59, 130, 246)',
                         pointHoverBorderColor: '#fff',
                         pointHoverBorderWidth: 3,
@@ -5997,7 +6025,7 @@ Vui lòng kiểm tra:
                         tension: 0.4,
                         pointRadius: 0,
                         pointHitRadius: 10,
-                        pointHoverRadius: 8,
+                        pointHoverRadius: 12,
                         pointHoverBackgroundColor: 'rgb(168, 85, 247)',
                         pointHoverBorderColor: '#fff',
                         pointHoverBorderWidth: 3,
@@ -6013,7 +6041,7 @@ Vui lòng kiểm tra:
                         tension: 0.4,
                         pointRadius: 0,
                         pointHitRadius: 10,
-                        pointHoverRadius: 8,
+                        pointHoverRadius: 12,
                         pointHoverBackgroundColor: 'rgb(6, 182, 212)',
                         pointHoverBorderColor: '#fff',
                         pointHoverBorderWidth: 3,

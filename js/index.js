@@ -125,6 +125,17 @@ function triggerHaptic(durationMs = 5) {
     }
 }
 
+// Auto-enable haptic by simulating user gesture on page load
+// Click SOC button (default tab) after short delay to enable vibration API
+setTimeout(() => {
+    const socBtn = document.getElementById('socChartBtn');
+    if (socBtn) {
+        socBtn.click();
+        console.log('🔔 Auto-clicked SOC button to enable haptic feedback');
+    }
+}, 1500); // Wait 1.5s for page to fully load
+
+
 // Get current API (round-robin with health check)
 function getNextHealthyApi() {
     // Try to find a healthy API starting from current index

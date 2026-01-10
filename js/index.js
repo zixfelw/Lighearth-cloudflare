@@ -3719,37 +3719,41 @@ Vui lòng kiểm tra:
 
         const ctx = canvas.getContext('2d');
 
-        // Create full 24h timeline with 10-minute intervals (144 slots instead of 288)
-        const fullLabels = [];
-        for (let h = 0; h < 24; h++) {
-            for (let m = 0; m < 60; m += 10) {
-                fullLabels.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
+        // Sort timeline by time and extract unique data points
+        const sortedTimeline = [...timeline]
+            .filter(p => p.t || p.time)
+            .sort((a, b) => {
+                const timeA = a.t || a.time;
+                const timeB = b.t || b.time;
+                return timeA.localeCompare(timeB);
+            });
+
+        // Run-length encoding: only keep points where value changes
+        const compressedLabels = [];
+        const compressedData = [];
+        let lastValue = null;
+
+        sortedTimeline.forEach(point => {
+            const timeStr = point.t || point.time;
+            const batPower = point.bat ?? point.batteryPower ?? 0;
+
+            // Only add point if value is different from last
+            if (lastValue === null || batPower !== lastValue) {
+                compressedLabels.push(timeStr);
+                compressedData.push(batPower);
+                lastValue = batPower;
+            }
+        });
+
+        // If no data, show empty chart with basic labels
+        if (compressedLabels.length === 0) {
+            for (let h = 0; h < 24; h += 4) {
+                compressedLabels.push(`${String(h).padStart(2, '0')}:00`);
+                compressedData.push(0);
             }
         }
 
-        // Battery flow data - use Map to automatically merge duplicates (last value wins)
-        const batteryFlowMap = new Map();
-
-        // Fill data from timeline - map to 10-minute slots, duplicates will be overwritten
-        timeline.forEach(point => {
-            const timeStr = point.t || point.time;
-            if (!timeStr) return;
-            const [hours, minutes] = timeStr.split(':').map(Number);
-            // 10-minute slot: 6 slots per hour, 144 total
-            const slotIndex = hours * 6 + Math.floor(minutes / 10);
-            if (slotIndex >= 0 && slotIndex < 144) {
-                // API returns bat: negative = discharge, positive = charge
-                const batPower = point.bat ?? point.batteryPower ?? 0;
-                // Last value for this slot wins (merges duplicates)
-                batteryFlowMap.set(slotIndex, batPower);
-            }
-        });
-
-        // Convert Map to array (144 slots for 10-minute intervals)
-        const batteryFlow = new Array(144).fill(0);
-        batteryFlowMap.forEach((value, index) => {
-            batteryFlow[index] = value;
-        });
+        console.log(`📊 Battery chart compressed: ${sortedTimeline.length} points → ${compressedLabels.length} unique values`);
 
         // Fetch accurate totals from daily-energy API
         const deviceId = window.CURRENT_DEVICE_ID || new URLSearchParams(window.location.search).get('id') || 'P250801055';
@@ -3773,14 +3777,14 @@ Vui lòng kiểm tra:
             }
         } catch (err) {
             console.warn('⚠️ Failed to fetch daily-energy for battery totals:', err);
-            // Fallback: calculate from timeline data
+            // Fallback: calculate from compressed data
             let totalChargeWh = 0;
             let totalDischargeWh = 0;
-            batteryFlowMap.forEach(batPower => {
+            compressedData.forEach(batPower => {
                 if (batPower > 0) {
-                    totalChargeWh += batPower / 12;
+                    totalChargeWh += batPower / 6; // Estimate based on data points
                 } else {
-                    totalDischargeWh += Math.abs(batPower) / 12;
+                    totalDischargeWh += Math.abs(batPower) / 6;
                 }
             });
             const chargeEl = document.getElementById('chargeTotal');
@@ -3802,10 +3806,10 @@ Vui lòng kiểm tra:
         batteryFlowChartInstance = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: fullLabels,
+                labels: compressedLabels,
                 datasets: [{
                     label: 'Battery Flow',
-                    data: batteryFlow,
+                    data: compressedData,
                     borderColor: '#f472b6',
                     backgroundColor: gradient,
                     fill: 'origin',

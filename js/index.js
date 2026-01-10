@@ -3510,6 +3510,7 @@ Vui lòng kiểm tra:
                         fill: true,
                         tension: 0.3,
                         pointRadius: 0,
+                        pointHoverRadius: 12,
                         borderWidth: 2,
                         order: 3
                     },
@@ -3521,6 +3522,7 @@ Vui lòng kiểm tra:
                         fill: false,
                         tension: 0.3,
                         pointRadius: 0,
+                        pointHoverRadius: 12,
                         borderWidth: 1.5,
                         order: 2
                     },
@@ -3532,6 +3534,7 @@ Vui lòng kiểm tra:
                         fill: false,
                         tension: 0.3,
                         pointRadius: 0,
+                        pointHoverRadius: 12,
                         borderWidth: 1.5,
                         order: 1
                     }
@@ -3650,6 +3653,7 @@ Vui lòng kiểm tra:
                     fill: true,
                     tension: 0.4,
                     pointRadius: 0,
+                    pointHoverRadius: 12,
                     borderWidth: 2
                 }]
             },
@@ -3777,6 +3781,7 @@ Vui lòng kiểm tra:
                     fill: 'origin',
                     tension: 0.3,
                     pointRadius: 0,
+                    pointHoverRadius: 12,
                     borderWidth: 1.5
                 }]
             },

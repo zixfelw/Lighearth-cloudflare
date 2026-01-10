@@ -3452,7 +3452,7 @@ Vui lòng kiểm tra:
     // ========================================
     let gridSourceChartInstance = null;
 
-    function renderGridSourceChart(timeline) {
+    async function renderGridSourceChart(timeline) {
         const canvas = document.getElementById('gridSourceChart');
         if (!canvas) return;
 
@@ -3488,14 +3488,50 @@ Vui lòng kiểm tra:
             }
         });
 
+        // Fetch accurate totals from daily-energy API
+        const deviceId = window.CURRENT_DEVICE_ID || new URLSearchParams(window.location.search).get('id') || 'P250801055';
+        try {
+            const dailyEnergyUrl = `https://temperature-soc-power.applike098.workers.dev/api/realtime/daily-energy/${deviceId}`;
+            const response = await fetch(dailyEnergyUrl);
+            if (response.ok) {
+                const data = await response.json();
+                const summary = data.summary || data.today || {};
+
+                // Update KWh totals display
+                const gridPurchaseEl = document.getElementById('gridPurchaseTotal');
+                const essentialEl = document.getElementById('essentialBackupTotal');
+                const loadEl = document.getElementById('loadConsumptionTotal');
+
+                const gridKwh = summary.grid ?? summary.grid_in ?? 0;
+                const essentialKwh = summary.essential ?? 0;
+                const loadKwh = summary.load ?? summary.totalLoad ?? 0;
+
+                if (gridPurchaseEl) gridPurchaseEl.textContent = `${gridKwh.toFixed(1)} KWh`;
+                if (essentialEl) essentialEl.textContent = `${essentialKwh.toFixed(1)} KWh`;
+                if (loadEl) loadEl.textContent = `${loadKwh.toFixed(1)} KWh`;
+
+                console.log('✅ Grid Source totals updated from daily-energy API:', { gridKwh, essentialKwh, loadKwh });
+            }
+        } catch (err) {
+            console.warn('⚠️ Failed to fetch daily-energy for grid source totals:', err);
+        }
+
         if (gridSourceChartInstance) {
             gridSourceChartInstance.destroy();
         }
 
-        // Create gradient for grid feed-in area
-        const gradient = ctx.createLinearGradient(0, 0, 0, 280);
-        gradient.addColorStop(0, 'rgba(59, 130, 246, 0.6)');
-        gradient.addColorStop(1, 'rgba(59, 130, 246, 0.1)');
+        // Create gradients for all datasets
+        const blueGradient = ctx.createLinearGradient(0, 0, 0, 280);
+        blueGradient.addColorStop(0, 'rgba(59, 130, 246, 0.6)');
+        blueGradient.addColorStop(1, 'rgba(59, 130, 246, 0.1)');
+
+        const greenGradient = ctx.createLinearGradient(0, 0, 0, 280);
+        greenGradient.addColorStop(0, 'rgba(34, 197, 94, 0.5)');
+        greenGradient.addColorStop(1, 'rgba(34, 197, 94, 0.05)');
+
+        const amberGradient = ctx.createLinearGradient(0, 0, 0, 280);
+        amberGradient.addColorStop(0, 'rgba(245, 158, 11, 0.5)');
+        amberGradient.addColorStop(1, 'rgba(245, 158, 11, 0.05)');
 
         gridSourceChartInstance = new Chart(ctx, {
             type: 'line',
@@ -3506,7 +3542,7 @@ Vui lòng kiểm tra:
                         label: 'Tải hòa lưới',
                         data: gridFeedIn,
                         borderColor: '#3b82f6',
-                        backgroundColor: gradient,
+                        backgroundColor: blueGradient,
                         fill: true,
                         tension: 0.3,
                         pointRadius: 0,
@@ -3518,8 +3554,8 @@ Vui lòng kiểm tra:
                         label: 'Công suất cổng load',
                         data: loadPower,
                         borderColor: '#22c55e',
-                        backgroundColor: 'transparent',
-                        fill: false,
+                        backgroundColor: greenGradient,
+                        fill: true,
                         tension: 0.3,
                         pointRadius: 0,
                         pointHoverRadius: 12,
@@ -3530,8 +3566,8 @@ Vui lòng kiểm tra:
                         label: 'CS mua từ lưới',
                         data: gridPurchase,
                         borderColor: '#f59e0b',
-                        backgroundColor: 'transparent',
-                        fill: false,
+                        backgroundColor: amberGradient,
+                        fill: true,
                         tension: 0.3,
                         pointRadius: 0,
                         pointHoverRadius: 12,
@@ -3586,7 +3622,7 @@ Vui lòng kiểm tra:
             }
         });
 
-        console.log('✅ Grid Source Chart rendered');
+        console.log('✅ Grid Source Chart rendered with gradients');
     }
 
     // ========================================

@@ -4872,7 +4872,12 @@ Vui lòng kiểm tra:
                 responsive: true,
                 maintainAspectRatio: false,
                 animation: false,
-                onHover: (event, elements) => { if (elements.length) triggerHaptic(); },
+                onHover: (event, elements) => {
+                    if (elements.length) {
+                        console.log('🔔 SOC chart hover - triggering haptic');
+                        triggerHaptic();
+                    }
+                },
                 plugins: {
                     legend: { display: false },
                     tooltip: {

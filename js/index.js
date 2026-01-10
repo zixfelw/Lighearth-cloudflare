@@ -2822,7 +2822,9 @@ Vui lòng kiểm tra:
 
     // Global function to refresh all APIs when date changes
     window.refreshAllDataForDate = async function (date) {
-        const deviceId = deviceIdFromUrl || 'P250801055';
+        // Get deviceId from URL params
+        const urlParams = new URLSearchParams(window.location.search);
+        const deviceId = urlParams.get('deviceId') || 'P250801055';
         const formattedDate = date || new Date().toISOString().split('T')[0];
 
         console.log(`🔄 Refreshing ALL data for date: ${formattedDate}`);

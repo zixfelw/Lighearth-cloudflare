@@ -197,7 +197,7 @@ canvas:hover {
 }
 
 /* ========================================
-   CELL VOLTAGE PROGRESS BAR - Visual Balance Indicator
+   CELL VOLTAGE PROGRESS BAR - 3D Battery Fill
    ======================================== */
 
 .cell-item {
@@ -206,45 +206,51 @@ canvas:hover {
 
 .cell-voltage-bar {
     position: absolute;
-    bottom: 4px;
-    left: 4px;
-    right: 4px;
-    height: 8px;
-    border-radius: 4px;
-    background: rgba(0, 0, 0, 0.25);
+    bottom: 6px;
+    left: 6px;
+    right: 6px;
+    height: 10px;
+    border-radius: 5px;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.2) 100%);
     overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .cell-voltage-bar-fill {
     height: 100%;
     border-radius: 4px;
-    transition: width 0.3s ease, background 0.3s ease;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease;
     position: relative;
     overflow: hidden;
+    box-shadow:
+        inset 0 -2px 4px rgba(0, 0, 0, 0.2),
+        inset 0 2px 4px rgba(255, 255, 255, 0.25);
 }
 
+/* Shimmering highlight effect */
 .cell-voltage-bar-fill::after {
     content: '';
     position: absolute;
     top: 0;
-    left: -50%;
-    width: 30%;
+    left: -100%;
+    width: 50%;
     height: 100%;
-    background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.25) 50%, transparent 100%);
-    animation: bar-shimmer 2.5s ease-in-out infinite;
+    background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.4) 50%, transparent 100%);
+    animation: bar-shimmer 3s ease-in-out infinite;
 }
 
 @keyframes bar-shimmer {
     0% {
-        left: -30%;
+        left: -50%;
         opacity: 0;
     }
 
-    10% {
+    20% {
         opacity: 1;
     }
 
-    90% {
+    80% {
         opacity: 1;
     }
 
@@ -254,39 +260,65 @@ canvas:hover {
     }
 }
 
-/* LiFePO4 Voltage-based colors */
+/* LiFePO4 Voltage-based colors with 3D gradients */
 .cell-voltage-bar-fill.bar-critical {
-    background: linear-gradient(90deg, #ef4444, #dc2626);
+    background: linear-gradient(180deg, #f87171 0%, #dc2626 50%, #b91c1c 100%);
+    box-shadow:
+        inset 0 -2px 4px rgba(0, 0, 0, 0.3),
+        inset 0 2px 4px rgba(255, 255, 255, 0.2),
+        0 0 8px rgba(239, 68, 68, 0.5);
 }
 
 .cell-voltage-bar-fill.bar-low {
-    background: linear-gradient(90deg, #f97316, #ea580c);
+    background: linear-gradient(180deg, #fb923c 0%, #ea580c 50%, #c2410c 100%);
+    box-shadow:
+        inset 0 -2px 4px rgba(0, 0, 0, 0.3),
+        inset 0 2px 4px rgba(255, 255, 255, 0.2),
+        0 0 8px rgba(249, 115, 22, 0.5);
 }
 
 .cell-voltage-bar-fill.bar-medium {
-    background: linear-gradient(90deg, #eab308, #ca8a04);
+    background: linear-gradient(180deg, #facc15 0%, #ca8a04 50%, #a16207 100%);
+    box-shadow:
+        inset 0 -2px 4px rgba(0, 0, 0, 0.3),
+        inset 0 2px 4px rgba(255, 255, 255, 0.2),
+        0 0 8px rgba(234, 179, 8, 0.5);
 }
 
 .cell-voltage-bar-fill.bar-full {
-    background: linear-gradient(90deg, #3b82f6, #2563eb, #1d4ed8);
+    background: linear-gradient(180deg, #60a5fa 0%, #2563eb 50%, #1d4ed8 100%);
+    box-shadow:
+        inset 0 -2px 4px rgba(0, 0, 0, 0.3),
+        inset 0 2px 4px rgba(255, 255, 255, 0.25),
+        0 0 8px rgba(59, 130, 246, 0.5);
 }
 
-/* VIP Premium - Cyan/Teal gradient with shimmer for >= 3.35V */
+/* VIP Premium - Electric Cyan/Green gradient for >= 3.35V */
 .cell-voltage-bar-fill.bar-premium {
-    background: linear-gradient(90deg, #06b6d4, #0891b2, #0e7490);
-    box-shadow: 0 0 8px rgba(6, 182, 212, 0.5);
-    animation: premium-shimmer 2s ease-in-out infinite;
+    background: linear-gradient(180deg, #34d399 0%, #10b981 40%, #059669 100%);
+    box-shadow:
+        inset 0 -2px 4px rgba(0, 0, 0, 0.2),
+        inset 0 2px 4px rgba(255, 255, 255, 0.3),
+        0 0 12px rgba(16, 185, 129, 0.6);
+    animation: premium-glow 2s ease-in-out infinite;
 }
 
-@keyframes premium-shimmer {
+@keyframes premium-glow {
 
     0%,
     100% {
-        box-shadow: 0 0 8px rgba(6, 182, 212, 0.5);
+        box-shadow:
+            inset 0 -2px 4px rgba(0, 0, 0, 0.2),
+            inset 0 2px 4px rgba(255, 255, 255, 0.3),
+            0 0 12px rgba(16, 185, 129, 0.6);
     }
 
     50% {
-        box-shadow: 0 0 15px rgba(6, 182, 212, 0.8), 0 0 25px rgba(8, 145, 178, 0.4);
+        box-shadow:
+            inset 0 -2px 4px rgba(0, 0, 0, 0.2),
+            inset 0 2px 4px rgba(255, 255, 255, 0.4),
+            0 0 20px rgba(16, 185, 129, 0.8),
+            0 0 30px rgba(52, 211, 153, 0.4);
     }
 }
 
@@ -1011,80 +1043,176 @@ body:has(#mainHeader.header-hidden) #compactSearch {
 }
 
 /* ========================================
-   CELL SECTION - Enhanced
+   CELL SECTION - 3D Battery Style Design
    ======================================== */
 
 #cellGrid .grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
+    gap: 10px;
+    padding: 8px;
 }
 
 @media (min-width: 640px) {
     #cellGrid .grid {
         grid-template-columns: repeat(8, 1fr);
-        gap: 10px;
+        gap: 12px;
+        padding: 12px;
     }
 }
 
+/* 3D Battery Cell Card */
 .cell-item {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    padding: 8px 6px;
-    border-radius: var(--radius-md);
-    min-height: 55px;
-    transition: var(--transition-normal);
+    justify-content: flex-start;
+    padding: 10px 8px 14px;
+    border-radius: 12px;
+    min-height: 80px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
+    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.3),
+        0 2px 4px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+}
+
+.cell-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 50%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 100%);
+    pointer-events: none;
+}
+
+.cell-item:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.4),
+        0 4px 8px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .cell-item .cell-label {
-    font-size: 11px;
-    font-weight: 600;
-    opacity: 0.85;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 4px;
+    z-index: 1;
 }
 
 .cell-item .cell-voltage {
-    font-size: 13px;
-    font-weight: 700;
+    font-size: 15px;
+    font-weight: 800;
     font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    z-index: 1;
+    margin-bottom: 6px;
 }
 
 @media (min-width: 640px) {
     .cell-item {
-        min-height: 60px;
-        padding: 10px 8px;
+        min-height: 90px;
+        padding: 12px 10px 16px;
+        border-radius: 14px;
     }
 
     .cell-item .cell-label {
-        font-size: 12px;
+        font-size: 11px;
     }
 
     .cell-item .cell-voltage {
-        font-size: 14px;
+        font-size: 16px;
     }
 }
 
-/* Cell colors with refined gradients */
+/* Cell Status Colors - 3D Style with Gradient Overlays */
 .cell-good {
-    background: linear-gradient(135deg, #10b981, #059669);
-    color: white;
+    background: linear-gradient(180deg, #065f46 0%, #022c22 100%);
+    border-color: rgba(16, 185, 129, 0.4);
+    box-shadow:
+        0 4px 12px rgba(16, 185, 129, 0.25),
+        0 2px 4px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(16, 185, 129, 0.3);
+}
+
+.cell-good::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #10b981, #34d399);
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
 }
 
 .cell-ok {
-    background: linear-gradient(135deg, #f59e0b, #d97706);
-    color: white;
+    background: linear-gradient(180deg, #78350f 0%, #451a03 100%);
+    border-color: rgba(245, 158, 11, 0.4);
+    box-shadow:
+        0 4px 12px rgba(245, 158, 11, 0.25),
+        0 2px 4px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(245, 158, 11, 0.3);
+}
+
+.cell-ok::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.6);
 }
 
 .cell-warning {
-    background: linear-gradient(135deg, #f43f5e, #e11d48);
-    color: white;
+    background: linear-gradient(180deg, #7f1d1d 0%, #450a0a 100%);
+    border-color: rgba(239, 68, 68, 0.4);
+    box-shadow:
+        0 4px 12px rgba(239, 68, 68, 0.25),
+        0 2px 4px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(239, 68, 68, 0.3);
+    animation: warning-pulse 2s ease-in-out infinite;
+}
+
+.cell-warning::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #ef4444, #f87171);
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+}
+
+@keyframes warning-pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.85;
+    }
 }
 
 .cell-default {
-    background: linear-gradient(135deg, var(--bg-dark-700), var(--bg-dark-800));
-    color: white;
+    background: linear-gradient(180deg, #334155 0%, #1e293b 100%);
+    border-color: rgba(148, 163, 184, 0.2);
 }
 
 /* ========================================

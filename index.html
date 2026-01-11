@@ -3145,49 +3145,66 @@
                     </div>
                 </div>
 
-                <div id="cellSectionContent" class="p-3">
-                    <div class="grid grid-cols-5 gap-2 mb-3">
-                        <div
-                            class="bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/40 dark:to-indigo-900/40 rounded-lg p-2 text-center border border-blue-200 dark:border-blue-700">
-                            <div class="text-[8px] font-bold text-blue-600 dark:text-blue-400 uppercase">Điện Áp Pin
-                            </div>
-                            <div class="text-sm sm:text-lg font-black text-blue-700 dark:text-blue-300"
-                                id="batteryVoltageDisplay">--</div>
-                        </div>
-                        <div
-                            class="bg-gradient-to-br from-teal-100 to-cyan-100 dark:from-teal-900/40 dark:to-cyan-900/40 rounded-lg p-2 text-center border border-teal-200 dark:border-teal-700">
-                            <div class="text-[8px] font-bold text-teal-600 dark:text-teal-400 uppercase">Trung Bình
-                            </div>
-                            <div class="text-sm sm:text-lg font-black text-teal-700 dark:text-teal-300" id="cellAvg">--
+                <div id="cellSectionContent" class="p-4">
+                    <!-- Stats Row - 3D Glass Cards -->
+                    <div class="grid grid-cols-5 gap-2 sm:gap-3 mb-4">
+                        <!-- Điện Áp Pin -->
+                        <div class="relative bg-gradient-to-b from-slate-800 to-slate-900 rounded-xl p-2.5 sm:p-3 text-center border border-indigo-500/30 shadow-lg overflow-hidden group hover:scale-105 transition-transform">
+                            <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-400 via-blue-500 to-indigo-400"></div>
+                            <div class="absolute inset-0 bg-gradient-to-t from-transparent to-white/5"></div>
+                            <div class="relative z-10">
+                                <div class="text-[7px] sm:text-[9px] font-bold text-indigo-300 uppercase tracking-wide mb-1">Điện Áp Pin</div>
+                                <div class="text-sm sm:text-xl font-black text-white" id="batteryVoltageDisplay">--</div>
                             </div>
                         </div>
-                        <div
-                            class="bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/40 dark:to-indigo-900/40 rounded-lg p-2 text-center border border-blue-300 dark:border-blue-600">
-                            <div class="text-[8px] font-bold text-blue-600 dark:text-blue-400 uppercase">Cao Nhất Hiện
-                                Tại</div>
-                            <div class="text-sm sm:text-lg font-black text-blue-700 dark:text-blue-300" id="cellMax">--
+                        <!-- Trung Bình -->
+                        <div class="relative bg-gradient-to-b from-slate-800 to-slate-900 rounded-xl p-2.5 sm:p-3 text-center border border-teal-500/30 shadow-lg overflow-hidden group hover:scale-105 transition-transform">
+                            <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-teal-400 via-cyan-500 to-teal-400"></div>
+                            <div class="absolute inset-0 bg-gradient-to-t from-transparent to-white/5"></div>
+                            <div class="relative z-10">
+                                <div class="text-[7px] sm:text-[9px] font-bold text-teal-300 uppercase tracking-wide mb-1">Trung Bình</div>
+                                <div class="text-sm sm:text-xl font-black text-white" id="cellAvg">--</div>
                             </div>
                         </div>
-                        <div
-                            class="bg-gradient-to-br from-amber-100 to-yellow-100 dark:from-amber-900/40 dark:to-yellow-900/40 rounded-lg p-2 text-center border border-amber-200 dark:border-amber-700">
-                            <div class="text-[8px] font-bold text-amber-600 dark:text-amber-400 uppercase">Thấp Nhất
-                                Hiện Tại</div>
-                            <div class="text-sm sm:text-lg font-black text-amber-700 dark:text-amber-300" id="cellMin">
-                                --</div>
+                        <!-- Cao Nhất -->
+                        <div class="relative bg-gradient-to-b from-slate-800 to-slate-900 rounded-xl p-2.5 sm:p-3 text-center border border-blue-500/30 shadow-lg overflow-hidden group hover:scale-105 transition-transform">
+                            <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 via-sky-500 to-blue-400"></div>
+                            <div class="absolute inset-0 bg-gradient-to-t from-transparent to-white/5"></div>
+                            <div class="relative z-10">
+                                <div class="text-[7px] sm:text-[9px] font-bold text-blue-300 uppercase tracking-wide mb-1">Cao Nhất</div>
+                                <div class="text-sm sm:text-xl font-black text-white" id="cellMax">--</div>
+                            </div>
                         </div>
-                        <div
-                            class="bg-gradient-to-br from-rose-100 to-red-100 dark:from-rose-900/40 dark:to-red-900/40 rounded-lg p-2 text-center border border-rose-200 dark:border-rose-700">
-                            <div class="text-[8px] font-bold text-rose-600 dark:text-rose-400 uppercase">Độ Lệch</div>
-                            <div class="text-sm sm:text-lg font-black" id="cellDiffValue">--</div>
+                        <!-- Thấp Nhất -->
+                        <div class="relative bg-gradient-to-b from-slate-800 to-slate-900 rounded-xl p-2.5 sm:p-3 text-center border border-amber-500/30 shadow-lg overflow-hidden group hover:scale-105 transition-transform">
+                            <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-400"></div>
+                            <div class="absolute inset-0 bg-gradient-to-t from-transparent to-white/5"></div>
+                            <div class="relative z-10">
+                                <div class="text-[7px] sm:text-[9px] font-bold text-amber-300 uppercase tracking-wide mb-1">Thấp Nhất</div>
+                                <div class="text-sm sm:text-xl font-black text-white" id="cellMin">--</div>
+                            </div>
+                        </div>
+                        <!-- Độ Lệch -->
+                        <div class="relative bg-gradient-to-b from-slate-800 to-slate-900 rounded-xl p-2.5 sm:p-3 text-center border border-rose-500/30 shadow-lg overflow-hidden group hover:scale-105 transition-transform">
+                            <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-rose-400 via-pink-500 to-rose-400"></div>
+                            <div class="absolute inset-0 bg-gradient-to-t from-transparent to-white/5"></div>
+                            <div class="relative z-10">
+                                <div class="text-[7px] sm:text-[9px] font-bold text-rose-300 uppercase tracking-wide mb-1">Độ Lệch</div>
+                                <div class="text-sm sm:text-xl font-black" id="cellDiffValue">--</div>
+                            </div>
                         </div>
                     </div>
 
-                    <div
-                        class="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-2 sm:p-3 border border-slate-200 dark:border-slate-700">
+                    <!-- Cell Grid Container -->
+                    <div class="bg-gradient-to-b from-slate-900/80 to-black/60 rounded-2xl p-3 sm:p-4 border border-slate-700/50 shadow-2xl">
                         <div id="cellGrid">
-                            <div
-                                class="cell-placeholder bg-slate-100 dark:bg-slate-800 rounded-lg h-16 flex items-center justify-center">
-                                <span class="text-slate-400 text-xs">Đang chờ dữ liệu cell...</span>
+                            <div class="cell-placeholder bg-slate-800/50 rounded-xl h-20 flex items-center justify-center border border-dashed border-slate-600">
+                                <span class="text-slate-500 text-xs flex items-center gap-2">
+                                    <svg class="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                    </svg>
+                                    Đang chờ dữ liệu cell...
+                                </span>
                             </div>
                         </div>
                     </div>

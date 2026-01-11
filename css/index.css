@@ -1159,12 +1159,12 @@ body:has(#mainHeader.header-hidden) #compactSearch {
 }
 
 .cell-ok {
-    background: linear-gradient(180deg, #78350f 0%, #451a03 100%);
-    border-color: rgba(245, 158, 11, 0.4);
+    background: linear-gradient(180deg, #b45309 0%, #92400e 50%, #78350f 100%);
+    border-color: rgba(251, 191, 36, 0.5);
     box-shadow:
-        0 4px 12px rgba(245, 158, 11, 0.25),
+        0 4px 12px rgba(245, 158, 11, 0.35),
         0 2px 4px rgba(0, 0, 0, 0.2),
-        inset 0 1px 0 rgba(245, 158, 11, 0.3);
+        inset 0 1px 0 rgba(251, 191, 36, 0.4);
 }
 
 .cell-ok::after {
@@ -1173,9 +1173,9 @@ body:has(#mainHeader.header-hidden) #compactSearch {
     bottom: 0;
     left: 0;
     right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, #f59e0b, #fbbf24);
-    box-shadow: 0 0 10px rgba(245, 158, 11, 0.6);
+    height: 4px;
+    background: linear-gradient(90deg, #fbbf24, #fcd34d, #fbbf24);
+    box-shadow: 0 0 12px rgba(251, 191, 36, 0.7);
 }
 
 .cell-warning {

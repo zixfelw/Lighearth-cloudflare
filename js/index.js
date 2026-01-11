@@ -2476,7 +2476,7 @@ Vui lòng kiểm tra:
                     chargeDay: source.charge !== undefined ? source.charge : (source.charge_day !== undefined ? source.charge_day : 0),
                     dischargeDay: source.discharge !== undefined ? source.discharge : (source.discharge_day !== undefined ? source.discharge_day : 0),
                     loadDay: source.load !== undefined ? source.load : (source.total_load_day !== undefined ? source.total_load_day : (source.load_day || 0)),
-                    gridDay: source.gridIn !== undefined ? source.gridIn : (source.grid_day !== undefined ? source.grid_day : 0),
+                    gridDay: source.grid !== undefined ? source.grid : (source.gridIn !== undefined ? source.gridIn : (source.grid_in !== undefined ? source.grid_in : (source.grid_day !== undefined ? source.grid_day : 0))),
                     essentialDay: source.essential !== undefined ? source.essential : (source.essential_day !== undefined ? source.essential_day : 0)
                 };
 

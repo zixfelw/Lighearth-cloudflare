@@ -1078,7 +1078,8 @@ body:has(#mainHeader.header-hidden) #compactSearch {
         0 4px 12px rgba(0, 0, 0, 0.3),
         0 2px 4px rgba(0, 0, 0, 0.2),
         inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    overflow: hidden;
+    overflow: visible;
+    margin-top: 8px;
 }
 
 .cell-item::before {
@@ -1138,12 +1139,12 @@ body:has(#mainHeader.header-hidden) #compactSearch {
 
 /* Cell Status Colors - 3D Style with Gradient Overlays */
 .cell-good {
-    background: linear-gradient(180deg, #065f46 0%, #022c22 100%);
-    border-color: rgba(16, 185, 129, 0.4);
+    background: linear-gradient(180deg, #0d9488 0%, #0f766e 50%, #115e59 100%);
+    border-color: rgba(20, 184, 166, 0.5);
     box-shadow:
-        0 4px 12px rgba(16, 185, 129, 0.25),
+        0 4px 12px rgba(20, 184, 166, 0.35),
         0 2px 4px rgba(0, 0, 0, 0.2),
-        inset 0 1px 0 rgba(16, 185, 129, 0.3);
+        inset 0 1px 0 rgba(94, 234, 212, 0.4);
 }
 
 .cell-good::after {
@@ -1152,9 +1153,9 @@ body:has(#mainHeader.header-hidden) #compactSearch {
     bottom: 0;
     left: 0;
     right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, #10b981, #34d399);
-    box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
+    height: 4px;
+    background: linear-gradient(90deg, #2dd4bf, #5eead4, #2dd4bf);
+    box-shadow: 0 0 12px rgba(45, 212, 191, 0.7);
 }
 
 .cell-ok {
@@ -1221,17 +1222,18 @@ body:has(#mainHeader.header-hidden) #compactSearch {
 
 .cell-badge {
     position: absolute;
-    top: -6px;
+    top: -10px;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 7px;
+    font-size: 8px;
     font-weight: 800;
-    padding: 2px 6px;
-    border-radius: 4px;
+    padding: 3px 8px;
+    border-radius: 6px;
     white-space: nowrap;
-    z-index: 10;
+    z-index: 20;
     letter-spacing: 0.5px;
-    box-shadow: var(--shadow-md);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 @media (min-width: 640px) {

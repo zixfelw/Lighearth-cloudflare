@@ -1150,13 +1150,13 @@ body:has(#mainHeader.header-hidden) #compactSearch {
 .cell-good::after {
     content: '';
     position: absolute;
-    bottom: 1px;
-    left: 1px;
-    right: 1px;
+    bottom: 0;
+    left: 0;
+    right: 0;
     height: 4px;
     background: linear-gradient(90deg, #2dd4bf, #5eead4, #2dd4bf);
     box-shadow: 0 0 12px rgba(45, 212, 191, 0.7);
-    border-radius: 0 0 10px 10px;
+    border-radius: 0 0 12px 12px;
 }
 
 .cell-ok {
@@ -1171,13 +1171,13 @@ body:has(#mainHeader.header-hidden) #compactSearch {
 .cell-ok::after {
     content: '';
     position: absolute;
-    bottom: 1px;
-    left: 1px;
-    right: 1px;
+    bottom: 0;
+    left: 0;
+    right: 0;
     height: 4px;
     background: linear-gradient(90deg, #fbbf24, #fcd34d, #fbbf24);
     box-shadow: 0 0 12px rgba(251, 191, 36, 0.7);
-    border-radius: 0 0 10px 10px;
+    border-radius: 0 0 12px 12px;
 }
 
 .cell-warning {
@@ -1193,13 +1193,13 @@ body:has(#mainHeader.header-hidden) #compactSearch {
 .cell-warning::after {
     content: '';
     position: absolute;
-    bottom: 1px;
-    left: 1px;
-    right: 1px;
+    bottom: 0;
+    left: 0;
+    right: 0;
     height: 4px;
     background: linear-gradient(90deg, #ef4444, #f87171);
     box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
-    border-radius: 0 0 10px 10px;
+    border-radius: 0 0 12px 12px;
 }
 
 @keyframes warning-pulse {

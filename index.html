@@ -3123,6 +3123,13 @@
                                 <p class="text-[10px] text-teal-600 dark:text-teal-400 font-medium">Giám sát từng cell
                                 </p>
                             </div>
+                            <!-- Theme Switcher Button -->
+                            <button id="cellThemeToggle" onclick="toggleCellTheme()"
+                                class="ml-2 px-2.5 py-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white text-[9px] font-bold rounded-lg shadow-lg transition-all hover:scale-105 flex items-center gap-1.5"
+                                title="Chuyển theme hiển thị cell">
+                                <i data-lucide="palette" class="w-3 h-3"></i>
+                                <span id="cellThemeLabel">Basic</span>
+                            </button>
                         </div>
                         <div class="flex items-center gap-2">
                             <span id="cellCountBadge"
@@ -4327,6 +4334,53 @@
                 localStorage.theme = 'dark'; // Save default preference
             }
         }
+
+        // Cell Voltage Theme Management
+        // Themes: 'basic' (default) and 'neon' (Neon Cyberpunk)
+        let currentCellTheme = localStorage.getItem('cellTheme') || 'basic';
+
+        // Apply saved cell theme on load
+        function applyCellTheme(theme) {
+            const section = document.getElementById('batteryCellSection');
+            const label = document.getElementById('cellThemeLabel');
+            const toggleBtn = document.getElementById('cellThemeToggle');
+
+            if (section) {
+                section.classList.remove('cell-theme-basic', 'cell-theme-neon');
+                section.classList.add(`cell-theme-${theme}`);
+            }
+
+            if (label) {
+                label.textContent = theme === 'neon' ? 'Neon' : 'Basic';
+            }
+
+            if (toggleBtn) {
+                if (theme === 'neon') {
+                    toggleBtn.classList.remove('from-purple-500', 'to-pink-500', 'hover:from-purple-600', 'hover:to-pink-600');
+                    toggleBtn.classList.add('from-cyan-500', 'to-purple-500', 'hover:from-cyan-600', 'hover:to-purple-600');
+                } else {
+                    toggleBtn.classList.remove('from-cyan-500', 'to-purple-500', 'hover:from-cyan-600', 'hover:to-purple-600');
+                    toggleBtn.classList.add('from-purple-500', 'to-pink-500', 'hover:from-purple-600', 'hover:to-pink-600');
+                }
+            }
+
+            currentCellTheme = theme;
+            localStorage.setItem('cellTheme', theme);
+        }
+
+        // Toggle between themes
+        function toggleCellTheme() {
+            const newTheme = currentCellTheme === 'basic' ? 'neon' : 'basic';
+            applyCellTheme(newTheme);
+
+            // Re-initialize lucide icons in case any changed
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+
+        // Apply theme on DOM ready
+        setTimeout(() => applyCellTheme(currentCellTheme), 100);
 
         // Function to update 3D house image based on theme
         function updateHouse3DImage() {

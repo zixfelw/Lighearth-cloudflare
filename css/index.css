@@ -1289,6 +1289,158 @@ html:not(.dark) .cell-voltage-bar {
 }
 
 /* ========================================
+   NEON CYBERPUNK THEME
+   ======================================== */
+
+/* Neon theme container */
+.cell-theme-neon #cellGrid {
+    background: linear-gradient(135deg, #0a0a0f 0%, #1a0a2e 100%);
+    border: 1px solid rgba(236, 72, 153, 0.3);
+    box-shadow:
+        0 0 20px rgba(139, 92, 246, 0.2),
+        inset 0 0 40px rgba(6, 182, 212, 0.05);
+}
+
+/* Neon cell items - base */
+.cell-theme-neon .cell-item {
+    background: linear-gradient(180deg, rgba(15, 15, 25, 0.95) 0%, rgba(5, 5, 15, 0.98) 100%);
+    border: 2px solid transparent;
+    border-image: linear-gradient(135deg, #06b6d4, #8b5cf6, #ec4899) 1;
+    border-radius: 12px;
+    box-shadow:
+        0 0 15px rgba(139, 92, 246, 0.4),
+        inset 0 0 20px rgba(6, 182, 212, 0.1);
+    animation: neon-pulse 3s ease-in-out infinite;
+    margin-top: 8px;
+}
+
+.cell-theme-neon .cell-item::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(135deg, #06b6d4, #8b5cf6, #ec4899, #06b6d4);
+    border-radius: 14px;
+    z-index: -1;
+    opacity: 0.5;
+    filter: blur(8px);
+}
+
+.cell-theme-neon .cell-item::after {
+    display: none;
+}
+
+@keyframes neon-pulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 15px rgba(139, 92, 246, 0.4), inset 0 0 20px rgba(6, 182, 212, 0.1);
+    }
+
+    50% {
+        box-shadow: 0 0 25px rgba(139, 92, 246, 0.6), inset 0 0 30px rgba(6, 182, 212, 0.2);
+    }
+}
+
+.cell-theme-neon .cell-item .cell-label {
+    color: #a5b4fc;
+    text-shadow: 0 0 10px rgba(165, 180, 252, 0.5);
+}
+
+.cell-theme-neon .cell-item .cell-voltage {
+    color: #fff;
+    text-shadow:
+        0 0 10px rgba(6, 182, 212, 0.8),
+        0 0 20px rgba(139, 92, 246, 0.6);
+    font-weight: 900;
+}
+
+/* Neon cell status colors */
+.cell-theme-neon .cell-good {
+    border-image: linear-gradient(135deg, #00ff88, #00ffdd) 1;
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+}
+
+.cell-theme-neon .cell-ok {
+    border-image: linear-gradient(135deg, #ffaa00, #ff6600) 1;
+    box-shadow: 0 0 20px rgba(255, 170, 0, 0.5);
+}
+
+.cell-theme-neon .cell-warning {
+    border-image: linear-gradient(135deg, #ff0066, #ff3399) 1;
+    box-shadow: 0 0 20px rgba(255, 0, 102, 0.6);
+    animation: neon-warning 1s ease-in-out infinite;
+}
+
+@keyframes neon-warning {
+
+    0%,
+    100% {
+        box-shadow: 0 0 20px rgba(255, 0, 102, 0.6);
+    }
+
+    50% {
+        box-shadow: 0 0 35px rgba(255, 0, 102, 0.9), 0 0 50px rgba(255, 51, 153, 0.4);
+    }
+}
+
+/* Neon progress bar */
+.cell-theme-neon .cell-voltage-bar {
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.cell-theme-neon .cell-voltage-bar-fill {
+    background: linear-gradient(90deg, #06b6d4, #8b5cf6, #ec4899);
+    box-shadow: 0 0 10px rgba(139, 92, 246, 0.6);
+}
+
+.cell-theme-neon .cell-voltage-bar-fill.bar-premium {
+    background: linear-gradient(90deg, #00ff88, #00ffdd, #00ff88);
+    box-shadow: 0 0 15px rgba(0, 255, 136, 0.7);
+    animation: neon-bar-glow 2s ease-in-out infinite;
+}
+
+@keyframes neon-bar-glow {
+
+    0%,
+    100% {
+        box-shadow: 0 0 15px rgba(0, 255, 136, 0.7);
+    }
+
+    50% {
+        box-shadow: 0 0 25px rgba(0, 255, 221, 0.9);
+    }
+}
+
+/* Neon badges */
+.cell-theme-neon .cell-badge {
+    background: linear-gradient(135deg, #ec4899, #8b5cf6);
+    border: 1px solid #fff;
+    box-shadow: 0 0 15px rgba(236, 72, 153, 0.6);
+}
+
+.cell-theme-neon .cell-badge-max {
+    background: linear-gradient(135deg, #00ff88, #00cc66);
+    box-shadow: 0 0 15px rgba(0, 255, 136, 0.7);
+}
+
+.cell-theme-neon .cell-badge-min {
+    background: linear-gradient(135deg, #ff6600, #ff3300);
+    box-shadow: 0 0 15px rgba(255, 102, 0, 0.7);
+}
+
+/* Neon stats cards */
+.cell-theme-neon .cell-stat-card {
+    background: linear-gradient(180deg, rgba(15, 15, 25, 0.95) 0%, rgba(5, 5, 15, 0.98) 100%) !important;
+    border: 1px solid rgba(139, 92, 246, 0.4) !important;
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.2) !important;
+}
+
+.cell-theme-neon .cell-stat-card>div:first-child {
+    background: linear-gradient(90deg, #ec4899, #8b5cf6, #06b6d4) !important;
+}
+
+/* ========================================
    CELL MAX/MIN HIGHLIGHT
    ======================================== */
 

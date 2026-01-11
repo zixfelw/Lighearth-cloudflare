@@ -1289,155 +1289,215 @@ html:not(.dark) .cell-voltage-bar {
 }
 
 /* ========================================
-   NEON CYBERPUNK THEME
+   CIRCULAR GAUGE THEME
    ======================================== */
 
-/* Neon theme container */
-.cell-theme-neon #cellGrid {
-    background: linear-gradient(135deg, #0a0a0f 0%, #1a0a2e 100%);
-    border: 1px solid rgba(236, 72, 153, 0.3);
-    box-shadow:
-        0 0 20px rgba(139, 92, 246, 0.2),
-        inset 0 0 40px rgba(6, 182, 212, 0.05);
+/* Gauge theme container - dark background */
+.cell-theme-gauge #cellGrid {
+    background: linear-gradient(180deg, #0f172a 0%, #020617 100%);
+    border: 1px solid rgba(59, 130, 246, 0.2);
 }
 
-/* Neon cell items - base */
-.cell-theme-neon .cell-item {
-    background: linear-gradient(180deg, rgba(15, 15, 25, 0.95) 0%, rgba(5, 5, 15, 0.98) 100%);
-    border: 2px solid transparent;
-    border-image: linear-gradient(135deg, #06b6d4, #8b5cf6, #ec4899) 1;
-    border-radius: 12px;
-    box-shadow:
-        0 0 15px rgba(139, 92, 246, 0.4),
-        inset 0 0 20px rgba(6, 182, 212, 0.1);
-    animation: neon-pulse 3s ease-in-out infinite;
-    margin-top: 8px;
+/* Gauge grid layout */
+.cell-theme-gauge #cellGrid .grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    padding: 16px;
 }
 
-.cell-theme-neon .cell-item::before {
-    content: '';
-    position: absolute;
-    inset: -2px;
-    background: linear-gradient(135deg, #06b6d4, #8b5cf6, #ec4899, #06b6d4);
-    border-radius: 14px;
-    z-index: -1;
-    opacity: 0.5;
-    filter: blur(8px);
+@media (min-width: 640px) {
+    .cell-theme-gauge #cellGrid .grid {
+        grid-template-columns: repeat(8, 1fr);
+        gap: 16px;
+    }
 }
 
-.cell-theme-neon .cell-item::after {
+/* Gauge cell item - circular container */
+.cell-theme-gauge .cell-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 4px;
+    min-height: auto;
+    position: relative;
+    margin-top: 0;
+}
+
+.cell-theme-gauge .cell-item::before,
+.cell-theme-gauge .cell-item::after {
     display: none;
 }
 
-@keyframes neon-pulse {
+/* Gauge wrapper */
+.cell-gauge-wrapper {
+    position: relative;
+    width: 70px;
+    height: 70px;
+}
 
-    0%,
-    100% {
-        box-shadow: 0 0 15px rgba(139, 92, 246, 0.4), inset 0 0 20px rgba(6, 182, 212, 0.1);
-    }
-
-    50% {
-        box-shadow: 0 0 25px rgba(139, 92, 246, 0.6), inset 0 0 30px rgba(6, 182, 212, 0.2);
+@media (min-width: 640px) {
+    .cell-gauge-wrapper {
+        width: 85px;
+        height: 85px;
     }
 }
 
-.cell-theme-neon .cell-item .cell-label {
-    color: #a5b4fc;
-    text-shadow: 0 0 10px rgba(165, 180, 252, 0.5);
+/* SVG Gauge circle */
+.cell-gauge-svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
 }
 
-.cell-theme-neon .cell-item .cell-voltage {
+.cell-gauge-bg {
+    fill: none;
+    stroke: rgba(71, 85, 105, 0.4);
+    stroke-width: 6;
+}
+
+.cell-gauge-progress {
+    fill: none;
+    stroke-width: 6;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.5s ease, stroke 0.3s ease;
+}
+
+/* Gauge center content */
+.cell-gauge-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    z-index: 5;
+}
+
+.cell-theme-gauge .cell-label {
+    font-size: 9px;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 1px;
+}
+
+.cell-theme-gauge .cell-voltage {
+    font-size: 11px;
+    font-weight: 800;
     color: #fff;
-    text-shadow:
-        0 0 10px rgba(6, 182, 212, 0.8),
-        0 0 20px rgba(139, 92, 246, 0.6);
-    font-weight: 900;
+    font-family: 'SF Mono', 'Monaco', monospace;
 }
 
-/* Neon cell status colors */
-.cell-theme-neon .cell-good {
-    border-image: linear-gradient(135deg, #00ff88, #00ffdd) 1;
-    box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+@media (min-width: 640px) {
+    .cell-theme-gauge .cell-label {
+        font-size: 10px;
+    }
+
+    .cell-theme-gauge .cell-voltage {
+        font-size: 13px;
+    }
 }
 
-.cell-theme-neon .cell-ok {
-    border-image: linear-gradient(135deg, #ffaa00, #ff6600) 1;
-    box-shadow: 0 0 20px rgba(255, 170, 0, 0.5);
+/* Gauge color classes */
+.gauge-critical {
+    stroke: url(#gaugeGradientRed);
 }
 
-.cell-theme-neon .cell-warning {
-    border-image: linear-gradient(135deg, #ff0066, #ff3399) 1;
-    box-shadow: 0 0 20px rgba(255, 0, 102, 0.6);
-    animation: neon-warning 1s ease-in-out infinite;
+.gauge-low {
+    stroke: url(#gaugeGradientOrange);
 }
 
-@keyframes neon-warning {
+.gauge-medium {
+    stroke: url(#gaugeGradientYellow);
+}
+
+.gauge-full {
+    stroke: url(#gaugeGradientBlue);
+}
+
+.gauge-premium {
+    stroke: url(#gaugeGradientGreen);
+}
+
+/* Gauge glow effects */
+.cell-theme-gauge .cell-item.cell-good .cell-gauge-progress {
+    filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.6));
+}
+
+.cell-theme-gauge .cell-item.cell-ok .cell-gauge-progress {
+    filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.6));
+}
+
+.cell-theme-gauge .cell-item.cell-warning .cell-gauge-progress {
+    filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.7));
+    animation: gauge-warning-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes gauge-warning-pulse {
 
     0%,
     100% {
-        box-shadow: 0 0 20px rgba(255, 0, 102, 0.6);
+        filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.7));
     }
 
     50% {
-        box-shadow: 0 0 35px rgba(255, 0, 102, 0.9), 0 0 50px rgba(255, 51, 153, 0.4);
+        filter: drop-shadow(0 0 12px rgba(239, 68, 68, 0.9));
     }
 }
 
-/* Neon progress bar */
-.cell-theme-neon .cell-voltage-bar {
-    background: rgba(0, 0, 0, 0.6);
-    border: 1px solid rgba(139, 92, 246, 0.3);
+/* Gauge badges */
+.cell-theme-gauge .cell-badge {
+    top: -4px;
+    font-size: 7px;
+    padding: 2px 5px;
+    z-index: 10;
 }
 
-.cell-theme-neon .cell-voltage-bar-fill {
-    background: linear-gradient(90deg, #06b6d4, #8b5cf6, #ec4899);
-    box-shadow: 0 0 10px rgba(139, 92, 246, 0.6);
+.cell-theme-gauge .cell-badge-max {
+    background: linear-gradient(135deg, #10b981, #059669);
 }
 
-.cell-theme-neon .cell-voltage-bar-fill.bar-premium {
-    background: linear-gradient(90deg, #00ff88, #00ffdd, #00ff88);
-    box-shadow: 0 0 15px rgba(0, 255, 136, 0.7);
-    animation: neon-bar-glow 2s ease-in-out infinite;
+.cell-theme-gauge .cell-badge-min {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
 }
 
-@keyframes neon-bar-glow {
-
-    0%,
-    100% {
-        box-shadow: 0 0 15px rgba(0, 255, 136, 0.7);
-    }
-
-    50% {
-        box-shadow: 0 0 25px rgba(0, 255, 221, 0.9);
-    }
+/* Hide progress bar in gauge mode */
+.cell-theme-gauge .cell-voltage-bar {
+    display: none;
 }
 
-/* Neon badges */
-.cell-theme-neon .cell-badge {
-    background: linear-gradient(135deg, #ec4899, #8b5cf6);
-    border: 1px solid #fff;
-    box-shadow: 0 0 15px rgba(236, 72, 153, 0.6);
+/* Gauge stats cards */
+.cell-theme-gauge .cell-stat-card {
+    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%) !important;
+    border: 1px solid rgba(59, 130, 246, 0.3) !important;
 }
 
-.cell-theme-neon .cell-badge-max {
-    background: linear-gradient(135deg, #00ff88, #00cc66);
-    box-shadow: 0 0 15px rgba(0, 255, 136, 0.7);
+/* Visibility toggles for Basic vs Gauge mode */
+/* Default: hide gauge, show basic */
+.cell-gauge-wrapper {
+    display: none;
 }
 
-.cell-theme-neon .cell-badge-min {
-    background: linear-gradient(135deg, #ff6600, #ff3300);
-    box-shadow: 0 0 15px rgba(255, 102, 0, 0.7);
+.basic-only {
+    display: block;
 }
 
-/* Neon stats cards */
-.cell-theme-neon .cell-stat-card {
-    background: linear-gradient(180deg, rgba(15, 15, 25, 0.95) 0%, rgba(5, 5, 15, 0.98) 100%) !important;
-    border: 1px solid rgba(139, 92, 246, 0.4) !important;
-    box-shadow: 0 0 15px rgba(139, 92, 246, 0.2) !important;
+/* Gauge mode: show gauge, hide basic */
+.cell-theme-gauge .cell-gauge-wrapper {
+    display: block;
 }
 
-.cell-theme-neon .cell-stat-card>div:first-child {
-    background: linear-gradient(90deg, #ec4899, #8b5cf6, #06b6d4) !important;
+.cell-theme-gauge .basic-only {
+    display: none;
+}
+
+.cell-theme-gauge .cell-voltage-bar {
+    display: none;
 }
 
 /* ========================================

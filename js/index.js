@@ -5746,16 +5746,37 @@ Vui lòng kiểm tra:
 
                     // Color based on LiFePO4 voltage thresholds
                     let barColorClass = 'bar-premium'; // >= 3.35V VIP
-                    if (voltage < 3.0) barColorClass = 'bar-critical';
-                    else if (voltage < 3.1) barColorClass = 'bar-low';
-                    else if (voltage < 3.2) barColorClass = 'bar-medium';
-                    else if (voltage < 3.35) barColorClass = 'bar-full';
+                    let gaugeColor = '#10b981'; // green
+                    if (voltage < 3.0) { barColorClass = 'bar-critical'; gaugeColor = '#ef4444'; }
+                    else if (voltage < 3.1) { barColorClass = 'bar-low'; gaugeColor = '#f97316'; }
+                    else if (voltage < 3.2) { barColorClass = 'bar-medium'; gaugeColor = '#eab308'; }
+                    else if (voltage < 3.35) { barColorClass = 'bar-full'; gaugeColor = '#3b82f6'; }
+
+                    // SVG Gauge calculations
+                    const radius = 28;
+                    const circumference = 2 * Math.PI * radius;
+                    const dashOffset = circumference - (barPercent / 100) * circumference;
 
                     gridHtml += `
                         <div class="cell-item ${colorClass} ${blinkClass} ${highlightClass}">
                             ${badge}
-                            <span class="cell-label">Cell ${index + 1}</span>
-                            <span class="cell-voltage">${voltage.toFixed(3)}V</span>
+                            <!-- Gauge SVG (visible in gauge theme) -->
+                            <div class="cell-gauge-wrapper">
+                                <svg class="cell-gauge-svg" viewBox="0 0 70 70">
+                                    <circle class="cell-gauge-bg" cx="35" cy="35" r="${radius}"/>
+                                    <circle class="cell-gauge-progress" cx="35" cy="35" r="${radius}" 
+                                        stroke="${gaugeColor}"
+                                        stroke-dasharray="${circumference}"
+                                        stroke-dashoffset="${dashOffset}"/>
+                                </svg>
+                                <div class="cell-gauge-center">
+                                    <span class="cell-label">Cell ${index + 1}</span>
+                                    <span class="cell-voltage">${voltage.toFixed(3)}V</span>
+                                </div>
+                            </div>
+                            <!-- Basic mode elements (hidden in gauge theme) -->
+                            <span class="cell-label basic-only">Cell ${index + 1}</span>
+                            <span class="cell-voltage basic-only">${voltage.toFixed(3)}V</span>
                             <div class="cell-voltage-bar">
                                 <div class="cell-voltage-bar-fill ${barColorClass}" style="width: ${barPercent.toFixed(1)}%"></div>
                             </div>

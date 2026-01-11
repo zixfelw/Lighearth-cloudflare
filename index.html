@@ -4336,7 +4336,7 @@
         }
 
         // Cell Voltage Theme Management
-        // Themes: 'basic' (default) and 'neon' (Neon Cyberpunk)
+        // Themes: 'basic' (default) and 'gauge' (Circular Gauge)
         let currentCellTheme = localStorage.getItem('cellTheme') || 'basic';
 
         // Apply saved cell theme on load
@@ -4346,20 +4346,20 @@
             const toggleBtn = document.getElementById('cellThemeToggle');
 
             if (section) {
-                section.classList.remove('cell-theme-basic', 'cell-theme-neon');
+                section.classList.remove('cell-theme-basic', 'cell-theme-gauge');
                 section.classList.add(`cell-theme-${theme}`);
             }
 
             if (label) {
-                label.textContent = theme === 'neon' ? 'Neon' : 'Basic';
+                label.textContent = theme === 'gauge' ? 'Gauge' : 'Basic';
             }
 
             if (toggleBtn) {
-                if (theme === 'neon') {
+                if (theme === 'gauge') {
                     toggleBtn.classList.remove('from-purple-500', 'to-pink-500', 'hover:from-purple-600', 'hover:to-pink-600');
-                    toggleBtn.classList.add('from-cyan-500', 'to-purple-500', 'hover:from-cyan-600', 'hover:to-purple-600');
+                    toggleBtn.classList.add('from-blue-500', 'to-teal-500', 'hover:from-blue-600', 'hover:to-teal-600');
                 } else {
-                    toggleBtn.classList.remove('from-cyan-500', 'to-purple-500', 'hover:from-cyan-600', 'hover:to-purple-600');
+                    toggleBtn.classList.remove('from-blue-500', 'to-teal-500', 'hover:from-blue-600', 'hover:to-teal-600');
                     toggleBtn.classList.add('from-purple-500', 'to-pink-500', 'hover:from-purple-600', 'hover:to-pink-600');
                 }
             }
@@ -4370,7 +4370,7 @@
 
         // Toggle between themes
         function toggleCellTheme() {
-            const newTheme = currentCellTheme === 'basic' ? 'neon' : 'basic';
+            const newTheme = currentCellTheme === 'basic' ? 'gauge' : 'basic';
             applyCellTheme(newTheme);
 
             // Re-initialize lucide icons in case any changed

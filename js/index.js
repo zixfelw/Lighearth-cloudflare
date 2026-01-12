@@ -671,13 +671,34 @@ document.addEventListener('DOMContentLoaded', function () {
         energyDatePicker.value = today.toISOString().split('T')[0];
     }
 
-    // Get deviceId from URL parameter
+    // Get deviceId from URL parameter OR localStorage
     const urlParams = new URLSearchParams(window.location.search);
-    const deviceIdParam = urlParams.get('deviceId');
+    let deviceIdParam = urlParams.get('deviceId');
+
+    // If no deviceId in URL, try to load from localStorage
+    if (!deviceIdParam) {
+        deviceIdParam = localStorage.getItem('savedDeviceId');
+        console.log('📱 Loaded deviceId from localStorage:', deviceIdParam);
+    }
+
     if (deviceIdParam) {
+        // Save to localStorage for future visits (PWA install)
+        localStorage.setItem('savedDeviceId', deviceIdParam);
+        console.log('💾 Saved deviceId to localStorage:', deviceIdParam);
+
         const deviceIdInput = document.getElementById('deviceId');
         if (deviceIdInput) {
             deviceIdInput.value = deviceIdParam;
+        }
+
+        // Auto-fetch data if deviceId was restored from localStorage (not in URL)
+        if (!urlParams.get('deviceId')) {
+            console.log('🔄 Auto-fetching data for saved device:', deviceIdParam);
+            setTimeout(() => {
+                if (typeof fetchData === 'function') {
+                    fetchData();
+                }
+            }, 500);
         }
     }
 

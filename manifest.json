@@ -1,6 +1,6 @@
 {
-    "name": "Solar Monitor",
-    "short_name": "Solar",
+    "name": "Lumentree",
+    "short_name": "Lumentree",
     "description": "Solar Energy Monitoring Dashboard",
     "start_url": ".",
     "display": "standalone",

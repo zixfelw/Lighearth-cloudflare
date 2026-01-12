@@ -1060,7 +1060,16 @@ function generateDataHtml(data, title) {
 
 export default {
   async fetch(request, env, ctx) {
-    const url = new URL(request.url);
+    // Auto-fix URL: replace second ? with & (e.g., ?date=...?secret=... → ?date=...&secret=...)
+    let fixedUrl = request.url;
+    const firstQ = fixedUrl.indexOf('?');
+    if (firstQ !== -1) {
+      const afterFirstQ = fixedUrl.substring(firstQ + 1);
+      if (afterFirstQ.includes('?')) {
+        fixedUrl = fixedUrl.substring(0, firstQ + 1) + afterFirstQ.replace(/\?/g, '&');
+      }
+    }
+    const url = new URL(fixedUrl);
     const path = url.pathname;
     const origin = request.headers.get('Origin') || '*';
     const wantsHtml = url.searchParams.get('format') === 'html' ||

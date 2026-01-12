@@ -1070,6 +1070,33 @@ export default {
       return new Response(null, { status: 204, headers: corsHeaders(origin) });
     }
 
+    // Origin Protection: Only allow requests from authorized domains or with secret key
+    const ALLOWED_ORIGINS = [
+      'https://lumentree.pages.dev',
+      'https://lumentree-beta.pages.dev'
+    ];
+    const SECRET_KEY = 'lumentree123';
+
+    const requestOrigin = request.headers.get('Origin') || '';
+    const requestReferer = request.headers.get('Referer') || '';
+    const secretParam = url.searchParams.get('secret');
+
+    // Check if request is authorized
+    const isAllowedOrigin = ALLOWED_ORIGINS.some(allowed =>
+      requestOrigin.startsWith(allowed) || requestReferer.startsWith(allowed)
+    );
+    const hasValidSecret = secretParam === SECRET_KEY;
+
+    // Block unauthorized API requests (but allow root path for health check)
+    if (path !== '/' && path !== '' && !isAllowedOrigin && !hasValidSecret) {
+      return jsonResponse({
+        success: false,
+        error: 'Unauthorized',
+        message: 'Access denied. Invalid origin or missing secret key.',
+        version: VERSION
+      }, origin, 403);
+    }
+
     const haUrl = env.HA_URL || env.PI_URL;
     const haToken = env.HA_TOKEN || env.PI_TOKEN;
 

@@ -19,6 +19,14 @@
 const API_POOL = [
     // PRIORITY 1: Optimized Realtime Workers (lightweight, fast)
     {
+        name: 'Realtime-0 (bluexoan845)',
+        worker: 'https://realtime.bluexoan845.workers.dev',
+        tsp: 'https://temperature-soc-power.applike098.workers.dev',
+        failCount: 0,
+        disabled: false,
+        priority: 1
+    },
+    {
         name: 'Realtime-1 (applike098)',
         worker: 'https://realtime.applike098.workers.dev',
         tsp: 'https://temperature-soc-power.applike098.workers.dev',
@@ -158,8 +166,10 @@ function getNextHealthyApi() {
 
 // Alternating load balancing - switch between APIs each call
 let lastUsedApiIndex = -1;  // Track last used API for alternating
-let lastUsedPriority1Index = -1;  // Track within priority 1
+// Initialize with random index for Priority 1 APIs (random on first load)
+let lastUsedPriority1Index = Math.floor(Math.random() * API_POOL.filter(a => a.priority === 1).length) - 1;
 let lastUsedPriority2Index = -1;  // Track within priority 2
+const API_FAILOVER_DELAY_MS = 2000;  // Wait 2 seconds before switching to another API on failure
 
 function getAlternatingHealthyApi() {
     // Separate APIs by priority
@@ -237,7 +247,7 @@ function getCurrentPollingInterval() {
     return POLLING_INTERVAL;
 }
 
-// Mark API as failed
+// Mark API as failed and return a promise that resolves after delay
 function markApiFailed(apiUrl) {
     const api = API_POOL.find(a => apiUrl.includes(a.worker.replace('https://', '').split('.')[0]));
     if (api) {
@@ -248,6 +258,13 @@ function markApiFailed(apiUrl) {
             console.error(`❌ ${api.name} DISABLED after ${MAX_FAILS_PER_API} failures`);
         }
     }
+}
+
+// Async version: Mark API as failed and wait before switching
+async function markApiFailedWithDelay(apiUrl) {
+    markApiFailed(apiUrl);
+    console.log(`⏳ Waiting ${API_FAILOVER_DELAY_MS}ms before switching to next API...`);
+    await new Promise(resolve => setTimeout(resolve, API_FAILOVER_DELAY_MS));
 }
 
 // Mark API as successful - reset fail count

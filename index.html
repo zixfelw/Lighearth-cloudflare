@@ -2036,20 +2036,30 @@
     </style>
 
     <script>
-        // Hide splash screen after page loads
-        window.addEventListener('load', function () {
-            const splash = document.getElementById('splashScreen');
-            if (splash) {
-                // Wait a bit for visual effect, then fade out
-                setTimeout(function () {
-                    splash.classList.add('fade-out');
-                    // Remove from DOM after fade
-                    setTimeout(function () {
-                        splash.remove();
-                    }, 500);
-                }, 1500); // Show splash for 1.5s
-            }
-        });
+            // Splash screen only for PWA (standalone mode), not browser
+            (function () {
+                const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+                    || window.navigator.standalone === true;
+                const splash = document.getElementById('splashScreen');
+
+                if (!isStandalone && splash) {
+                    // Not in PWA mode - hide splash immediately
+                    splash.remove();
+                    return;
+                }
+
+                // In PWA mode - show splash then fade out
+                window.addEventListener('load', function () {
+                    if (splash) {
+                        setTimeout(function () {
+                            splash.classList.add('fade-out');
+                            setTimeout(function () {
+                                splash.remove();
+                            }, 500);
+                        }, 1500);
+                    }
+                });
+            })();
     </script>
 
     <!-- Background Gradient Blobs - Dark Mode Only (6 blobs total) -->

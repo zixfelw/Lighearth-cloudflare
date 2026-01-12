@@ -2,7 +2,7 @@
     "name": "Solar Monitor",
     "short_name": "Solar",
     "description": "Solar Energy Monitoring Dashboard",
-    "start_url": "/",
+    "start_url": ".",
     "display": "standalone",
     "orientation": "portrait",
     "background_color": "#0f172a",

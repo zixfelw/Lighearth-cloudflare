@@ -5507,6 +5507,7 @@
                             <input type="text" id="haDeviceId" placeholder="VD: P250801055"
                                 style="text-transform: uppercase; width: 100%; padding: 14px 16px; background: rgba(0,0,0,0.4); border: 2px solid rgba(16,185,129,0.2); border-radius: 12px; color: #fff; font-size: 1em; font-weight: 600; transition: all 0.3s;">
                         </div>
+
                         <div class="evn-input-group" style="margin-bottom: 16px;">
                             <label
                                 style="color: rgba(255,255,255,0.7); font-size: 0.85em; margin-bottom: 10px; display: block;">Chọn
@@ -5613,15 +5614,20 @@
             const urlParams = new URLSearchParams(window.location.search);
             const deviceIdParam = urlParams.get('deviceId');
             const savedDeviceId = localStorage.getItem('lumentreeDeviceId');
+            const savedToken = localStorage.getItem('lumentreeToken');
             const deviceId = deviceIdParam || savedDeviceId || '';
 
             const lightearthInput = document.getElementById('lightearthDeviceId');
             const haInput = document.getElementById('haDeviceId');
+            const tokenInput = document.getElementById('haToken');
             if (lightearthInput && deviceId) {
                 lightearthInput.value = deviceId.toUpperCase();
             }
             if (haInput && deviceId) {
                 haInput.value = deviceId.toUpperCase();
+            }
+            if (tokenInput && savedToken) {
+                tokenInput.value = savedToken.toUpperCase();
             }
 
             // Year checkboxes are now static in HTML (2024, 2025, 2026)
@@ -5633,9 +5639,10 @@
             document.body.style.overflow = 'auto';
         }
 
-        // Fetch yearly data from Home Assistant - supports MULTI-YEAR
+        // Fetch yearly data - v4.3.0: Uses cloud API with auto token lookup
         async function fetchHAYearlyData() {
             const deviceId = document.getElementById('haDeviceId').value.trim().toUpperCase();
+            // const token = document.getElementById('haToken')?.value.trim().toUpperCase() || ''; // Token is now auto-looked up by worker
 
             // Get selected years from checkboxes
             const selectedYears = [];
@@ -5655,18 +5662,57 @@
 
             // Save device ID
             localStorage.setItem('lumentreeDeviceId', deviceId);
+            // if (token) localStorage.setItem('lumentreeToken', token); // Token is now auto-looked up by worker
 
             try {
-                showNotification(`🔄 Đang lấy dữ liệu ${selectedYears.length} năm...`, 'info');
+                // v4.3.0: Always use cloud API - token is auto-looked up by worker
+                showNotification(`🔄 Đang lấy dữ liệu từ Cloud (${selectedYears.length} năm)...`, 'info');
                 const startTime = Date.now();
 
                 // Fetch all years in parallel
-                const fetchPromises = selectedYears.map(year =>
-                    fetch(`${TEMPERATURE_SOC_API}/api/ha/statistics/${deviceId}/year?year=${year}`)
-                        .then(res => res.json())
-                        .then(data => ({ year, ...data }))
-                        .catch(err => ({ year, success: false, error: err.message }))
-                );
+                // v4.4.0: 2025 uses KV (pre-fetched), other years use cloud API
+                const fetchPromises = selectedYears.map(async year => {
+                    if (year === 2025) {
+                        // Fetch from KV (has complete historical data)
+                        try {
+                            const kvRes = await fetch(`${TEMPERATURE_SOC_API}/api/admin/history/2025`);
+                            const kvData = await kvRes.json();
+                            if (kvData.success && kvData.data?.devices?.[deviceId]) {
+                                const deviceData = kvData.data.devices[deviceId];
+                                // Convert KV format to standard months array
+                                const months = [];
+                                Object.entries(deviceData.months || {}).forEach(([monthKey, monthData]) => {
+                                    if (monthData.grid > 0 || monthData.load > 0 || monthData.pv > 0) {
+                                        const [y, m] = monthKey.split('-');
+                                        months.push({
+                                            month: monthKey,
+                                            monthNumber: parseInt(m),
+                                            pv: monthData.pv || 0, // v4.4.0: Now reading PV from KV
+                                            grid: monthData.grid || 0,
+                                            load: monthData.load || 0,
+                                            essential: 0
+                                        });
+                                    }
+                                });
+                                months.sort((a, b) => a.monthNumber - b.monthNumber);
+                                return { year, success: true, months, source: 'KV' };
+                            }
+                            // Fallback to cloud API if device not in KV
+                            throw new Error('Device not in KV, falling back to cloud');
+                        } catch (e) {
+                            console.log('KV fallback for 2025:', e.message);
+                            // Fallback to cloud API
+                            const cloudRes = await fetch(`${TEMPERATURE_SOC_API}/api/cloud/statistics/${deviceId}/year?year=${year}`);
+                            const data = await cloudRes.json();
+                            return { year, ...data, source: 'Cloud' };
+                        }
+                    } else {
+                        // Other years: use cloud API
+                        const res = await fetch(`${TEMPERATURE_SOC_API}/api/cloud/statistics/${deviceId}/year?year=${year}`);
+                        const data = await res.json();
+                        return { year, ...data, source: 'Cloud' };
+                    }
+                });
 
                 const results = await Promise.all(fetchPromises);
                 const elapsed = Date.now() - startTime;

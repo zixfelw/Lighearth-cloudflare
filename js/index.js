@@ -1220,23 +1220,127 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ========================================
-    // REALTIME POLLING (3 seconds interval)
+    // REALTIME POLLING (4 seconds default, 10 seconds for specific URLs)
     // ========================================
+
+    // Check if current URL should use slow polling (10 seconds)
+    // Only applies to lumentree.pages.dev or lumentree-beta.pages.dev with specific device IDs
+    function shouldUseSlowPolling(deviceId) {
+        const slowDevices = ['P250725049', 'P250714010'];
+        const slowDomains = ['lumentree.pages.dev', 'lumentree-beta.pages.dev'];
+
+        const hostname = window.location.hostname.toLowerCase();
+        const deviceUpper = deviceId ? deviceId.toUpperCase() : '';
+
+        const isDomainMatch = slowDomains.some(d => hostname.includes(d));
+        const isDeviceMatch = slowDevices.indexOf(deviceUpper) !== -1;
+
+        return isDomainMatch && isDeviceMatch;
+    }
+
+    // Simple fetch for slow devices - only 1 API per call, no complex retry
+    let slowApiIndex = 0; // Rotate through APIs for slow devices
+    async function fetchRealtimeDataSimple(deviceId) {
+        // Get next API in rotation (simple round-robin)
+        const healthyApis = API_POOL.filter(a => !a.disabled);
+        if (healthyApis.length === 0) {
+            API_POOL.forEach(a => { a.disabled = false; a.failCount = 0; });
+        }
+
+        slowApiIndex = (slowApiIndex + 1) % API_POOL.length;
+        const api = API_POOL[slowApiIndex];
+        const apiUrl = `${api.worker}/api/realtime/device/${deviceId}`;
+
+        console.log(`🐢 [SLOW] Trying ${api.name}: ${apiUrl}`);
+
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout
+
+            const response = await fetch(apiUrl, { signal: controller.signal });
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+                console.warn(`🐢 [SLOW] ${api.name} failed: ${response.status}`);
+                return; // Don't retry immediately, wait for next interval
+            }
+
+            const data = await response.json();
+            console.log(`🐢 [SLOW] ✅ ${api.name} success`);
+
+            if (data.error || data.success === false) return;
+
+            // Process data (same as normal fetch)
+            const isNewFormat = data.deviceData !== undefined;
+            let displayData, cellsData;
+
+            if (isNewFormat) {
+                const dd = data.deviceData || {};
+                displayData = {
+                    pvTotalPower: dd.pv?.totalPower || 0,
+                    pv1Power: dd.pv?.pv1Power || 0,
+                    pv2Power: dd.pv?.pv2Power || 0,
+                    pv1Voltage: dd.pv?.pv1Voltage || 0,
+                    pv2Voltage: dd.pv?.pv2Voltage || 0,
+                    batteryPower: dd.battery?.power || 0,
+                    batteryVoltage: dd.battery?.voltage || 0,
+                    batteryCurrent: dd.battery?.current || 0,
+                    batterySoc: dd.battery?.soc || 0,
+                    loadPower: dd.load?.power || 0,
+                    essentialPower: dd.essential?.power || 0,
+                    gridPower: dd.grid?.power || 0,
+                    gridVoltage: dd.grid?.voltage || 0
+                };
+                cellsData = dd.battery?.cells || null;
+            } else {
+                const d = data.data || {};
+                displayData = {
+                    pvTotalPower: d.pvTotalPower || 0,
+                    batteryPower: d.batteryPower || 0,
+                    batteryVoltage: d.batteryVoltage || 0,
+                    batteryCurrent: d.batteryCurrent || 0,
+                    batterySoc: d.batterySoc || 0,
+                    loadPower: d.loadPower || 0,
+                    essentialPower: d.essentialPower || 0,
+                    gridPower: d.gridPower || 0
+                };
+                cellsData = d.batteryCells || null;
+            }
+
+            latestRealtimeData = displayData;
+            updateRealTimeDisplay(displayData);
+
+            if (cellsData) {
+                updateBatteryCellDisplay(cellsData);
+            }
+
+        } catch (error) {
+            console.warn(`🐢 [SLOW] ${api.name} error:`, error.message);
+            // Don't retry, just wait for next interval
+        }
+    }
 
     function startRealtimePolling(deviceId) {
         if (realtimePollingInterval) {
             clearInterval(realtimePollingInterval);
         }
 
-        const pollingInterval = getCurrentPollingInterval();
-        const healthyCount = API_POOL.filter(a => !a.disabled).length;
-        console.log(`🔄 Starting realtime polling for device: ${deviceId} (every ${pollingInterval / 1000}s - ${healthyCount}/${API_POOL.length} APIs healthy)`);
+        // Check if slow mode
+        const isSlowMode = shouldUseSlowPolling(deviceId);
+        const pollingInterval = isSlowMode ? 12000 : getCurrentPollingInterval();
 
-        // Fetch immediately
+        const healthyCount = API_POOL.filter(a => !a.disabled).length;
+
+        if (isSlowMode) {
+            console.log(`🐢 SLOW MODE: ${deviceId} (every 12s) - ${healthyCount}/${API_POOL.length} APIs`);
+        } else {
+            console.log(`🔄 Starting realtime polling for device: ${deviceId} (every ${pollingInterval / 1000}s - ${healthyCount}/${API_POOL.length} APIs healthy)`);
+        }
+
+        // Fetch immediately (use normal fetch for all)
         fetchRealtimeData(deviceId);
 
-        // Poll based on current API state
-        // Primary: 5 seconds, Fallback: 10 seconds
+        // Poll at determined interval
         realtimePollingInterval = setInterval(() => {
             fetchRealtimeData(deviceId);
         }, pollingInterval);
@@ -1263,7 +1367,106 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     async function fetchRealtimeData(deviceId) {
-        // Load Balancing: Check if we should rotate to a different API
+        // SLOW MODE: For specific devices, just try 1 API and return (no retry loop)
+        if (shouldUseSlowPolling(deviceId)) {
+            slowApiIndex = (slowApiIndex + 1) % API_POOL.length;
+            const api = API_POOL[slowApiIndex];
+            const apiUrl = `${api.worker}/api/realtime/device/${deviceId}`;
+            console.log(`🐢 [SLOW] Single API: ${api.name.split(' ')[0]}`);
+
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
+                const response = await fetch(apiUrl, { signal: controller.signal });
+                clearTimeout(timeoutId);
+
+                if (!response.ok) {
+                    console.warn(`🐢 [SLOW] ${api.name.split(' ')[0]} → ${response.status}`);
+                    return;
+                }
+
+                const data = await response.json();
+                if (data.error || data.success === false) return;
+
+                // Parse response (same logic as normal mode)
+                const isNewFormat = data.deviceData !== undefined;
+                let displayData, cellsData;
+
+                if (isNewFormat) {
+                    const dd = data.deviceData || {};
+                    displayData = {
+                        pvTotalPower: dd.pv?.totalPower || 0,
+                        pv1Power: dd.pv?.pv1Power || 0,
+                        pv2Power: dd.pv?.pv2Power || 0,
+                        pv1Voltage: dd.pv?.pv1Voltage || 0,
+                        pv2Voltage: dd.pv?.pv2Voltage || 0,
+                        gridValue: dd.grid?.power || 0,
+                        gridVoltageValue: dd.grid?.inputVoltage || 0,
+                        batteryPercent: dd.battery?.soc || 0,
+                        batteryValue: dd.battery?.power || 0,
+                        batteryVoltage: dd.battery?.voltage || 0,
+                        batteryCurrent: dd.battery?.current || 0,
+                        batteryStatus: dd.battery?.status || 'Idle',
+                        deviceTempValue: dd.temperature || dd.system?.temperature || 0,
+                        essentialValue: dd.acOutput?.power || 0,
+                        loadValue: dd.load?.homePower || dd.load?.power || 0,
+                        inverterAcOutPower: dd.acOutput?.power || 0,
+                        model: dd.model || null
+                    };
+                    cellsData = dd.batteryCells || dd.battery?.cells || data.batteryCells;
+                } else if (data.data) {
+                    displayData = {
+                        pvTotalPower: data.data.totalPvPower || 0,
+                        pv1Power: data.data.pv1Power || 0,
+                        pv2Power: data.data.pv2Power || 0,
+                        gridValue: data.data.gridPowerFlow || 0,
+                        gridVoltageValue: data.data.acInputVoltage || 0,
+                        batteryPercent: data.data.batterySoc || 0,
+                        batteryValue: data.data.batteryPower || 0,
+                        batteryVoltage: data.data.batteryVoltage || 0,
+                        batteryCurrent: data.data.batteryCurrent || 0,
+                        batteryStatus: data.data.batteryStatus || 'Idle',
+                        deviceTempValue: data.data.temperature || 0,
+                        essentialValue: data.data.acOutputPower || 0,
+                        loadValue: data.data.homeLoad || 0,
+                        inverterAcOutPower: data.data.acOutputPower || 0
+                    };
+                    cellsData = data.cells;
+                } else {
+                    return;
+                }
+
+                // Update UI
+                latestRealtimeData = displayData;
+                updateRealTimeDisplay(displayData);
+                if (displayData.model) applyDeviceInfo(displayData.model);
+
+                // Update battery cells if available
+                if (cellsData && cellsData.cells) {
+                    let cellVoltages = [];
+                    if (Array.isArray(cellsData.cells)) {
+                        cellsData.cells.sort((a, b) => a.cell - b.cell).forEach(c => cellVoltages.push(c.voltage));
+                    } else {
+                        Object.keys(cellsData.cells).sort().forEach(k => cellVoltages.push(cellsData.cells[k]));
+                    }
+                    if (cellVoltages.length > 0) {
+                        updateBatteryCellDisplay({
+                            cells: cellVoltages,
+                            max: cellsData.max || Math.max(...cellVoltages),
+                            min: cellsData.min || Math.min(...cellVoltages),
+                            avg: cellsData.avg || cellVoltages.reduce((a, b) => a + b, 0) / cellVoltages.length
+                        });
+                    }
+                }
+
+                console.log(`🐢 [SLOW] ✅ ${api.name.split(' ')[0]} success`);
+            } catch (e) {
+                console.warn(`🐢 [SLOW] ${api.name.split(' ')[0]} error:`, e.message);
+            }
+            return; // Don't continue to retry loop
+        }
+
+        // NORMAL MODE: Load Balancing with retry
         let selectedApi = null;
 
         // If we've hit rotation threshold on current API, switch to random different one
@@ -1327,6 +1530,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     console.error(`❌ API error ${response.status}: ${response.statusText} for ${apiUrl}`);
                     markApiFailed(apiUrl);
                     lastError = new Error(`HTTP ${response.status}`);
+                    // Wait before trying next API (12s for slow devices, 2s for others)
+                    const failoverDelay = shouldUseSlowPolling(deviceId) ? 12000 : API_FAILOVER_DELAY_MS;
+                    await new Promise(resolve => setTimeout(resolve, failoverDelay));
                     continue; // Try next API
                 }
 
@@ -1525,6 +1731,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 console.error(`❌ Network error for ${api.name}:`, error.message);
                 markApiFailed(apiUrl);
                 lastError = error;
+                // Wait 1 second before trying next API
+                await new Promise(resolve => setTimeout(resolve, API_FAILOVER_DELAY_MS));
                 continue; // Try next API
             }
         }

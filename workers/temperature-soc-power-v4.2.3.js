@@ -40,7 +40,76 @@
  */
 
 const VN_TIMEZONE_OFFSET = 7;
-const VERSION = '4.2.3';
+const VERSION = '4.3.0';
+const LUMENTREE_BASE = 'http://lesvr.suntcn.com/lesvr';
+
+// v4.4.0: Device tokens now stored in Cloudflare KV
+// Tokens are synced automatically from Home Assistant via sync_tokens_to_kv.ps1
+// No more hardcoded tokens - all managed through KV for easier maintenance
+
+// Helper to get token for a device (KV-only, async)
+async function getDeviceToken(deviceId, env) {
+  const id = deviceId.toUpperCase();
+
+  if (!env.LUMENTREE_KV) {
+    console.log('LUMENTREE_KV not bound');
+    return null;
+  }
+
+  try {
+    const kvTokens = await env.LUMENTREE_KV.get('device_tokens', 'json');
+    if (kvTokens && kvTokens[id]) {
+      return kvTokens[id];
+    }
+  } catch (e) {
+    console.log('KV read error:', e);
+  }
+
+  return null;
+}
+
+
+
+// Get all tokens from KV
+async function getAllTokens(env) {
+  if (!env.LUMENTREE_KV) return {};
+
+  try {
+    const kvTokens = await env.LUMENTREE_KV.get('device_tokens', 'json');
+    return kvTokens || {};
+  } catch (e) {
+    console.log('KV read error:', e);
+    return {};
+  }
+}
+
+// Save tokens to KV
+async function saveTokensToKV(tokens, env) {
+  if (!env.LUMENTREE_KV) {
+    throw new Error('LUMENTREE_KV not bound');
+  }
+  await env.LUMENTREE_KV.put('device_tokens', JSON.stringify(tokens));
+  return true;
+}
+
+// Get device history from KV
+async function getDeviceHistory(year, env) {
+  if (!env.LUMENTREE_KV) return null;
+  try {
+    return await env.LUMENTREE_KV.get(`history_${year}`, 'json');
+  } catch (e) {
+    return null;
+  }
+}
+
+// Save device history to KV
+async function saveDeviceHistory(year, data, env) {
+  if (!env.LUMENTREE_KV) {
+    throw new Error('LUMENTREE_KV not bound');
+  }
+  await env.LUMENTREE_KV.put(`history_${year}`, JSON.stringify(data));
+  return true;
+}
 
 function corsHeaders(origin) {
   return {
@@ -95,6 +164,154 @@ async function fetchHA(endpoint, env) {
   }
 
   return response.json();
+}
+
+// ============ Lumentree Cloud API Functions (v4.3.0) ============
+function lumentreeHeaders(token) {
+  return {
+    'Authorization': token,
+    'versionCode': '1.6.3',
+    'platform': '2',
+    'wifiStatus': '1',
+    'User-Agent': 'Mozilla/5.0 (Linux; Android 10; SM-G970F)',
+    'Accept': 'application/json, text/plain, */*'
+  };
+}
+
+// Fetch daily data directly from Lumentree Cloud
+async function fetchLumentreeDailyData(deviceId, date, token) {
+  const headers = lumentreeHeaders(token);
+
+  const [pvRes, otherRes] = await Promise.all([
+    fetch(`${LUMENTREE_BASE}/getPVDayData?queryDate=${date}&deviceId=${deviceId}`, { headers }),
+    fetch(`${LUMENTREE_BASE}/getOtherDayData?queryDate=${date}&deviceId=${deviceId}`, { headers })
+  ]);
+
+  const pvData = await pvRes.json();
+  const otherData = await otherRes.json();
+
+  const result = { date, pv: 0, grid: 0, load: 0 };
+
+  if (pvData.returnValue === 1 && pvData.data?.pv?.tableValue) {
+    result.pv = pvData.data.pv.tableValue / 10.0;
+  }
+  if (otherData.returnValue === 1 && otherData.data) {
+    if (otherData.data.grid?.tableValue) result.grid = otherData.data.grid.tableValue / 10.0;
+    if (otherData.data.homeload?.tableValue) result.load = otherData.data.homeload.tableValue / 10.0;
+  }
+
+  return result;
+}
+
+// Fetch entire year data by scanning all days (v4.3.0 - Optimized for CF Worker timeout)
+// Uses parallel month scanning with larger batches to complete within 30s limit
+async function fetchLumentreeYearlyData(deviceId, year, token) {
+  const results = { pv: Array(12).fill(0), grid: Array(12).fill(0), load: Array(12).fill(0) };
+  const monthDays = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+  // Check leap year
+  if ((year % 4 === 0 && year % 100 !== 0) || year % 400 === 0) monthDays[1] = 29;
+
+  const currentYear = new Date().getFullYear();
+  const currentMonth = new Date().getMonth() + 1;
+
+  // Determine which months to scan
+  let monthsToScan;
+  if (year === currentYear) {
+    // Current year: scan Jan to current month
+    monthsToScan = Array.from({ length: currentMonth }, (_, i) => i);
+  } else if (year === currentYear - 1) {
+    // Last year: scan all 12 months
+    monthsToScan = Array.from({ length: 12 }, (_, i) => i);
+  } else {
+    // Older years: scan Q3-Q4 only (Jul-Dec) to save time
+    monthsToScan = [6, 7, 8, 9, 10, 11];
+  }
+
+  // Fetch month data - scan all days in parallel per month
+  async function scanMonth(m) {
+    const monthNum = m + 1;
+    const dayPromises = [];
+
+    for (let d = 1; d <= monthDays[m]; d++) {
+      const dateStr = `${year}-${String(monthNum).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      dayPromises.push(
+        fetchLumentreeDailyData(deviceId, dateStr, token).catch(() => ({ pv: 0, grid: 0, load: 0 }))
+      );
+    }
+
+    const dayResults = await Promise.all(dayPromises);
+    let monthPv = 0, monthGrid = 0, monthLoad = 0;
+    for (const r of dayResults) {
+      monthPv += r.pv || 0;
+      monthGrid += r.grid || 0;
+      monthLoad += r.load || 0;
+    }
+
+    return { m, pv: monthPv, grid: monthGrid, load: monthLoad };
+  }
+
+  // Scan all months in parallel (much faster!)
+  const monthPromises = monthsToScan.map(m => scanMonth(m));
+  const monthResults = await Promise.all(monthPromises);
+
+  // Populate results
+  for (const mr of monthResults) {
+    results.pv[mr.m] = Math.round(mr.pv * 10) / 10;
+    results.grid[mr.m] = Math.round(mr.grid * 10) / 10;
+    results.load[mr.m] = Math.round(mr.load * 10) / 10;
+  }
+
+  return results;
+}
+
+// Format Lumentree yearly data to match existing response format
+function formatLumentreeYearlyResponse(deviceId, year, data) {
+  const months = [];
+  let totalPv = 0, totalGrid = 0, totalLoad = 0;
+
+  for (let i = 0; i < 12; i++) {
+    const pv = data.pv[i] || 0;
+    const grid = data.grid[i] || 0;
+    const load = data.load[i] || 0;
+
+    if (pv > 0 || grid > 0 || load > 0) {
+      const monthNumber = i + 1;
+      months.push({
+        month: `${year}-${String(monthNumber).padStart(2, '0')}`,
+        monthNumber,
+        pv, grid, load,
+        totalLoad: load,
+        essential: 0,
+        charge: 0,
+        discharge: 0,
+        battery: 0
+      });
+      totalPv += pv;
+      totalGrid += grid;
+      totalLoad += load;
+    }
+  }
+
+  return {
+    success: true,
+    deviceId: deviceId.toUpperCase(),
+    year,
+    source: 'lumentree_cloud',
+    totalMonths: months.length,
+    totals: {
+      pv: Math.round(totalPv * 10) / 10,
+      grid: Math.round(totalGrid * 10) / 10,
+      load: Math.round(totalLoad * 10) / 10,
+      essential: 0,
+      battery: 0,
+      charge: 0,
+      discharge: 0
+    },
+    months,
+    timestamp: new Date().toISOString(),
+    version: VERSION
+  };
 }
 
 function toVietnamTime(utcTimestamp) {
@@ -537,12 +754,69 @@ async function getYearlyStatistics(deviceId, year, env) {
       return await getYearlyStatisticsFromCurrentSensor(deviceId, env);
     }
 
-    // For past years, search in history
+    // v4.4.0: For past years, check KV first (has pre-fetched Grid/Load data)
+    const kvData = await getYearlyStatisticsFromKV(deviceId, year, env);
+    if (kvData && kvData.success && kvData.months && kvData.months.length > 0) {
+      console.log(`📦 Found ${year} data in KV for ${deviceUpper}`);
+      return kvData;
+    }
+
+    // Fallback: search in HA history
     return await getYearlyStatisticsFromHistory(deviceId, year, env);
 
   } catch (e) {
     return { success: false, deviceId: deviceUpper, year, error: e.message, version: VERSION };
   }
+}
+
+// v4.4.0: Get yearly stats from KV (pre-fetched historical data)
+async function getYearlyStatisticsFromKV(deviceId, year, env) {
+  const deviceUpper = deviceId.toUpperCase();
+
+  if (!env.LUMENTREE_KV) return null;
+
+  try {
+    const history = await getDeviceHistory(year, env);
+    if (history && history.devices && history.devices[deviceUpper]) {
+      const deviceData = history.devices[deviceUpper];
+
+      // Convert KV format to standard months array
+      const months = [];
+      Object.entries(deviceData.months || {}).forEach(([monthKey, monthData]) => {
+        if (monthData.grid > 0 || monthData.load > 0) {
+          const [y, m] = monthKey.split('-');
+          const monthNum = parseInt(m);
+          months.push({
+            month: `T${monthNum}`,
+            monthNumber: monthNum,
+            pv: monthData.pv || 0, // v4.4.0: Now reading PV from KV history
+            grid: monthData.grid || 0,
+            load: monthData.load || 0,
+            essential: 0,
+            charge: 0,
+            discharge: 0
+          });
+        }
+      });
+
+      months.sort((a, b) => a.monthNumber - b.monthNumber);
+
+      if (months.length > 0) {
+        return {
+          success: true,
+          deviceId: deviceUpper,
+          year: year,
+          months: months,
+          source: 'kv_history',
+          version: VERSION
+        };
+      }
+    }
+  } catch (e) {
+    console.log('KV history read error:', e);
+  }
+
+  return null;
 }
 
 // Get yearly stats from current sensor (for current year)
@@ -1128,6 +1402,7 @@ export default {
           timezone: 'UTC+7 (Vietnam)',
           endpoints: [
             '/api/ha/statistics/{deviceId}/year?year={YYYY}&format=html',
+            '/api/cloud/statistics/{deviceId}/year?year={YYYY}&token={token}',
             '/api/solar/dashboard/{deviceId}',
             '/api/realtime/soc-history/{deviceId}?date={date}',
             '/api/realtime/power-history/{deviceId}?date={date}',
@@ -1140,6 +1415,66 @@ export default {
             HA_TOKEN: haToken ? 'SET' : 'MISSING'
           }
         }, origin);
+      }
+
+      // ============ ADMIN ENDPOINTS (KV Management) ============
+      // POST /api/admin/sync-tokens - Push tokens to KV
+      if (path === '/api/admin/sync-tokens' && request.method === 'POST') {
+        try {
+          const body = await request.json();
+          if (!body.tokens || typeof body.tokens !== 'object') {
+            return jsonResponse({ success: false, error: 'Invalid tokens format' }, origin, 400);
+          }
+          await saveTokensToKV(body.tokens, env);
+          return jsonResponse({
+            success: true,
+            message: `Synced ${Object.keys(body.tokens).length} tokens to KV`,
+            version: VERSION
+          }, origin);
+        } catch (e) {
+          return jsonResponse({ success: false, error: e.message }, origin, 500);
+        }
+      }
+
+      // POST /api/admin/sync-history - Push device history to KV
+      if (path === '/api/admin/sync-history' && request.method === 'POST') {
+        try {
+          const body = await request.json();
+          const year = body.year || 2025;
+          if (!body.devices || typeof body.devices !== 'object') {
+            return jsonResponse({ success: false, error: 'Invalid devices format' }, origin, 400);
+          }
+          await saveDeviceHistory(year, body, env);
+          return jsonResponse({
+            success: true,
+            message: `Synced ${Object.keys(body.devices).length} devices history for ${year} to KV`,
+            version: VERSION
+          }, origin);
+        } catch (e) {
+          return jsonResponse({ success: false, error: e.message }, origin, 500);
+        }
+      }
+
+      // GET /api/admin/tokens - List all tokens (KV + hardcoded merged)
+      if (path === '/api/admin/tokens') {
+        const tokens = await getAllTokens(env);
+        return jsonResponse({
+          success: true,
+          count: Object.keys(tokens).length,
+          tokens: tokens,
+          version: VERSION
+        }, origin);
+      }
+
+      // GET /api/admin/history/{year} - Get device history from KV
+      const historyMatch = path.match(/^\/api\/admin\/history\/(\d{4})$/);
+      if (historyMatch) {
+        const year = parseInt(historyMatch[1]);
+        const history = await getDeviceHistory(year, env);
+        if (history) {
+          return jsonResponse({ success: true, year, data: history, version: VERSION }, origin);
+        }
+        return jsonResponse({ success: false, error: `No history for ${year}` }, origin, 404);
       }
 
       if (!haUrl || !haToken) {
@@ -1170,6 +1505,50 @@ export default {
           return htmlResponse(generateDataHtml(data, `Yearly Statistics ${year} - ${deviceId.toUpperCase()}`), origin);
         }
         return jsonResponse(data, origin);
+      }
+
+      // v4.3.0: NEW - Cloud Statistics (fetches directly from Lumentree API)
+      // Usage: /api/cloud/statistics/{deviceId}/year?year=2025 (auto-lookup token)
+      // Or: /api/cloud/statistics/{deviceId}/year?year=2025&token=xxx (manual token)
+      const cloudStatsMatch = path.match(/^\/api\/cloud\/statistics\/([^\/]+)\/year$/);
+      if (cloudStatsMatch) {
+        const deviceId = cloudStatsMatch[1];
+        const year = parseInt(url.searchParams.get('year')) || getCurrentVietnamYear();
+
+        // v4.4.0: Auto-lookup token from KV if not provided
+        let token = url.searchParams.get('token');
+        if (!token) {
+          token = await getDeviceToken(deviceId, env);
+        }
+
+        if (!token) {
+          const allTokens = await getAllTokens(env);
+          return jsonResponse({
+            success: false,
+            error: 'Token not found',
+            message: `Device ${deviceId.toUpperCase()} not in KV. Provide token via ?token=xxx or sync tokens to KV.`,
+            registeredDevices: Object.keys(allTokens).length,
+            version: VERSION
+          }, origin, 400);
+        }
+
+        try {
+          const rawData = await fetchLumentreeYearlyData(deviceId, year, token);
+          const data = formatLumentreeYearlyResponse(deviceId, year, rawData);
+
+          if (wantsHtml) {
+            return htmlResponse(generateDataHtml(data, `Cloud Statistics ${year} - ${deviceId.toUpperCase()}`), origin);
+          }
+          return jsonResponse(data, origin);
+        } catch (e) {
+          return jsonResponse({
+            success: false,
+            error: e.message,
+            deviceId: deviceId.toUpperCase(),
+            year,
+            version: VERSION
+          }, origin, 500);
+        }
       }
 
       // Power Peak

@@ -1,0 +1,23 @@
+﻿{
+    "created_at":  1766288975.423777,
+    "entry_id":  "01KCZGDSHZEDG0P8CF2D4D8M08",
+    "domain":  "lumentree",
+    "modified_at":  1766288975.423778,
+    "title":  "SUNT-8.0kW-HP",
+    "source":  "user",
+    "state":  "loaded",
+    "supports_options":  false,
+    "supports_remove_device":  false,
+    "supports_unload":  true,
+    "supports_reconfigure":  false,
+    "supported_subentry_types":  {
+
+                                 },
+    "pref_disable_new_entities":  false,
+    "pref_disable_polling":  false,
+    "disabled_by":  null,
+    "reason":  null,
+    "error_reason_translation_key":  null,
+    "error_reason_translation_placeholders":  null,
+    "num_subentries":  0
+}

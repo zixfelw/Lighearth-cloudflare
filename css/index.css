@@ -444,6 +444,23 @@ canvas:hover {
     }
 }
 
+/* SVG Text Flash Animation - Quick flash only */
+svg text.value-updated {
+    animation: svgTextFlash 0.3s ease-out;
+}
+
+@keyframes svgTextFlash {
+
+    0%,
+    30% {
+        filter: drop-shadow(0 0 10px currentColor) brightness(1.8);
+    }
+
+    100% {
+        filter: none;
+    }
+}
+
 .cell-no-communication {
     opacity: 0.4;
     background: linear-gradient(135deg, #6b7280, #4b5563) !important;
@@ -2519,42 +2536,145 @@ html:not(.dark) .cell-voltage-bar {
 /* Solar level colors */
 .solar-level-none {
     background: linear-gradient(180deg, #1e293b 0%, #334155 100%);
+    color: #e2e8f0;
+}
+
+.solar-level-none .solar-time {
+    color: #94a3b8;
+}
+
+.solar-level-none .solar-value {
+    color: #f1f5f9;
 }
 
 .solar-level-low {
     background: linear-gradient(180deg, #fef3c7 0%, #fde68a 100%);
+    color: #78350f;
+}
+
+.solar-level-low .solar-time {
+    color: #92400e;
+}
+
+.solar-level-low .solar-value {
+    color: #451a03;
 }
 
 .solar-level-medium {
     background: linear-gradient(180deg, #fde68a 0%, #fbbf24 100%);
+    color: #78350f;
+}
+
+.solar-level-medium .solar-time {
+    color: #92400e;
+}
+
+.solar-level-medium .solar-value {
+    color: #451a03;
 }
 
 .solar-level-high {
     background: linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%);
+    color: #451a03;
+}
+
+.solar-level-high .solar-time {
+    color: #78350f;
+}
+
+.solar-level-high .solar-value {
+    color: #1c1917;
 }
 
 .solar-level-extreme {
     background: linear-gradient(180deg, #f59e0b 0%, #ea580c 100%);
+    color: #fff7ed;
+}
+
+.solar-level-extreme .solar-time {
+    color: #ffedd5;
+}
+
+.solar-level-extreme .solar-value {
+    color: #ffffff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .dark .solar-level-none {
-    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+    /* Night sky gradient - subtle blue-purple tint for depth */
+    background: linear-gradient(180deg, #1e293b 0%, #0f172a 60%, #1a1a2e 100%);
+    color: #94a3b8;
+    border: 1px solid #334155;
 }
 
+.dark .solar-level-none .solar-time {
+    color: #64748b;
+}
+
+.dark .solar-level-none .solar-value {
+    color: #475569;
+}
+
+/* Twilight/dawn transition - subtle warm glow */
 .dark .solar-level-low {
-    background: linear-gradient(180deg, #78350f 0%, #451a03 100%);
+    background: linear-gradient(180deg, #44403c 0%, #292524 50%, #1c1917 100%);
+    color: #fcd34d;
+    border: 1px solid #57534e;
 }
 
+.dark .solar-level-low .solar-time {
+    color: #d6d3d1;
+}
+
+.dark .solar-level-low .solar-value {
+    color: #fbbf24;
+    text-shadow: 0 0 4px rgba(251, 191, 36, 0.3);
+}
+
+/* Morning/evening - warm amber glow */
 .dark .solar-level-medium {
-    background: linear-gradient(180deg, #92400e 0%, #78350f 100%);
+    background: linear-gradient(180deg, #78350f 0%, #451a03 50%, #292524 100%);
+    color: #fef3c7;
+    border: 1px solid #92400e;
 }
 
+.dark .solar-level-medium .solar-time {
+    color: #fde68a;
+}
+
+.dark .solar-level-medium .solar-value {
+    color: #fcd34d;
+    text-shadow: 0 0 6px rgba(252, 211, 77, 0.4);
+}
+
+/* Sunny - bright orange glow */
 .dark .solar-level-high {
-    background: linear-gradient(180deg, #b45309 0%, #92400e 100%);
+    background: linear-gradient(180deg, #b45309 0%, #92400e 50%, #78350f 100%);
+    color: #fffbeb;
+    border: 1px solid #d97706;
 }
 
+.dark .solar-level-high .solar-time {
+    color: #fef3c7;
+}
+
+.dark .solar-level-high .solar-value {
+    color: #ffffff;
+    text-shadow: 0 0 8px rgba(251, 191, 36, 0.5);
+}
+
+/* Extreme sun - intense glow */
 .dark .solar-level-extreme {
-    background: linear-gradient(180deg, #c2410c 0%, #b45309 100%);
+    background: linear-gradient(180deg, #ea580c 0%, #c2410c 50%, #b45309 100%);
+    color: #ffffff;
+    border: 1px solid #f97316;
+    box-shadow: 0 0 12px rgba(249, 115, 22, 0.3);
+}
+
+.dark .solar-level-extreme .solar-time,
+.dark .solar-level-extreme .solar-value {
+    color: #ffffff;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
 }
 
 /* Custom scrollbar for solar forecast */

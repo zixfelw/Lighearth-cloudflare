@@ -40,8 +40,8 @@
  */
 
 const VN_TIMEZONE_OFFSET = 7;
-const VERSION = '4.3.0';
-const LUMENTREE_BASE = 'http://lesvr.suntcn.com/lesvr';
+const VERSION = '4.4.0';
+const LUMENTREE_BASE = 'https://lesvr.suntcn.com/lesvr';
 
 // v4.4.0: Device tokens now stored in Cloudflare KV
 // Tokens are synced automatically from Home Assistant via sync_tokens_to_kv.ps1
@@ -436,8 +436,9 @@ async function getPowerHistoryFromHistoryAPI(deviceId, date, env) {
 
   const data = await fetchHA(`/api/history/period/${startTime}?filter_entity_id=${entities.join(',')}&end_time=${endTime}`, env);
 
-  if (!data || data.length === 0) {
-    return { success: true, timeline: [], count: 0, message: 'No power data', version: VERSION, source: 'history_api' };
+  if (!data || data.length === 0 || data.every(arr => !arr || arr.length === 0)) {
+    // Fallback to Lumentree Cloud API when HA History is empty
+    return await getPowerHistoryFromLumentreeCloud(deviceId, date, env);
   }
 
   const timeSlots = {};
@@ -465,6 +466,101 @@ async function getPowerHistoryFromHistoryAPI(deviceId, date, env) {
 
   const timeline = Object.values(timeSlots).sort((a, b) => a.t.localeCompare(b.t));
   return { success: true, deviceId, date, timeline, count: timeline.length, version: VERSION, source: 'history_api' };
+}
+
+// ============ Lumentree Cloud Fallback for Power History (v4.4.0) ============
+async function getPowerHistoryFromLumentreeCloud(deviceId, date, env) {
+  const deviceUpper = deviceId.toUpperCase();
+
+  // Get token from KV
+  const token = await getDeviceToken(deviceUpper, env);
+  if (!token) {
+    return { success: false, deviceId, date, timeline: [], count: 0, message: 'No token found for device', version: VERSION, source: 'lumentree_cloud' };
+  }
+
+  const headers = lumentreeHeaders(token);
+
+  try {
+    // Fetch PV, Other (Grid/Load), and Battery data from Lumentree Cloud in parallel
+    const [pvRes, otherRes, batRes] = await Promise.all([
+      fetch(`${LUMENTREE_BASE}/getPVDayData?queryDate=${date}&deviceId=${deviceUpper}`, { headers }),
+      fetch(`${LUMENTREE_BASE}/getOtherDayData?queryDate=${date}&deviceId=${deviceUpper}`, { headers }),
+      fetch(`${LUMENTREE_BASE}/getBatDayData?queryDate=${date}&deviceId=${deviceUpper}`, { headers })
+    ]);
+
+    const pvData = await pvRes.json();
+    const otherData = await otherRes.json();
+    const batData = await batRes.json();
+
+    // Debug: check if data exists at all
+    if (!pvData.data && !otherData.data) {
+      return {
+        success: false, deviceId, date, timeline: [], count: 0,
+        message: 'No data in response',
+        version: VERSION, source: 'lumentree_cloud',
+        debug: { pvKeys: Object.keys(pvData || {}), otherKeys: Object.keys(otherData || {}) }
+      };
+    }
+
+    // Parse PV series - actual format: data.pv.tableValueInfo (array of W values)
+    const pvSeries = pvData.data?.pv?.tableValueInfo || [];
+
+    // Parse Other series - actual format: data.grid.tableValueInfo, data.homeload.tableValueInfo, etc.
+    const gridSeries = otherData.data?.grid?.tableValueInfo || [];
+    const loadSeries = otherData.data?.homeload?.tableValueInfo || [];
+    const essentialSeries = otherData.data?.essentialLoad?.tableValueInfo || [];
+
+    // Parse Battery series - signed power values (W)
+    // IMPORTANT: API returns REVERSED signs: positive = discharge, negative = charge
+    // We invert to match expected: positive = charge, negative = discharge
+    const batSeriesRaw = batData.data?.tableValueInfo || [];
+
+    // Debug: log what we got
+    const batDebug = {
+      hasData: !!batData.data,
+      seriesLen: batSeriesRaw.length,
+      batsArrayLen: (batData.data?.bats || []).length,
+      firstFewValues: batSeriesRaw.slice(0, 5)
+    };
+
+    // Build timeline with 5-min intervals
+    const timeline = [];
+    const maxLen = Math.max(pvSeries.length, gridSeries.length, loadSeries.length, batSeriesRaw.length, 1);
+
+    for (let i = 0; i < maxLen; i++) {
+      const hours = Math.floor(i / 12);
+      const minutes = (i % 12) * 5;
+      const timeKey = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+
+      const pv = Math.round(parseFloat(pvSeries[i]) || 0);
+      const grid = Math.round(parseFloat(gridSeries[i]) || 0);
+      const load = Math.round(parseFloat(loadSeries[i]) || 0);
+      const backup = Math.round(parseFloat(essentialSeries[i]) || 0);
+
+      // Battery: API positive = discharge, negative = charge
+      // Invert for frontend: positive = charge, negative = discharge
+      const batRaw = parseFloat(batSeriesRaw[i]) || 0;
+      const bat = Math.round(-batRaw);  // Invert sign
+
+      // Only add if there's any data
+      if (pv > 0 || grid !== 0 || load > 0 || backup > 0 || bat !== 0) {
+        timeline.push({ t: timeKey, pv, grid, load, bat, backup });
+      }
+    }
+
+    return {
+      success: true,
+      deviceId,
+      date,
+      timeline,
+      count: timeline.length,
+      version: VERSION,
+      source: 'lumentree_cloud',
+      debug: { pvLen: pvSeries.length, gridLen: gridSeries.length, loadLen: loadSeries.length, bat: batDebug }
+    };
+  } catch (error) {
+    return { success: false, deviceId, date, timeline: [], count: 0, message: `Cloud API error: ${error.message}`, version: VERSION, source: 'lumentree_cloud' };
+  }
 }
 
 async function getSOCHistory(deviceId, date, env) {
@@ -666,35 +762,89 @@ async function getPowerPeak(deviceId, date, env) {
   }
 }
 
-async function getDailyEnergy(deviceId, env) {
+async function getDailyEnergy(deviceId, env, date = null) {
   const deviceLower = deviceId.toLowerCase();
+  const deviceUpper = deviceId.toUpperCase();
   const today = getVietnamToday();
+  const targetDate = date || today;
 
-  const sensors = ['pv_today', 'load_today', 'grid_in_today', 'total_load_today', 'charge_today', 'discharge_today', 'essential_today'];
-  const results = {};
+  // If querying today, use HA sensors
+  if (targetDate === today) {
+    const sensors = ['pv_today', 'load_today', 'grid_in_today', 'total_load_today', 'charge_today', 'discharge_today', 'essential_today'];
+    const results = {};
 
-  for (const sensor of sensors) {
-    try {
-      const data = await fetchHA(`/api/states/sensor.device_${deviceLower}_${sensor}`, env);
-      const key = sensor.replace('_today', '');
-      results[key] = parseFloat(data?.state) || 0;
-    } catch (e) {
-      results[sensor.replace('_today', '')] = 0;
+    for (const sensor of sensors) {
+      try {
+        const data = await fetchHA(`/api/states/sensor.device_${deviceLower}_${sensor}`, env);
+        const key = sensor.replace('_today', '');
+        results[key] = parseFloat(data?.state) || 0;
+      } catch (e) {
+        results[sensor.replace('_today', '')] = 0;
+      }
     }
+
+    const summary = {
+      pv: Math.round(results.pv * 10) / 10,
+      load: Math.round(results.load * 10) / 10,
+      totalLoad: Math.round(results.total_load * 10) / 10,
+      grid: Math.round(results.grid_in * 10) / 10,
+      charge: Math.round(results.charge * 10) / 10,
+      discharge: Math.round(results.discharge * 10) / 10,
+      essential: Math.round(results.essential * 10) / 10,
+      selfConsumption: Math.round((results.pv - results.grid_in) * 10) / 10
+    };
+
+    return { success: true, deviceId, date: today, summary, raw: results, version: VERSION, source: 'ha_sensors' };
   }
 
-  const summary = {
-    pv: Math.round(results.pv * 10) / 10,
-    load: Math.round(results.load * 10) / 10,
-    totalLoad: Math.round(results.total_load * 10) / 10,
-    grid: Math.round(results.grid_in * 10) / 10,
-    charge: Math.round(results.charge * 10) / 10,
-    discharge: Math.round(results.discharge * 10) / 10,
-    essential: Math.round(results.essential * 10) / 10,
-    selfConsumption: Math.round((results.pv - results.grid_in) * 10) / 10
-  };
+  // For past dates, use Lumentree Cloud API
+  const token = await getDeviceToken(deviceUpper, env);
+  if (!token) {
+    return { success: false, deviceId, date: targetDate, message: 'No token found', version: VERSION, source: 'lumentree_cloud' };
+  }
 
-  return { success: true, deviceId, date: today, summary, raw: results, version: VERSION };
+  const headers = lumentreeHeaders(token);
+
+  try {
+    const [pvRes, otherRes, batRes] = await Promise.all([
+      fetch(`${LUMENTREE_BASE}/getPVDayData?queryDate=${targetDate}&deviceId=${deviceUpper}`, { headers }),
+      fetch(`${LUMENTREE_BASE}/getOtherDayData?queryDate=${targetDate}&deviceId=${deviceUpper}`, { headers }),
+      fetch(`${LUMENTREE_BASE}/getBatDayData?queryDate=${targetDate}&deviceId=${deviceUpper}`, { headers })
+    ]);
+
+    const pvData = await pvRes.json();
+    const otherData = await otherRes.json();
+    const batData = await batRes.json();
+
+    // Parse daily totals from tableValue (divided by 10 to get kWh)
+    const pv = (pvData.data?.pv?.tableValue || 0) / 10;
+    const grid = (otherData.data?.grid?.tableValue || 0) / 10;
+    const load = (otherData.data?.homeload?.tableValue || 0) / 10;
+    const essential = (otherData.data?.essentialLoad?.tableValue || 0) / 10;
+
+    // Battery data: bats is array [charge, discharge]
+    const bats = batData.data?.bats || [];
+    const charge = bats[0]?.tableValue ? bats[0].tableValue / 10 : 0;
+    const discharge = bats[1]?.tableValue ? bats[1].tableValue / 10 : 0;
+
+    const totalLoad = load + essential;
+    const selfConsumption = pv - grid;
+
+    const summary = {
+      pv: Math.round(pv * 10) / 10,
+      load: Math.round(load * 10) / 10,
+      totalLoad: Math.round(totalLoad * 10) / 10,
+      grid: Math.round(grid * 10) / 10,
+      charge: Math.round(charge * 10) / 10,
+      discharge: Math.round(discharge * 10) / 10,
+      essential: Math.round(essential * 10) / 10,
+      selfConsumption: Math.round(selfConsumption * 10) / 10
+    };
+
+    return { success: true, deviceId, date: targetDate, summary, version: VERSION, source: 'lumentree_cloud' };
+  } catch (error) {
+    return { success: false, deviceId, date: targetDate, message: `Cloud API error: ${error.message}`, version: VERSION, source: 'lumentree_cloud' };
+  }
 }
 
 function calculateTieredPrice(kWh, vatRate = 0.08) {
@@ -1562,10 +1712,11 @@ export default {
         return jsonResponse(data, origin);
       }
 
-      // Daily Energy
+      // Daily Energy (with optional date parameter)
       const dailyMatch = path.match(/^\/api\/realtime\/daily-energy\/([^\/]+)$/);
       if (dailyMatch) {
-        const data = await getDailyEnergy(dailyMatch[1], env);
+        const date = url.searchParams.get('date') || null;  // null = today
+        const data = await getDailyEnergy(dailyMatch[1], env, date);
         if (wantsHtml) {
           return htmlResponse(generateDataHtml(data, `Daily Energy - ${dailyMatch[1]}`), origin);
         }

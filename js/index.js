@@ -293,16 +293,18 @@ function tryPrimaryAPI() {
 // Must be outside DOMContentLoaded for mobile compatibility
 // ========================================
 
-// Switch between Pro, Basic, and 3D Home Energy Flow views
+// Switch between Pro, Basic, 3D Home, and Flow Energy views
 window.switchEnergyFlowView = function (view) {
     console.log('[switchEnergyFlowView] Called with view:', view);
 
     const proView = document.getElementById('energyFlowPro');
     const basicView = document.getElementById('energyFlowBasic');
     const home3DView = document.getElementById('energyFlow3DHome');
+    const flowView = document.getElementById('energyFlowAdvanced');
     const proBtn = document.getElementById('proViewBtn');
     const basicBtn = document.getElementById('basicViewBtn');
     const home3DBtn = document.getElementById('home3DViewBtn');
+    const flowBtn = document.getElementById('flowViewBtn');
 
     if (!proView || !basicView) {
         console.warn('Energy flow views not found, retrying in 100ms...');
@@ -315,7 +317,7 @@ window.switchEnergyFlowView = function (view) {
         const inactiveClasses = ['text-slate-600', 'dark:text-slate-300', 'hover:text-slate-800', 'dark:hover:text-slate-100'];
         const activeClasses = ['bg-teal-500', 'text-white', 'shadow-sm'];
 
-        [proBtn, basicBtn, home3DBtn].forEach(btn => {
+        [proBtn, basicBtn, home3DBtn, flowBtn].forEach(btn => {
             if (btn) {
                 btn.classList.remove(...activeClasses);
                 btn.classList.add(...inactiveClasses);
@@ -335,6 +337,7 @@ window.switchEnergyFlowView = function (view) {
     proView.classList.add('hidden');
     basicView.classList.add('hidden');
     if (home3DView) home3DView.classList.add('hidden');
+    if (flowView) flowView.classList.add('hidden');
 
     // Reset all buttons
     resetAllButtons();
@@ -351,6 +354,17 @@ window.switchEnergyFlowView = function (view) {
             setActiveButton(home3DBtn);
             if (typeof window.autoSync3DHomeView === 'function') {
                 window.autoSync3DHomeView();
+            }
+        } else {
+            proView.classList.remove('hidden');
+            setActiveButton(proBtn);
+        }
+    } else if (view === 'flow') {
+        if (flowView) {
+            flowView.classList.remove('hidden');
+            setActiveButton(flowBtn);
+            if (typeof window.autoSyncFlowView === 'function') {
+                window.autoSyncFlowView();
             }
         } else {
             proView.classList.remove('hidden');
@@ -668,7 +682,315 @@ window.autoSyncBasicView = function () {
     }
 };
 
-console.log('✅ window.autoSync3DHomeView and window.autoSyncBasicView defined GLOBALLY');
+// Auto-sync data to Flow Advanced view elements (Dark Neon Style)
+window.autoSyncFlowView = function () {
+    // Get current values from Pro view and daily stats
+    const pvPower = document.getElementById('pv-power')?.textContent || '-- W';
+    const gridPower = document.getElementById('grid-power')?.textContent || '-- W';
+    const batteryPercent = document.getElementById('battery-percent-icon')?.textContent || '--%';
+    const batteryPower = document.getElementById('battery-power')?.textContent || '-- W';
+    const batteryVoltage = document.getElementById('battery-voltage-pro')?.textContent || '--V';
+    const batteryCurrent = document.getElementById('battery-current-pro')?.textContent || '--A';
+    const batteryStatus = document.getElementById('battery-status-text')?.textContent || '--';
+    const essentialPower = document.getElementById('essential-power')?.textContent || '-- W';
+    const loadPower = document.getElementById('load-power')?.textContent || '-- W';
+    const gridVoltage = document.getElementById('grid-voltage')?.textContent || '--V';
+    const deviceTemp = document.getElementById('device-temp')?.textContent || '--°C';
+
+    // Get PV1/PV2 details from Pro view (look for the pv-desc content)
+    const pv1Power = window.latestRealtimeData?.pPv1 || 0;
+    const pv2Power = window.latestRealtimeData?.pPv2 || 0;
+    const pv1Voltage = window.latestRealtimeData?.vpv1 || 0;
+    const pv2Voltage = window.latestRealtimeData?.vpv2 || 0;
+
+    // Get daily stats from existing elements or window data
+    const dailySolar = document.getElementById('pv-total')?.textContent || '-- kWh';
+    const dailyLoad = document.getElementById('load-total')?.textContent || '-- kWh';
+    const dailyCharge = document.getElementById('bat-charge')?.textContent || '-- kWh';
+    const dailyDischarge = document.getElementById('bat-discharge')?.textContent || '-- kWh';
+    const dailySell = document.getElementById('sell-total')?.textContent || '--';
+    const dailyBuy = document.getElementById('buy-total')?.textContent || '--';
+
+    // Get inverter power and frequency
+    const inverterPower = window.latestRealtimeData?.pac || 0;
+    const loadFreq = window.latestRealtimeData?.fac || 50;
+
+    // Helper function to update Flow view elements with blink effect
+    const updateFlowValue = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) {
+            const oldValue = el.textContent;
+            if (oldValue !== value) {
+                el.textContent = value;
+                el.classList.remove('value-updated');
+                void el.offsetWidth;
+                el.classList.add('value-updated');
+                setTimeout(() => el.classList.remove('value-updated'), 600);
+            }
+        }
+    };
+
+    // Update Flow view elements
+    updateFlowValue('flow-pv-power', pvPower);
+    updateFlowValue('flow-pv1-power', pv1Power > 0 ? pv1Power + 'W' : '--W');
+    updateFlowValue('flow-pv2-power', pv2Power > 0 ? pv2Power + 'W' : '--W');
+    updateFlowValue('flow-pv1-voltage', pv1Voltage > 0 ? pv1Voltage.toFixed(1) + 'V' : '--V');
+    updateFlowValue('flow-pv2-voltage', pv2Voltage > 0 ? pv2Voltage.toFixed(1) + 'V' : '--V');
+
+    updateFlowValue('flow-grid-power', gridPower);
+    updateFlowValue('flow-battery-power', batteryPower);
+    updateFlowValue('flow-battery-voltage', batteryVoltage);
+    updateFlowValue('flow-battery-current', batteryCurrent);
+    updateFlowValue('flow-battery-status', batteryStatus);
+    updateFlowValue('flow-essential-power', essentialPower);
+    updateFlowValue('flow-load-power', loadPower);
+    updateFlowValue('flow-load-voltage', gridVoltage);
+
+    // Update inverter section
+    updateFlowValue('flow-inverter-power', inverterPower > 0 ? inverterPower + ' W' : '-- W');
+    updateFlowValue('flow-inverter-voltage', gridVoltage.replace('V', ''));
+    updateFlowValue('flow-inverter-freq', loadFreq.toFixed(2));
+    updateFlowValue('flow-inverter-temp', '🌡️ ' + deviceTemp);
+
+    // Update daily stats
+    updateFlowValue('flow-daily-solar', dailySolar);
+    updateFlowValue('flow-daily-load', dailyLoad);
+    updateFlowValue('flow-daily-charge', dailyCharge);
+    updateFlowValue('flow-daily-discharge', dailyDischarge);
+    updateFlowValue('flow-daily-sell', dailySell);
+    updateFlowValue('flow-daily-buy', dailyBuy);
+
+    // Update battery percentage and fill bar
+    const batteryPercentNum = parseInt(batteryPercent.replace(/[^\d]/g, '')) || 0;
+    updateFlowValue('flow-battery-percent', batteryPercent);
+
+    const batteryFillEl = document.getElementById('flow-battery-fill');
+    if (batteryFillEl) {
+        batteryFillEl.style.width = batteryPercentNum + '%';
+        // Change color based on SOC
+        batteryFillEl.className = 'absolute left-0 top-0 bottom-0 transition-all duration-500';
+        if (batteryPercentNum <= 20) {
+            batteryFillEl.classList.add('bg-gradient-to-r', 'from-red-500', 'to-red-400');
+        } else if (batteryPercentNum <= 50) {
+            batteryFillEl.classList.add('bg-gradient-to-r', 'from-yellow-500', 'to-yellow-400');
+        } else {
+            batteryFillEl.classList.add('bg-gradient-to-r', 'from-emerald-500', 'to-emerald-400');
+        }
+    }
+
+    // Calculate and update runtime estimation
+    const batteryCapacity = window.batteryCapacityWh || 5120; // Default 5.12kWh
+    const currentSOC = batteryPercentNum;
+    const targetSOC = 10;
+    const batteryPowerVal = parseInt(batteryPower.replace(/[^\d-]/g, '')) || 0;
+
+    if (batteryPowerVal < -10 && currentSOC > targetSOC) {
+        // Discharging - calculate runtime
+        const remainingWh = (currentSOC - targetSOC) / 100 * batteryCapacity;
+        const dischargeRate = Math.abs(batteryPowerVal);
+        const runtimeHours = remainingWh / dischargeRate;
+        const hours = Math.floor(runtimeHours);
+        const mins = Math.floor((runtimeHours - hours) * 60);
+        updateFlowValue('flow-runtime', hours + ' hrs ' + mins + ' min');
+    } else if (batteryPowerVal > 10) {
+        updateFlowValue('flow-runtime', 'Đang sạc...');
+    } else {
+        updateFlowValue('flow-runtime', '-- hrs -- min');
+    }
+
+    // Calculate Autarky (self-sufficiency) = (Solar / Load) * 100
+    const solarVal = parseFloat(dailySolar.replace(/[^\d.]/g, '')) || 0;
+    const loadVal = parseFloat(dailyLoad.replace(/[^\d.]/g, '')) || 1;
+    const autarky = loadVal > 0 ? Math.min(100, (solarVal / loadVal) * 100).toFixed(0) : 0;
+    updateFlowValue('flow-autarky', autarky + '%');
+
+    // Calculate Ratio (Solar used / Solar generated)
+    const sellVal = parseFloat(dailySell.replace(/[^\d.]/g, '')) || 0;
+    const ratio = solarVal > 0 ? ((solarVal - sellVal) / solarVal * 100).toFixed(0) : 0;
+    updateFlowValue('flow-ratio', ratio + '%');
+
+    // ========== SUNSYNK SVG ELEMENTS UPDATE ==========
+    // Update SVG text elements (new Sunsynk layout)
+    updateFlowValue('flow-pv1-power-svg', pv1Power > 0 ? pv1Power + ' W' : '-- W');
+    updateFlowValue('flow-pv2-power-svg', pv2Power > 0 ? pv2Power + ' W' : '-- W');
+    updateFlowValue('flow-pv1-voltage-svg', pv1Voltage > 0 ? pv1Voltage.toFixed(1) + 'V' : '--V');
+    updateFlowValue('flow-pv2-voltage-svg', pv2Voltage > 0 ? pv2Voltage.toFixed(1) + 'V' : '--V');
+    updateFlowValue('flow-pv-total-svg', pvPower);
+    updateFlowValue('flow-daily-solar-svg', dailySolar);
+
+    // Inverter SVG
+    updateFlowValue('flow-inverter-power-svg', inverterPower > 0 ? inverterPower + ' W' : pvPower);
+    updateFlowValue('flow-inverter-current-svg', (inverterPower / 230).toFixed(1) + ' A');
+    updateFlowValue('flow-inverter-temp-svg', deviceTemp);
+
+    // Battery SVG
+    updateFlowValue('flow-battery-soc-svg', batteryPercent);
+    updateFlowValue('flow-battery-power-svg', batteryPower);
+    updateFlowValue('flow-battery-voltage-svg', batteryVoltage);
+    updateFlowValue('flow-battery-current-svg', batteryCurrent);
+    updateFlowValue('flow-runtime-svg', batteryPowerVal < -10 && currentSOC > targetSOC
+        ? Math.floor((currentSOC - targetSOC) / 100 * batteryCapacity / Math.abs(batteryPowerVal)) + 'h'
+        : batteryPowerVal > 10 ? 'Charging' : '-- hrs');
+    updateFlowValue('flow-daily-charge-svg', dailyCharge);
+    updateFlowValue('flow-daily-discharge-svg', dailyDischarge);
+
+    // Update battery gradient based on SOC
+    const gradientStop = document.getElementById('flow-battery-gradient-stop');
+    if (gradientStop) {
+        gradientStop.setAttribute('offset', batteryPercentNum + '%');
+    }
+
+    // Grid SVG
+    updateFlowValue('flow-grid-power-svg', gridPower);
+    updateFlowValue('flow-grid-voltage-svg', gridVoltage);
+    updateFlowValue('flow-daily-buy-svg', dailyBuy);
+    updateFlowValue('flow-daily-sell-svg', dailySell);
+
+    // Load SVG (swapped positions: Gray left = essential, Teal right = consumption)
+    updateFlowValue('flow-essential-power-svg', essentialPower);  // Gray (left) shows essential
+    updateFlowValue('flow-nonessential-power-svg', loadPower);  // Teal (right) shows consumption
+    updateFlowValue('flow-daily-load-svg', dailyLoad);
+
+    // Update inverter status text with inverter model (e.g., SUNT-8.0kW-HP)
+    // Get from device-type element which is already populated by applyDeviceInfo()
+    const deviceTypeEl = document.getElementById('device-type');
+    const inverterModel = deviceTypeEl?.textContent || 'Normal';
+    updateFlowValue('flow-status-text', inverterModel);
+
+    // Autarky & Ratio SVG
+    updateFlowValue('flow-autarky-svg', autarky + '%');
+    updateFlowValue('flow-ratio-svg', ratio + '%');
+
+    // Update flow line visibility based on power values
+    const pvTotal = parseInt(pvPower.replace(/[^\d]/g, '')) || 0;
+    const gridVal = parseInt(gridPower.replace(/[^\d-]/g, '')) || 0;
+
+    // Solar flow animation - dynamic dots based on PV power
+    const solarDot1 = document.getElementById('solar-dot-1');
+    const solarDot2 = document.getElementById('solar-dot-2');
+    const solarDot3 = document.getElementById('solar-dot-3');
+
+    if (solarDot1) solarDot1.style.display = pvTotal >= 1 ? 'inline' : 'none';
+    if (solarDot2) solarDot2.style.display = pvTotal > 1000 ? 'inline' : 'none';
+    if (solarDot3) solarDot3.style.display = pvTotal > 2500 ? 'inline' : 'none';
+
+    // PV1 flow animation - dynamic dots based on PV1 power
+    const pv1Dot1 = document.getElementById('pv1-dot-1');
+    const pv1Dot2 = document.getElementById('pv1-dot-2');
+    const pv1Dot3 = document.getElementById('pv1-dot-3');
+
+    if (pv1Dot1) pv1Dot1.style.display = pv1Power >= 1 ? 'inline' : 'none';
+    if (pv1Dot2) pv1Dot2.style.display = pv1Power > 1000 ? 'inline' : 'none';
+    if (pv1Dot3) pv1Dot3.style.display = pv1Power > 2500 ? 'inline' : 'none';
+
+    // PV2 flow animation - dynamic dots based on PV2 power
+    const pv2Dot1 = document.getElementById('pv2-dot-1');
+    const pv2Dot2 = document.getElementById('pv2-dot-2');
+    const pv2Dot3 = document.getElementById('pv2-dot-3');
+
+    if (pv2Dot1) pv2Dot1.style.display = pv2Power >= 1 ? 'inline' : 'none';
+    if (pv2Dot2) pv2Dot2.style.display = pv2Power > 1000 ? 'inline' : 'none';
+    if (pv2Dot3) pv2Dot3.style.display = pv2Power > 2500 ? 'inline' : 'none';
+
+    // Grid flow animation - dynamic dots based on power level
+    const gridFlowAnim = document.getElementById('grid-flow-anim');
+    const gridDot1 = document.getElementById('grid-dot-1');
+    const gridDot2 = document.getElementById('grid-dot-2');
+    const gridDot3 = document.getElementById('grid-dot-3');
+    const absGridVal = Math.abs(gridVal);
+
+    if (gridFlowAnim) {
+        // Always show the flow line container
+        gridFlowAnim.style.display = 'inline';
+
+        // Determine animation direction (import = from grid to inverter, export = inverter to grid)
+        const keyPoints = gridVal > 0 ? '1;0' : '0;1'; // Import from grid (positive) = 1;0
+
+        // Update keyPoints for all dots
+        [gridDot1, gridDot2, gridDot3].forEach(dot => {
+            if (dot) {
+                const animateMotion = dot.querySelector('animateMotion');
+                if (animateMotion) {
+                    animateMotion.setAttribute('keyPoints', keyPoints);
+                }
+            }
+        });
+
+        // Show/hide dots based on power level
+        // 0-20W: No dots (static line only)
+        // 21-1000W: 1 dot
+        // 1001-2000W: 2 dots
+        // >2000W: 3 dots
+        if (gridDot1) gridDot1.style.display = absGridVal > 20 ? 'inline' : 'none';
+        if (gridDot2) gridDot2.style.display = absGridVal > 1000 ? 'inline' : 'none';
+        if (gridDot3) gridDot3.style.display = absGridVal > 2000 ? 'inline' : 'none';
+    }
+
+    // Battery flow animation - dynamic dots based on power level and direction
+    const chargePath = document.getElementById('flow-bat-line-charge');
+    const dischargePath = document.getElementById('flow-bat-line-discharge');
+    const chargeDot1 = document.getElementById('bat-charge-dot-1');
+    const chargeDot2 = document.getElementById('bat-charge-dot-2');
+    const chargeDot3 = document.getElementById('bat-charge-dot-3');
+    const dischargeDot1 = document.getElementById('bat-discharge-dot-1');
+    const dischargeDot2 = document.getElementById('bat-discharge-dot-2');
+    const dischargeDot3 = document.getElementById('bat-discharge-dot-3');
+
+    const absBatPower = Math.abs(batteryPowerVal);
+
+    // Hide all dots and paths first
+    if (chargePath) chargePath.style.display = 'none';
+    if (dischargePath) dischargePath.style.display = 'none';
+    if (chargeDot1) chargeDot1.style.display = 'none';
+    if (chargeDot2) chargeDot2.style.display = 'none';
+    if (chargeDot3) chargeDot3.style.display = 'none';
+    if (dischargeDot1) dischargeDot1.style.display = 'none';
+    if (dischargeDot2) dischargeDot2.style.display = 'none';
+    if (dischargeDot3) dischargeDot3.style.display = 'none';
+
+    if (batteryPowerVal > 0 && absBatPower >= 1) {
+        // Charging: Inverter -> Battery
+        if (chargePath) chargePath.style.display = 'inline';
+        if (chargeDot1) chargeDot1.style.display = absBatPower >= 1 ? 'inline' : 'none';
+        if (chargeDot2) chargeDot2.style.display = absBatPower > 1000 ? 'inline' : 'none';
+        if (chargeDot3) chargeDot3.style.display = absBatPower > 2500 ? 'inline' : 'none';
+    } else if (batteryPowerVal < 0 && absBatPower >= 1) {
+        // Discharging: Battery -> Inverter
+        if (dischargePath) dischargePath.style.display = 'inline';
+        if (dischargeDot1) dischargeDot1.style.display = absBatPower >= 1 ? 'inline' : 'none';
+        if (dischargeDot2) dischargeDot2.style.display = absBatPower > 1000 ? 'inline' : 'none';
+        if (dischargeDot3) dischargeDot3.style.display = absBatPower > 2500 ? 'inline' : 'none';
+    }
+
+    // Tải Cổng Load flow animation (gray left) - dynamic dots based on essentialPower
+    const essentialVal = parseInt(essentialPower.replace(/[^\d]/g, '')) || 0;
+
+    // Dots for gray line (left section)
+    const loadDot2a = document.getElementById('load-dot-2a');
+    const loadDot2b = document.getElementById('load-dot-2b');
+    const loadDot2c = document.getElementById('load-dot-2c');
+
+    // Show/hide dots based on essentialPower
+    // 0W: no dots, 1-1000W: 1 dot, 1001-2000W: 2 dots, >2000W: 3 dots
+    if (loadDot2a) loadDot2a.style.display = essentialVal >= 1 ? 'inline' : 'none';
+    if (loadDot2b) loadDot2b.style.display = essentialVal > 1000 ? 'inline' : 'none';
+    if (loadDot2c) loadDot2c.style.display = essentialVal > 2000 ? 'inline' : 'none';
+
+    // Tải Tiêu Thụ flow animation (teal right) - dynamic dots based on loadPower
+    const consumptionVal = parseInt(loadPower.replace(/[^\d]/g, '')) || 0;
+
+    const nonessentialDot1 = document.getElementById('nonessential-dot-1');
+    const nonessentialDot2 = document.getElementById('nonessential-dot-2');
+    const nonessentialDot3 = document.getElementById('nonessential-dot-3');
+
+    // Show/hide dots based on loadPower (consumption)
+    // 0W: no dots, 1-1000W: 1 dot, 1001-2000W: 2 dots, >2000W: 3 dots
+    if (nonessentialDot1) nonessentialDot1.style.display = consumptionVal >= 1 ? 'inline' : 'none';
+    if (nonessentialDot2) nonessentialDot2.style.display = consumptionVal > 1000 ? 'inline' : 'none';
+    if (nonessentialDot3) nonessentialDot3.style.display = consumptionVal > 2000 ? 'inline' : 'none';
+};
+
+console.log('✅ window.autoSync3DHomeView, window.autoSyncBasicView and window.autoSyncFlowView defined GLOBALLY');
 
 document.addEventListener('DOMContentLoaded', function () {
     // ========================================
@@ -1071,6 +1393,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Fetch data for new date (skip device notification)
                 window.skipDeviceNotification = true;
                 fetchData();
+
+                // Also refresh daily energy cards for the selected date
+                if (typeof window.refreshAllDataForDate === 'function') {
+                    window.refreshAllDataForDate(selectedDate);
+                }
             }
         });
     }
@@ -1369,6 +1696,27 @@ document.addEventListener('DOMContentLoaded', function () {
     async function fetchRealtimeData(deviceId) {
         // SLOW MODE: For specific devices, just try 1 API and return (no retry loop)
         if (shouldUseSlowPolling(deviceId)) {
+            const cacheKey = `slow_cache_${deviceId.toUpperCase()}`;
+            const now = Date.now();
+
+            // Check if another tab fetched recently (within 10s)
+            try {
+                const cached = localStorage.getItem(cacheKey);
+                if (cached) {
+                    const { timestamp, data } = JSON.parse(cached);
+                    if (now - timestamp < 10000 && data) {
+                        // Use cached data instead of fetching
+                        console.log(`📡 [TAB-SYNC] Using cached data (${Math.round((now - timestamp) / 1000)}s old)`);
+                        latestRealtimeData = data.displayData;
+                        updateRealTimeDisplay(data.displayData);
+                        if (data.cellsData) {
+                            updateBatteryCellDisplay(data.cellsData);
+                        }
+                        return;
+                    }
+                }
+            } catch (e) { }
+
             slowApiIndex = (slowApiIndex + 1) % API_POOL.length;
             const api = API_POOL[slowApiIndex];
             const apiUrl = `${api.worker}/api/realtime/device/${deviceId}`;
@@ -1458,6 +1806,14 @@ document.addEventListener('DOMContentLoaded', function () {
                         });
                     }
                 }
+
+                // Cache data for other tabs
+                try {
+                    localStorage.setItem(cacheKey, JSON.stringify({
+                        timestamp: Date.now(),
+                        data: { displayData, cellsData }
+                    }));
+                } catch (e) { }
 
                 console.log(`🐢 [SLOW] ✅ ${api.name.split(' ')[0]} success`);
             } catch (e) {
@@ -3040,10 +3396,26 @@ Vui lòng kiểm tra:
             navigator.vibrate(10);
         }
 
-        // Hide all containers, show selected
+        // Hide all containers, show selected with fade animation
         containers.forEach((container, index) => {
             if (container) {
-                container.classList.toggle('hidden', index !== chartNum - 1);
+                if (index !== chartNum - 1) {
+                    // Hide non-active containers
+                    container.classList.add('hidden');
+                    container.style.opacity = '0';
+                } else {
+                    // Show and animate the active container
+                    container.classList.remove('hidden');
+                    container.style.opacity = '0';
+                    container.style.transform = 'translateY(8px)';
+                    container.style.transition = 'opacity 0.3s ease-out, transform 0.3s ease-out';
+
+                    // Trigger animation after a tiny delay
+                    requestAnimationFrame(() => {
+                        container.style.opacity = '1';
+                        container.style.transform = 'translateY(0)';
+                    });
+                }
             }
         });
 
@@ -3079,6 +3451,42 @@ Vui lòng kiểm tra:
     };
 
     // ========================================
+    // CHART DATE NAVIGATION
+    // ========================================
+
+    // Global function to change chart date by delta days (prev/next buttons)
+    window.changeChartDate = function (delta) {
+        const dateInput = document.getElementById('energy-chart-date-picker');
+        if (!dateInput) return;
+
+        // Get current date or default to today
+        const currentDate = dateInput.value ? new Date(dateInput.value) : new Date();
+
+        // Add delta days
+        currentDate.setDate(currentDate.getDate() + delta);
+
+        // Format as YYYY-MM-DD
+        const newDate = currentDate.toISOString().split('T')[0];
+
+        // Don't allow future dates
+        const today = new Date().toISOString().split('T')[0];
+        if (newDate > today) {
+            console.log('⚠️ Cannot navigate to future dates');
+            return;
+        }
+
+        // Update date input
+        dateInput.value = newDate;
+
+        // Refresh all data for the new date
+        if (typeof window.refreshAllDataForDate === 'function') {
+            window.refreshAllDataForDate(newDate);
+        }
+
+        console.log(`📅 Chart date changed by ${delta} day(s) to: ${newDate}`);
+    };
+
+    // ========================================
     // REFRESH ALL DATA FOR DATE
     // ========================================
 
@@ -3091,6 +3499,45 @@ Vui lòng kiểm tra:
 
         console.log(`🔄 Refreshing ALL data for date: ${formattedDate}`);
 
+        // ---- SYNC ALL DATE PICKERS ----
+        // Update chart date picker
+        const chartDatePicker = document.getElementById('energy-chart-date-picker');
+        if (chartDatePicker && chartDatePicker.value !== formattedDate) {
+            chartDatePicker.value = formattedDate;
+        }
+
+        // Update compact date picker (hidden input)
+        const compactDateInput = document.getElementById('compactDateInput');
+        if (compactDateInput && compactDateInput.value !== formattedDate) {
+            compactDateInput.value = formattedDate;
+        }
+
+        // Update main date input
+        const mainDateInput = document.getElementById('dateInput');
+        if (mainDateInput && mainDateInput.value !== formattedDate) {
+            mainDateInput.value = formattedDate;
+        }
+
+        // Update compact date display (dd/mm/yyyy format)
+        const compactDateDisplay = document.getElementById('compactDateDisplay');
+        if (compactDateDisplay) {
+            const dateObj = new Date(formattedDate);
+            const day = String(dateObj.getDate()).padStart(2, '0');
+            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const year = dateObj.getFullYear();
+            compactDateDisplay.textContent = `${day}/${month}/${year}`;
+        }
+
+        // ---- DATE CHANGE LOADING ANIMATION ----
+        // Add loading pulse to chart containers only (don't change date picker appearance)
+        const chartContainers = document.querySelectorAll('#chart1Container, #chart2Container, #chart3Container, #chart4Container');
+        chartContainers.forEach(container => {
+            if (container && !container.classList.contains('hidden')) {
+                container.style.transition = 'opacity 0.3s ease-out';
+                container.style.opacity = '0.4';
+            }
+        });
+
         // Show loading indicators
         const loadingEl = document.getElementById('powerChartLoading');
         if (loadingEl) loadingEl.classList.remove('hidden');
@@ -3099,8 +3546,8 @@ Vui lòng kiểm tra:
             // API 1: Solar Dashboard (summary data)
             const dashboardUrl = `https://temperature-soc-power.applike098.workers.dev/api/solar/dashboard/${deviceId}`;
 
-            // API 2: Daily Energy
-            const dailyEnergyUrl = `https://lightearth.applike098.workers.dev/api/realtime/daily-energy/${deviceId}`;
+            // API 2: Daily Energy (with date parameter for past dates)
+            const dailyEnergyUrl = `https://temperature-soc-power.applike098.workers.dev/api/realtime/daily-energy/${deviceId}?date=${formattedDate}`;
 
             // API 3: SOC History
             const socHistoryUrl = `https://temperature-soc-power.applike098.workers.dev/api/realtime/soc-history/${deviceId}?date=${formattedDate}`;
@@ -3122,6 +3569,52 @@ Vui lòng kiểm tra:
 
             console.log('✅ All API requests completed');
 
+            // Process Daily Energy (update UI cards)
+            if (dailyEnergyRes.status === 'fulfilled' && dailyEnergyRes.value.ok) {
+                const dailyData = await dailyEnergyRes.value.json();
+                console.log('📊 Daily Energy response:', dailyData);
+
+                if (dailyData.success && dailyData.summary) {
+                    const s = dailyData.summary;
+                    // Update DOM elements with daily stats
+                    const updateEl = (id, val) => {
+                        const el = document.getElementById(id);
+                        if (el) {
+                            const newVal = `${val.toFixed(1)} kWh`;
+                            if (el.textContent !== newVal) {
+                                el.textContent = newVal;
+                                el.classList.remove('value-updated');
+                                void el.offsetWidth;
+                                el.classList.add('value-updated');
+                                setTimeout(() => el.classList.remove('value-updated'), 600);
+                            }
+                        }
+                    };
+
+                    // Update "Dữ Liệu Trong Ngày" section cards
+                    updateEl('pv-total', s.pv || 0);
+                    updateEl('load-total', s.load || s.totalLoad || 0);
+                    updateEl('bat-charge', s.charge || 0);
+                    updateEl('bat-discharge', s.discharge || 0);
+                    updateEl('grid-total', s.grid || 0);
+                    updateEl('essential-total', s.essential || 0);
+
+                    // Update Chart 2: Tổng Nguồn Điện totals
+                    updateEl('gridPurchaseTotal', s.grid || 0);
+                    updateEl('essentialBackupTotal', s.essential || 0);
+                    updateEl('loadConsumptionTotal', s.load || s.totalLoad || 0);
+
+                    // Update Chart 3: Tổng PV total
+                    updateEl('pvTodayTotal', s.pv || 0);
+
+                    // Update Chart 4: Sạc & Xả Pin totals
+                    updateEl('chargeTotal', s.charge || 0);
+                    updateEl('dischargeTotal', s.discharge || 0);
+
+                    console.log('✅ All daily energy cards updated for', formattedDate);
+                }
+            }
+
             // Process Power History (main timeline data for charts 1-4)
             if (powerHistoryRes.status === 'fulfilled' && powerHistoryRes.value.ok) {
                 const powerData = await powerHistoryRes.value.json();
@@ -3133,23 +3626,76 @@ Vui lòng kiểm tra:
                 if (timeline.length > 0) {
                     cachedChartData = timeline;
 
+                    // Calculate peak values from timeline data
+                    const peaks = {
+                        pv: { value: 0, time: '--:--' },
+                        grid: { value: 0, time: '--:--' },
+                        load: { value: 0, time: '--:--' },
+                        charge: { value: 0, time: '--:--' },
+                        discharge: { value: 0, time: '--:--' },
+                        essential: { value: 0, time: '--:--' }
+                    };
+
+                    timeline.forEach(point => {
+                        const time = point.t || point.time || '';
+                        const pv = Math.abs(parseFloat(point.pv) || 0);
+                        const grid = Math.abs(parseFloat(point.grid) || 0);
+                        const load = Math.abs(parseFloat(point.load) || parseFloat(point.totalLoad) || 0);
+
+                        // bat field: positive = charging, negative = discharging
+                        const batValue = parseFloat(point.bat) || 0;
+                        const charge = batValue > 0 ? batValue : 0;
+                        const discharge = batValue < 0 ? Math.abs(batValue) : 0;
+
+                        const essential = Math.abs(parseFloat(point.backup) || parseFloat(point.essential) || 0);
+
+                        if (pv > peaks.pv.value) { peaks.pv = { value: pv, time }; }
+                        if (grid > peaks.grid.value) { peaks.grid = { value: grid, time }; }
+                        if (load > peaks.load.value) { peaks.load = { value: load, time }; }
+                        if (charge > peaks.charge.value) { peaks.charge = { value: charge, time }; }
+                        if (discharge > peaks.discharge.value) { peaks.discharge = { value: discharge, time }; }
+                        if (essential > peaks.essential.value) { peaks.essential = { value: essential, time }; }
+                    });
+
+                    // Update peak power DOM elements
+                    const updatePeak = (peakId, timeId, val, time) => {
+                        const peakEl = document.getElementById(peakId);
+                        const timeEl = document.getElementById(timeId);
+                        if (peakEl) {
+                            const newVal = val > 0 ? `${Math.round(val)} W` : '--';
+                            if (peakEl.textContent !== newVal) {
+                                peakEl.textContent = newVal;
+                                peakEl.classList.remove('value-updated');
+                                void peakEl.offsetWidth;
+                                peakEl.classList.add('value-updated');
+                                setTimeout(() => peakEl.classList.remove('value-updated'), 600);
+                            }
+                        }
+                        if (timeEl) timeEl.textContent = time || '--:--';
+                    };
+
+                    updatePeak('chart-pv-peak', 'chart-pv-time', peaks.pv.value, peaks.pv.time);
+                    updatePeak('chart-grid-peak', 'chart-grid-time', peaks.grid.value, peaks.grid.time);
+                    updatePeak('chart-load-peak', 'chart-load-time', peaks.load.value, peaks.load.time);
+                    updatePeak('chart-charge-peak', 'chart-charge-time', peaks.charge.value, peaks.charge.time);
+                    updatePeak('chart-discharge-peak', 'chart-discharge-time', peaks.discharge.value, peaks.discharge.time);
+                    updatePeak('chart-essential-peak', 'chart-essential-time', peaks.essential.value, peaks.essential.time);
+
+                    console.log('✅ Peak power values updated:', peaks);
+
                     // Update all power charts
                     updatePowerTimelineChart(timeline, formattedDate);
 
-                    // Update currently active chart
-                    switch (activeChartNumber) {
-                        case 1:
-                            // Chart 1 already updated by updatePowerTimelineChart
-                            break;
-                        case 2:
-                            renderGridSourceChart(timeline);
-                            break;
-                        case 3:
-                            renderPVTodayChart(timeline);
-                            break;
-                        case 4:
-                            renderBatteryFlowChart(timeline);
-                            break;
+                    // Render ALL charts to ensure data is updated
+                    // (Charts 2, 3, 4 are hidden but data needs to be ready when user switches)
+                    if (typeof renderGridSourceChart === 'function') {
+                        renderGridSourceChart(timeline);
+                    }
+                    if (typeof renderPVTodayChart === 'function') {
+                        renderPVTodayChart(timeline);
+                    }
+                    if (typeof renderBatteryFlowChart === 'function') {
+                        renderBatteryFlowChart(timeline);
                     }
 
                     console.log('✅ Power charts updated with', timeline.length, 'data points');
@@ -3199,6 +3745,15 @@ Vui lòng kiểm tra:
         } finally {
             // Hide loading
             if (loadingEl) loadingEl.classList.add('hidden');
+
+            // ---- RESTORE LOADING ANIMATION ----
+            // Restore chart container opacity with fade-in
+            const chartContainers = document.querySelectorAll('#chart1Container, #chart2Container, #chart3Container, #chart4Container');
+            chartContainers.forEach(container => {
+                if (container && !container.classList.contains('hidden')) {
+                    container.style.opacity = '1';
+                }
+            });
         }
     };
 
@@ -3734,33 +4289,8 @@ Vui lòng kiểm tra:
             }
         });
 
-        // Fetch accurate totals from daily-energy API
-        const deviceId = window.CURRENT_DEVICE_ID || new URLSearchParams(window.location.search).get('id') || 'P250801055';
-        try {
-            const dailyEnergyUrl = `https://temperature-soc-power.applike098.workers.dev/api/realtime/daily-energy/${deviceId}`;
-            const response = await fetch(dailyEnergyUrl);
-            if (response.ok) {
-                const data = await response.json();
-                const summary = data.summary || data.today || {};
-
-                // Update KWh totals display
-                const gridPurchaseEl = document.getElementById('gridPurchaseTotal');
-                const essentialEl = document.getElementById('essentialBackupTotal');
-                const loadEl = document.getElementById('loadConsumptionTotal');
-
-                const gridKwh = summary.grid ?? summary.grid_in ?? 0;
-                const essentialKwh = summary.essential ?? 0;
-                const loadKwh = summary.load ?? summary.totalLoad ?? 0;
-
-                if (gridPurchaseEl) gridPurchaseEl.textContent = `${gridKwh.toFixed(1)} KWh`;
-                if (essentialEl) essentialEl.textContent = `${essentialKwh.toFixed(1)} KWh`;
-                if (loadEl) loadEl.textContent = `${loadKwh.toFixed(1)} KWh`;
-
-                console.log('✅ Grid Source totals updated from daily-energy API:', { gridKwh, essentialKwh, loadKwh });
-            }
-        } catch (err) {
-            console.warn('⚠️ Failed to fetch daily-energy for grid source totals:', err);
-        }
+        // NOTE: KWh totals are now updated by refreshAllDataForDate with proper date parameter
+        // DO NOT fetch daily-energy here without date - it would overwrite with today's data
 
         if (gridSourceChartInstance) {
             gridSourceChartInstance.destroy();
@@ -3905,28 +4435,8 @@ Vui lòng kiểm tra:
             }
         });
 
-        // Fetch accurate PV total from daily-energy API
-        const deviceId = window.CURRENT_DEVICE_ID || new URLSearchParams(window.location.search).get('id') || 'P250801055';
-        const totalEl = document.getElementById('pvTodayTotal');
-
-        try {
-            const dailyEnergyUrl = `https://temperature-soc-power.applike098.workers.dev/api/realtime/daily-energy/${deviceId}`;
-            const response = await fetch(dailyEnergyUrl);
-            if (response.ok) {
-                const data = await response.json();
-                const summary = data.summary || data.today || {};
-                const pvKwh = summary.pv ?? 0;
-
-                if (totalEl) totalEl.textContent = `${pvKwh.toFixed(1)} KWh`;
-                console.log('✅ PV total updated from daily-energy API:', pvKwh);
-            }
-        } catch (err) {
-            console.warn('⚠️ Failed to fetch daily-energy for PV total:', err);
-            // Fallback: calculate from timeline
-            let totalPVWh = 0;
-            pvData.forEach(val => totalPVWh += val / 12);
-            if (totalEl) totalEl.textContent = `${(totalPVWh / 1000).toFixed(1)} KWh`;
-        }
+        // NOTE: PV total is now updated by refreshAllDataForDate with proper date parameter
+        // DO NOT fetch daily-energy here without date - it would overwrite with today's data
 
         if (pvTodayChartInstance) {
             pvTodayChartInstance.destroy();
@@ -4051,44 +4561,8 @@ Vui lòng kiểm tra:
 
         console.log(`📊 Battery chart compressed: ${sortedTimeline.length} points → ${compressedLabels.length} unique values`);
 
-        // Fetch accurate totals from daily-energy API (temperature-soc-power worker)
-        const deviceId = window.CURRENT_DEVICE_ID || new URLSearchParams(window.location.search).get('id') || 'P250801055';
-        try {
-            // Use temperature-soc-power API directly for accurate charge/discharge data
-            const dailyEnergyUrl = `https://temperature-soc-power.applike098.workers.dev/api/realtime/daily-energy/${deviceId}`;
-            const response = await fetch(dailyEnergyUrl);
-            if (response.ok) {
-                const data = await response.json();
-                const summary = data.summary || data.today || {};
-
-                // Update totals display with accurate API values
-                const chargeEl = document.getElementById('chargeTotal');
-                const dischargeEl = document.getElementById('dischargeTotal');
-                const charge = summary.charge ?? summary.charge_day ?? 0;
-                const discharge = summary.discharge ?? summary.discharge_day ?? 0;
-
-                if (chargeEl) chargeEl.textContent = `${charge.toFixed(1)} KWh`;
-                if (dischargeEl) dischargeEl.textContent = `${discharge.toFixed(1)} KWh`;
-
-                console.log('✅ Battery totals updated from daily-energy API:', { charge, discharge });
-            }
-        } catch (err) {
-            console.warn('⚠️ Failed to fetch daily-energy for battery totals:', err);
-            // Fallback: calculate from compressed data
-            let totalChargeWh = 0;
-            let totalDischargeWh = 0;
-            compressedData.forEach(batPower => {
-                if (batPower > 0) {
-                    totalChargeWh += batPower / 6; // Estimate based on data points
-                } else {
-                    totalDischargeWh += Math.abs(batPower) / 6;
-                }
-            });
-            const chargeEl = document.getElementById('chargeTotal');
-            const dischargeEl = document.getElementById('dischargeTotal');
-            if (chargeEl) chargeEl.textContent = `${(totalChargeWh / 1000).toFixed(1)} KWh`;
-            if (dischargeEl) dischargeEl.textContent = `${(totalDischargeWh / 1000).toFixed(1)} KWh`;
-        }
+        // NOTE: Battery totals are now updated by refreshAllDataForDate with proper date parameter
+        // DO NOT fetch daily-energy here without date - it would overwrite with today's data
 
         if (batteryFlowChartInstance) {
             batteryFlowChartInstance.destroy();
@@ -5528,8 +6002,19 @@ Vui lòng kiểm tra:
         }
 
         // Normal update with actual data
+        // Save data to window for Flow view access
+        window.latestRealtimeData = {
+            pPv1: data.pv1Power || 0,
+            pPv2: data.pv2Power || 0,
+            vpv1: data.pv1Voltage || 0,
+            vpv2: data.pv2Voltage || 0,
+            pac: data.inverterAcOutPower || data.pvTotalPower || 0,
+            fac: data.loadFrequency || 50
+        };
+
         // PV - with blink effect
         updateValue('pv-power', `${data.pvTotalPower}W`);
+
 
         // Show/hide suns based on PV power level
         // 1-2000W: 1 sun, 2001-3000W: 2 suns, 3001+W: 3 suns
@@ -5621,36 +6106,50 @@ Vui lòng kiểm tra:
         }
 
         // Battery Voltage (Điện Áp Pin) - display in ALL views (Pro, Basic, 3D Home, Cell section)
+        // Color: Green when charging, Red when discharging
         if (data.batteryVoltage) {
             const voltageStr = `${data.batteryVoltage.toFixed(1)}V`;
-            // Cell section display (original)
+            const voltageColorClass = data.batteryStatus === "Discharging"
+                ? "text-red-500"
+                : data.batteryStatus === "Charging"
+                    ? "text-emerald-500"
+                    : "text-slate-400";
+            const voltageHTML = `<span class="${voltageColorClass}">${voltageStr}</span>`;
+
+            // Cell section display (original - no color change)
             updateValue('batteryVoltageDisplay', voltageStr);
-            // Pro view - voltage under battery power
-            updateValue('battery-voltage-pro', voltageStr);
-            // Basic view - voltage under battery power
-            updateValue('battery-voltage-basic', voltageStr);
-            // 3D Home view - voltage under battery power
-            updateValue('battery-voltage-3d', voltageStr);
+            // Pro view - voltage under battery power (with color)
+            updateValueHTML('battery-voltage-pro', voltageHTML);
+            // Basic view - voltage under battery power (with color)
+            updateValueHTML('battery-voltage-basic', voltageHTML);
+            // 3D Home view - voltage under battery power (with color)
+            updateValueHTML('battery-voltage-3d', voltageHTML);
         }
 
         // Battery Current (Dòng điện Pin) - display in ALL views (Pro, Basic, 3D Home)
         // Show + when charging, - when discharging
+        // Color: Green when charging, Red when discharging
         const batteryCurrent = data.batteryCurrent || 0;
         const batteryPowerForSign = data.batteryValue || 0;
         let currentStr;
+        let currentColorClass;
         if (batteryPowerForSign > 0) {
-            // Charging - show positive
+            // Charging - show positive, green color
             currentStr = `+${Math.abs(batteryCurrent).toFixed(1)}A`;
+            currentColorClass = "text-emerald-500";
         } else if (batteryPowerForSign < 0) {
-            // Discharging - show negative
+            // Discharging - show negative, red color
             currentStr = `-${Math.abs(batteryCurrent).toFixed(1)}A`;
+            currentColorClass = "text-red-500";
         } else {
-            // Idle
+            // Idle - neutral color
             currentStr = `${Math.abs(batteryCurrent).toFixed(1)}A`;
+            currentColorClass = "text-slate-400";
         }
-        updateValue('battery-current-pro', currentStr);
-        updateValue('battery-current-basic', currentStr);
-        updateValue('battery-current-3d', currentStr);
+        const currentHTML = `<span class="${currentColorClass}">${currentStr}</span>`;
+        updateValueHTML('battery-current-pro', currentHTML);
+        updateValueHTML('battery-current-basic', currentHTML);
+        updateValueHTML('battery-current-3d', currentHTML);
 
         // Other values - with blink effect
         updateValue('device-temp', `${data.deviceTempValue}°C`);
@@ -5682,6 +6181,11 @@ Vui lòng kiểm tra:
         // Auto-sync to 3D Home view if it's visible
         if (typeof window.autoSync3DHomeView === 'function') {
             window.autoSync3DHomeView();
+        }
+
+        // Auto-sync to Flow Advanced view if it's visible
+        if (typeof window.autoSyncFlowView === 'function') {
+            window.autoSyncFlowView();
         }
 
         // Update last refresh time with blink
@@ -7242,7 +7746,8 @@ Vui lòng kiểm tra:
 
         let currentDate = new Date(dateInput.value);
         currentDate.setDate(currentDate.getDate() + offset);
-        dateInput.value = formatDate(currentDate);
+        const newDateValue = formatDate(currentDate);
+        dateInput.value = newDateValue;
 
         // Update compact date display
         const compactDateDisplay = document.getElementById('compactDateDisplay');
@@ -7258,6 +7763,11 @@ Vui lòng kiểm tra:
         // Skip device notification when just changing dates
         window.skipDeviceNotification = true;
         fetchData();
+
+        // Also refresh daily energy cards for the new date
+        if (typeof window.refreshAllDataForDate === 'function') {
+            window.refreshAllDataForDate(newDateValue);
+        }
     }
 
     function scrollToElement(elementId) {
@@ -7825,4 +8335,18 @@ Vui lòng kiểm tra:
         configureChartDefaults();
     });
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
+    // ========================================
+    // INITIAL DATA LOAD
+    // ========================================
+    // Load all data for today on page startup
+    const initialLoadDate = new Date().toISOString().split('T')[0];
+    console.log('🚀 Initial data load for date:', initialLoadDate);
+
+    // Delay slightly to ensure DOM is fully ready
+    setTimeout(() => {
+        if (typeof window.refreshAllDataForDate === 'function') {
+            window.refreshAllDataForDate(initialLoadDate);
+        }
+    }, 500);
 });

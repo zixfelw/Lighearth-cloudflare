@@ -39,6 +39,53 @@
         })();
     </script>
 
+    <!-- iOS PWA: Preserve deviceId in URL when adding to home screen -->
+    <script>
+        (function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            let deviceId = urlParams.get('deviceId');
+
+            // If deviceId in URL, save to localStorage
+            if (deviceId) {
+                localStorage.setItem('lumentree_deviceId', deviceId);
+            } else {
+                // No deviceId in URL - try to restore from localStorage
+                const savedDeviceId = localStorage.getItem('lumentree_deviceId');
+                if (savedDeviceId) {
+                    // Redirect to include deviceId (for iOS PWA launch)
+                    const newUrl = window.location.pathname + '?deviceId=' + savedDeviceId + window.location.hash;
+                    window.history.replaceState({}, '', newUrl);
+                    deviceId = savedDeviceId;
+                }
+            }
+
+            // Generate dynamic manifest with deviceId in start_url (iOS fix)
+            const manifest = {
+                name: "Lumentree",
+                short_name: "Lumentree",
+                description: "Solar Energy Monitoring Dashboard",
+                start_url: deviceId ? "./?deviceId=" + deviceId : "./",
+                display: "standalone",
+                orientation: "portrait",
+                background_color: "#0f172a",
+                theme_color: "#0f172a",
+                icons: [
+                    { src: "/android-chrome-192x192.png", sizes: "192x192", type: "image/png" },
+                    { src: "/android-chrome-512x512.png", sizes: "512x512", type: "image/png" },
+                    { src: "/apple-touch-icon.png", sizes: "180x180", type: "image/png", purpose: "any maskable" }
+                ]
+            };
+
+            // Create and append dynamic manifest link
+            const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+            const manifestUrl = URL.createObjectURL(blob);
+            const link = document.createElement('link');
+            link.rel = 'manifest';
+            link.href = manifestUrl;
+            document.head.appendChild(link);
+        })();
+    </script>
+
     <!-- Preload critical resources -->
     <link rel="preload" href="css/index.min.css" as="style" crossorigin>
     <link rel="preload" href="logo.webp" as="image">
@@ -2139,14 +2186,14 @@
         <!-- Zalo Community -->
         <a href="https://zalo.me/g/kmzrgh433" target="_blank" rel="noopener noreferrer"
             class="flex items-center gap-2 px-3 sm:px-5 py-2 sm:py-2.5 bg-[#0068FF] hover:bg-[#0055DD] text-white rounded-full shadow-lg hover:shadow-xl transition-all transform hover:scale-105 active:scale-95">
-            <img src="/zalo-logo.png" alt="Zalo" class="w-5 h-5 sm:w-6 sm:h-6 rounded-lg">
+            <img src="/icons/zalo-logo.png" alt="Zalo" class="w-5 h-5 sm:w-6 sm:h-6 rounded-lg">
             <span class="text-xs sm:text-sm font-bold whitespace-nowrap">Join Zalo LightEarth VN</span>
         </a>
 
         <!-- Telegram Bot -->
         <a href="https://t.me/lightearth_bot" target="_blank" rel="noopener noreferrer"
             class="flex items-center gap-2 px-3 sm:px-5 py-2 sm:py-2.5 bg-[#0088cc] hover:bg-[#006699] text-white rounded-full shadow-lg hover:shadow-xl transition-all transform hover:scale-105 active:scale-95">
-            <img src="/telegram-logo.png" alt="Telegram" class="w-5 h-5 sm:w-6 sm:h-6 rounded-full">
+            <img src="/icons/telegram-logo.png" alt="Telegram" class="w-5 h-5 sm:w-6 sm:h-6 rounded-full">
             <span class="text-xs sm:text-sm font-bold whitespace-nowrap">BOT Cảnh Báo Hệ Thống</span>
         </a>
     </div>
@@ -2388,8 +2435,13 @@
                             </button>
                             <button id="home3DViewBtn" onclick="switchEnergyFlowView('3dhome')" class="px-2.5 py-1.5 text-xs font-medium rounded-md transition-all duration-200
                                text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-slate-100"
-                                title="Giao diện 3D Home">
-                                3D Home
+                                title="Giao diện Home">
+                                Home
+                            </button>
+                            <button id="flowViewBtn" onclick="switchEnergyFlowView('flow')" class="px-2.5 py-1.5 text-xs font-medium rounded-md transition-all duration-200
+                               text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-slate-100"
+                                title="Giao diện Flow - Dark Neon Style">
+                                ⚡Flow
                             </button>
                         </div>
 
@@ -3230,6 +3282,489 @@
             </div>
         </div>
 
+        <!-- Energy Flow Advanced - Sunsynk Power Flow Card (SVG) -->
+        <div id="energyFlowAdvanced" class="hidden">
+            <style>
+                /* Sunsynk Flow Animation Styles */
+                @keyframes flowDots {
+                    0% {
+                        stroke-dashoffset: 24;
+                    }
+
+                    100% {
+                        stroke-dashoffset: 0;
+                    }
+                }
+
+                @keyframes flowDotsReverse {
+                    0% {
+                        stroke-dashoffset: 0;
+                    }
+
+                    100% {
+                        stroke-dashoffset: 24;
+                    }
+                }
+
+                .flow-line {
+                    stroke-dasharray: 4, 4;
+                    animation: flowDots 1s linear infinite;
+                }
+
+                .flow-line-reverse {
+                    stroke-dasharray: 4, 4;
+                    animation: flowDotsReverse 1s linear infinite;
+                }
+
+                .flow-hidden {
+                    display: none;
+                }
+
+                /* Text styles from Sunsynk */
+                .sunsynk-svg text {
+                    text-anchor: middle;
+                    dominant-baseline: middle;
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                }
+
+                .sunsynk-svg .left-align {
+                    text-anchor: start;
+                }
+
+                .sunsynk-svg .st3 {
+                    font-size: 12px;
+                }
+
+                .sunsynk-svg .st4 {
+                    font-size: 18px;
+                }
+
+                .sunsynk-svg .st8 {
+                    font-weight: 500;
+                }
+
+                .sunsynk-svg .st10 {
+                    font-size: 20px;
+                }
+
+                .sunsynk-svg .st13 {
+                    font-size: 28px;
+                }
+
+                .sunsynk-svg .st14 {
+                    font-size: 16px;
+                }
+
+                /* Mobile Responsive */
+                @media (max-width: 640px) {
+                    .sunsynk-svg {
+                        min-height: 400px;
+                        height: auto;
+                        touch-action: manipulation;
+                    }
+
+                    .sunsynk-svg .st3 {
+                        font-size: 14px;
+                    }
+
+                    .sunsynk-svg .st4 {
+                        font-size: 20px;
+                    }
+
+                    .sunsynk-svg .st10 {
+                        font-size: 22px;
+                    }
+
+                    .sunsynk-svg .st13 {
+                        font-size: 32px;
+                    }
+
+                    .sunsynk-svg .st14 {
+                        font-size: 18px;
+                    }
+                }
+            </style>
+
+            <div class="bg-slate-900 rounded-2xl p-2 sm:p-3 border border-slate-700">
+                <svg class="sunsynk-svg w-full" viewBox="0 0 483 510" preserveAspectRatio="xMidYMid meet"
+                    xmlns="http://www.w3.org/2000/svg">
+
+                    <!-- ===================== SOLAR SECTION ===================== -->
+                    <svg id="Solar-Flow" style="overflow: visible" x="3%" y="2.5%">
+                        <!-- Sun Icon -->
+                        <svg xmlns="http://www.w3.org/2000/svg" id="sun-flow" x="0" y="-0.5" width="40" height="40"
+                            viewBox="0 0 24 24">
+                            <path fill="#ff9b30"
+                                d="M11.45 2v3.55L15 3.77L11.45 2m-1 6L8 10.46l3.75 1.25L10.45 8M2 11.45L3.77 15l1.78-3.55H2M10 2H2v8c.57.17 1.17.25 1.77.25c3.58.01 6.49-2.9 6.5-6.5c-.01-.59-.1-1.18-.27-1.75m7 20v-6h-3l5-9v6h3l-5 9Z" />
+                        </svg>
+
+                        <!-- PV Total Box -->
+                        <rect x="51" y="162" width="70" height="30" rx="4.5" ry="4.5" fill="none" stroke="#ff9b30"
+                            stroke-width="1" />
+
+                        <!-- PV1 Box -->
+                        <rect x="0" y="40" width="85" height="38" rx="4.5" ry="4.5" fill="none" stroke="#ff9b30"
+                            stroke-width="1" />
+                        <!-- PV2 Box -->
+                        <rect x="101" y="40" width="85" height="38" rx="4.5" ry="4.5" fill="none" stroke="#ff9b30"
+                            stroke-width="1" />
+
+                        <!-- PV Names -->
+                        <text x="0" y="88" class="st3 st8 left-align" fill="#ff9b30">PV1</text>
+                        <text x="99" y="88" class="st3 st8 left-align" fill="#ff9b30">PV2</text>
+
+                        <!-- PV1 Power & Voltage -->
+                        <text id="flow-pv1-power-svg" x="43" y="55" class="st14 st8" fill="#ff9b30">-- W</text>
+                        <text id="flow-pv1-voltage-svg" x="43" y="70" class="st3" fill="#ff9b30">--V</text>
+                        <!-- PV2 Power & Voltage -->
+                        <text id="flow-pv2-power-svg" x="145" y="55" class="st14 st8" fill="#ff9b30">-- W</text>
+                        <text id="flow-pv2-voltage-svg" x="145" y="70" class="st3" fill="#ff9b30">--V</text>
+
+                        <!-- PV Total Power -->
+                        <text id="flow-pv-total-svg" x="87" y="178" class="st14 st8" fill="#ff9b30">-- W</text>
+
+                        <!-- Daily Solar Label -->
+                        <text x="43.5" y="29" class="st3 left-align" fill="#ff9b30">Daily Solar</text>
+                        <text id="flow-daily-solar-svg" x="43.5" y="15" class="st10 left-align" fill="#ff9b30">--
+                            kWh</text>
+
+                        <!-- PV1 Flow: From PV1 box bottom, then across to PV Total -->
+                        <svg id="pv1-flow" xmlns:xlink="http://www.w3.org/1999/xlink" overflow="visible">
+                            <path id="pv1-line" d="M 43 78 L 43 130 Q 43 140 53 140 L 76 140 Q 86 140 86 150 L 86 162"
+                                fill="none" stroke="#ff9b30" stroke-width="2" stroke-miterlimit="10" />
+                            <circle id="pv1-dot-1" r="3" fill="#ff9b30" style="display: none;">
+                                <animateMotion dur="1.5s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1"
+                                    calcMode="linear">
+                                    <mpath href="#pv1-line" xlink:href="#pv1-line" />
+                                </animateMotion>
+                            </circle>
+                            <circle id="pv1-dot-2" r="3" fill="#ff9b30" style="display: none;">
+                                <animateMotion dur="1.5s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1"
+                                    calcMode="linear" begin="0.5s">
+                                    <mpath href="#pv1-line" xlink:href="#pv1-line" />
+                                </animateMotion>
+                            </circle>
+                            <circle id="pv1-dot-3" r="3" fill="#ff9b30" style="display: none;">
+                                <animateMotion dur="1.5s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1"
+                                    calcMode="linear" begin="1s">
+                                    <mpath href="#pv1-line" xlink:href="#pv1-line" />
+                                </animateMotion>
+                            </circle>
+                        </svg>
+
+                        <!-- PV2 Flow: From PV2 box bottom, then across to PV Total -->
+                        <svg id="pv2-flow" xmlns:xlink="http://www.w3.org/1999/xlink" overflow="visible">
+                            <path id="pv2-line"
+                                d="M 143 78 L 143 130 Q 143 140 133 140 L 96 140 Q 86 140 86 150 L 86 162" fill="none"
+                                stroke="#ff9b30" stroke-width="2" stroke-miterlimit="10" />
+                            <circle id="pv2-dot-1" r="3" fill="#ff9b30" style="display: none;">
+                                <animateMotion dur="1.5s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1"
+                                    calcMode="linear">
+                                    <mpath href="#pv2-line" xlink:href="#pv2-line" />
+                                </animateMotion>
+                            </circle>
+                            <circle id="pv2-dot-2" r="3" fill="#ff9b30" style="display: none;">
+                                <animateMotion dur="1.5s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1"
+                                    calcMode="linear" begin="0.5s">
+                                    <mpath href="#pv2-line" xlink:href="#pv2-line" />
+                                </animateMotion>
+                            </circle>
+                            <circle id="pv2-dot-3" r="3" fill="#ff9b30" style="display: none;">
+                                <animateMotion dur="1.5s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1"
+                                    calcMode="linear" begin="1s">
+                                    <mpath href="#pv2-line" xlink:href="#pv2-line" />
+                                </animateMotion>
+                            </circle>
+                        </svg>
+
+                        <!-- Total PV -> Inverter Flow Line (PV Total bottom to Inverter top-left) -->
+                        <svg id="solar-flow" xmlns:xlink="http://www.w3.org/1999/xlink" overflow="visible">
+                            <path id="solar-line" d="M 86 192 L 86 220 Q 86 230 96 230 L 145 230" fill="none"
+                                stroke="#ff9b30" stroke-width="3" stroke-miterlimit="10" />
+                            <circle id="solar-dot-1" r="4" fill="#ff9b30" style="display: none;">
+                                <animateMotion dur="1s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1"
+                                    calcMode="linear">
+                                    <mpath href="#solar-line" xlink:href="#solar-line" />
+                                </animateMotion>
+                            </circle>
+                            <circle id="solar-dot-2" r="4" fill="#ff9b30" style="display: none;">
+                                <animateMotion dur="1s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1"
+                                    calcMode="linear" begin="0.33s">
+                                    <mpath href="#solar-line" xlink:href="#solar-line" />
+                                </animateMotion>
+                            </circle>
+                            <circle id="solar-dot-3" r="4" fill="#ff9b30" style="display: none;">
+                                <animateMotion dur="1s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1"
+                                    calcMode="linear" begin="0.66s">
+                                    <mpath href="#solar-line" xlink:href="#solar-line" />
+                                </animateMotion>
+                            </circle>
+                        </svg>
+                    </svg>
+
+
+                    <!-- ===================== INVERTER SECTION ===================== -->
+                    <svg id="Inverter-Flow" style="overflow: visible" x="3%" y="2.5%">
+                        <!-- Inverter Box -->
+                        <rect x="145.15" y="212" width="70" height="50" rx="7.5" ry="7.5" fill="none" stroke="#6b7280"
+                            stroke-width="1.5" />
+
+                        <!-- Inverter Power -->
+                        <text id="flow-inverter-power-svg" x="180.5" y="228" class="st14 st8" fill="#f8fafc">-- W</text>
+                        <!-- Inverter Current -->
+                        <text id="flow-inverter-current-svg" x="180.5" y="244" class="st3 st8" fill="#f8fafc">--
+                            A</text>
+                        <!-- Inverter Temp -->
+                        <text id="flow-inverter-temp-svg" x="180.5" y="256" class="st3" fill="#ef4444">--°C</text>
+
+                        <!-- Inverter Icon - Lumentree Inverter Image -->
+                        <image href="./images/lumentree-inverter.png" x="154.5" y="268" width="54" height="70"
+                            preserveAspectRatio="xMidYMid meet" />
+
+                        <!-- Status Circle -->
+                        <circle id="flow-status-circle" cx="160" cy="344" r="3.5" fill="#22c55e" />
+                        <text id="flow-status-text" x="167" y="346" class="st3 left-align" fill="#6b7280">Normal</text>
+                    </svg>
+
+                    <!-- ===================== BATTERY SECTION ===================== -->
+                    <svg id="Battery-Flow" style="overflow: visible" x="3%" y="2.5%">
+                        <!-- Battery Icon -->
+                        <defs>
+                            <linearGradient id="batteryGradientFlow" x1="0%" x2="0%" y1="100%" y2="0%">
+                                <stop offset="0%" stop-color="#5fb6ad" />
+                                <stop id="flow-battery-gradient-stop" offset="70%" stop-color="#5fb6ad" />
+                                <stop offset="100%" stop-color="#334155" />
+                            </linearGradient>
+                        </defs>
+
+                        <svg xmlns="http://www.w3.org/2000/svg" id="bat-flow" x="30" y="340" width="70" height="70"
+                            preserveAspectRatio="none" viewBox="0 0 24 24">
+                            <path id="flow-battery-icon" fill="url(#batteryGradientFlow)"
+                                d="M16 20H8V6h8m.67-2H15V2H9v2H7.33A1.33 1.33 0 0 0 6 5.33v15.34C6 21.4 6.6 22 7.33 22h9.34c.74 0 1.33-.6 1.33-1.33V5.33C18 4.6 17.4 4 16.67 4M15 16H9v2h6v-2m0-4H9v2h6v-2m0-4H9v2h6V8Z" />
+                        </svg>
+
+                        <!-- Battery SOC -->
+                        <text id="flow-battery-soc-svg" x="88" y="377" class="st13 st8 left-align"
+                            fill="#5fb6ad">--%</text>
+
+                        <!-- Battery Power Box (larger to include V/A) -->
+                        <rect x="40" y="270" width="90" height="65" rx="4.5" ry="4.5" fill="none" stroke="#5fb6ad" />
+                        <text id="flow-battery-power-svg" x="85" y="292" class="st14 st8" fill="#5fb6ad">-- W</text>
+                        <!-- Battery Voltage & Current (inside box, separate lines) -->
+                        <text id="flow-battery-voltage-svg" x="85" y="310" class="st3" fill="#5fb6ad">--V</text>
+                        <text id="flow-battery-current-svg" x="85" y="322" class="st3" fill="#5fb6ad">--A</text>
+
+                        <!-- Runtime -->
+                        <text id="flow-runtime-svg" x="88" y="402" class="st14 left-align" fill="#5fb6ad">-- hrs</text>
+                        <text id="flow-runtime-label" x="88" y="418" class="st3 left-align" fill="#5fb6ad">RUNTIME TO
+                            10%</text>
+
+                        <!-- Daily Charge/Discharge -->
+                        <text x="88" y="436" class="st3 left-align" fill="#5fb6ad">Sạc:</text>
+                        <text id="flow-daily-charge-svg" x="115" y="436" class="st3 left-align"
+                            fill="#22c55e">--kWh</text>
+                        <text x="88" y="454" class="st3 left-align" fill="#5fb6ad">Xả:</text>
+                        <text id="flow-daily-discharge-svg" x="115" y="454" class="st3 left-align"
+                            fill="#f59e0b">--kWh</text>
+
+                        <!-- Inverter -> Battery Flow (from inverter left, down to battery box center-top) -->
+                        <svg id="bat-flow-anim" xmlns:xlink="http://www.w3.org/1999/xlink" overflow="visible">
+                            <!-- Charging path: Inverter -> Battery -->
+                            <path id="flow-bat-line-charge" d="M 145 237 L 90 237 Q 80 237 80 247 L 80 270" fill="none"
+                                stroke="#5fb6ad" stroke-width="2" />
+                            <!-- Discharging path: Battery -> Inverter (reverse) -->
+                            <path id="flow-bat-line-discharge" d="M 80 270 L 80 247 Q 80 237 90 237 L 145 237"
+                                fill="none" stroke="#5fb6ad" stroke-width="2" style="display: none;" />
+
+                            <!-- Charging dots (Inverter -> Battery) -->
+                            <circle id="bat-charge-dot-1" r="4" fill="#5fb6ad" style="display: none;">
+                                <animateMotion dur="1.2s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1"
+                                    calcMode="linear">
+                                    <mpath href="#flow-bat-line-charge" xlink:href="#flow-bat-line-charge" />
+                                </animateMotion>
+                            </circle>
+                            <circle id="bat-charge-dot-2" r="4" fill="#5fb6ad" style="display: none;">
+                                <animateMotion dur="1.2s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1"
+                                    calcMode="linear" begin="0.4s">
+                                    <mpath href="#flow-bat-line-charge" xlink:href="#flow-bat-line-charge" />
+                                </animateMotion>
+                            </circle>
+                            <circle id="bat-charge-dot-3" r="4" fill="#5fb6ad" style="display: none;">
+                                <animateMotion dur="1.2s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1"
+                                    calcMode="linear" begin="0.8s">
+                                    <mpath href="#flow-bat-line-charge" xlink:href="#flow-bat-line-charge" />
+                                </animateMotion>
+                            </circle>
+
+                            <!-- Discharging dots (Battery -> Inverter) -->
+                            <circle id="bat-discharge-dot-1" r="4" fill="#5fb6ad" style="display: none;">
+                                <animateMotion dur="1.2s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1"
+                                    calcMode="linear">
+                                    <mpath href="#flow-bat-line-discharge" xlink:href="#flow-bat-line-discharge" />
+                                </animateMotion>
+                            </circle>
+                            <circle id="bat-discharge-dot-2" r="4" fill="#5fb6ad" style="display: none;">
+                                <animateMotion dur="1.2s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1"
+                                    calcMode="linear" begin="0.4s">
+                                    <mpath href="#flow-bat-line-discharge" xlink:href="#flow-bat-line-discharge" />
+                                </animateMotion>
+                            </circle>
+                            <circle id="bat-discharge-dot-3" r="4" fill="#5fb6ad" style="display: none;">
+                                <animateMotion dur="1.2s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1"
+                                    calcMode="linear" begin="0.8s">
+                                    <mpath href="#flow-bat-line-discharge" xlink:href="#flow-bat-line-discharge" />
+                                </animateMotion>
+                            </circle>
+                        </svg>
+                    </svg>
+
+                    <!-- ===================== GRID SECTION ===================== -->
+                    <svg id="Grid-Flow" style="overflow: visible" x="3%" y="2.5%">
+                        <!-- Grid Label -->
+                        <text x="430" y="45" class="st3" fill="#5490c2">Lưới EVN</text>
+
+                        <!-- Grid Tower Icon (top-right corner) -->
+                        <svg xmlns="http://www.w3.org/2000/svg" x="395" y="50" width="70" height="70"
+                            viewBox="0 0 24 24">
+                            <path fill="#5490c2"
+                                d="m8.28 5.45l-1.78-.9L7.76 2h8.47l1.27 2.55l-1.78.89L15 4H9l-.72 1.45M18.62 8h-4.53l-.79-3h-2.6l-.79 3H5.38L4.1 10.55l1.79.89l.73-1.44h10.76l.72 1.45l1.79-.89L18.62 8m-.85 14H15.7l-.24-.9L12 15.9l-3.47 5.2l-.23.9H6.23l2.89-11h2.07l-.36 1.35L12 14.1l1.16-1.75l-.35-1.35h2.07l2.89 11m-6.37-7l-.9-1.35l-1.18 4.48L11.4 15m3.28 3.12l-1.18-4.48l-.9 1.36l2.08 3.12Z" />
+                        </svg>
+
+                        <!-- Grid Power Box (below tower) -->
+                        <rect x="390" y="130" width="70" height="30" rx="4.5" ry="4.5" fill="none" stroke="#5490c2" />
+                        <text id="flow-grid-power-svg" x="425" y="147" class="st14 st8" fill="#5490c2">-- W</text>
+
+                        <!-- Grid Voltage -->
+                        <text id="flow-grid-voltage-svg" x="425" y="170" class="st3" fill="#5490c2">--V</text>
+
+                        <!-- Inverter -> Grid Flow (from inverter right, up and across to grid box center) -->
+                        <svg id="grid-flow-anim" xmlns:xlink="http://www.w3.org/1999/xlink" overflow="visible">
+                            <path id="flow-grid-line"
+                                d="M 215 220 L 300 220 Q 310 220 310 210 L 310 155 Q 310 145 320 145 L 390 145"
+                                fill="none" stroke="#5490c2" stroke-width="2" />
+                            <!-- Dot 1 (always visible when animation active) -->
+                            <circle id="grid-dot-1" r="4" fill="#5490c2" style="display: none;">
+                                <animateMotion dur="1.5s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1"
+                                    calcMode="linear">
+                                    <mpath href="#flow-grid-line" xlink:href="#flow-grid-line" />
+                                </animateMotion>
+                            </circle>
+                            <!-- Dot 2 (visible for 1001-2000W+) -->
+                            <circle id="grid-dot-2" r="4" fill="#5490c2" style="display: none;">
+                                <animateMotion dur="1.5s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1"
+                                    calcMode="linear" begin="0.5s">
+                                    <mpath href="#flow-grid-line" xlink:href="#flow-grid-line" />
+                                </animateMotion>
+                            </circle>
+                            <!-- Dot 3 (visible for >2000W) -->
+                            <circle id="grid-dot-3" r="4" fill="#5490c2" style="display: none;">
+                                <animateMotion dur="1.5s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1"
+                                    calcMode="linear" begin="1s">
+                                    <mpath href="#flow-grid-line" xlink:href="#flow-grid-line" />
+                                </animateMotion>
+                            </circle>
+                        </svg>
+                    </svg>
+
+                    <!-- ===================== LOAD SECTION (Tải Cổng Load - Gray) ===================== -->
+                    <svg id="Load-Flow" style="overflow: visible" x="3%" y="2.5%">
+                        <!-- Load Icon (simple home - gray, smaller) -->
+                        <svg xmlns="http://www.w3.org/2000/svg" x="275" y="335" width="50" height="50"
+                            viewBox="0 0 24 24">
+                            <path fill="#969696"
+                                d="M 12 3 z z M 19 20 v -8 h 3 L 12 3 L 2 12 h 3 v 8 z M 12 5.7 l 5 4.5 V 18 H 7 v -7.8 z" />
+                        </svg>
+
+                        <!-- Load Box -->
+                        <rect x="250" y="280" width="100" height="40" rx="4.5" ry="4.5" fill="none" stroke="#969696" />
+                        <text id="flow-essential-power-svg" x="300" y="304" class="st14 st8" fill="#f8fafc">-- W</text>
+
+                        <!-- Load Label (Tải Cổng Load) -->
+                        <text x="300" y="400" class="st3" fill="#f8fafc">Tải Cổng Load</text>
+
+
+                        <!-- Inverter -> Tải Cổng Load Flow LINE (gray) -->
+                        <svg id="load-flow-anim-2" xmlns:xlink="http://www.w3.org/1999/xlink" overflow="visible">
+                            <path id="flow-load-line-2" d="M 215 255 L 290 255 Q 300 255 300 265 L 300 280" fill="none"
+                                stroke="#969696" stroke-width="2" />
+                            <!-- Dot 1 -->
+                            <circle id="load-dot-2a" r="4" fill="#969696" style="display: none;">
+                                <animateMotion dur="1s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1"
+                                    calcMode="linear">
+                                    <mpath href="#flow-load-line-2" xlink:href="#flow-load-line-2" />
+                                </animateMotion>
+                            </circle>
+                            <!-- Dot 2 -->
+                            <circle id="load-dot-2b" r="4" fill="#969696" style="display: none;">
+                                <animateMotion dur="1s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1"
+                                    calcMode="linear" begin="0.33s">
+                                    <mpath href="#flow-load-line-2" xlink:href="#flow-load-line-2" />
+                                </animateMotion>
+                            </circle>
+                            <!-- Dot 3 -->
+                            <circle id="load-dot-2c" r="4" fill="#969696" style="display: none;">
+                                <animateMotion dur="1s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1"
+                                    calcMode="linear" begin="0.66s">
+                                    <mpath href="#flow-load-line-2" xlink:href="#flow-load-line-2" />
+                                </animateMotion>
+                            </circle>
+                        </svg>
+                    </svg>
+
+                    <!-- ===================== NON-ESSENTIAL LOAD (Tải Tiêu Thụ - Teal) ===================== -->
+                    <svg id="NonEssential-Flow" style="overflow: visible" x="3%" y="2.5%">
+                        <!-- Consumption Icon (lightning home - teal, larger) -->
+                        <svg xmlns="http://www.w3.org/2000/svg" x="385" y="325" width="60" height="60"
+                            viewBox="0 0 24 24">
+                            <path fill="#5fb6ad"
+                                d="M5 20v-8H2l10-9l10 9h-3v8H5m7-14.31l-5 4.5V18h10v-7.81l-5-4.5M11.5 18v-4H9l3.5-7v4H15l-3.5 7Z" />
+                        </svg>
+
+                        <!-- Consumption Power Box -->
+                        <rect x="375" y="280" width="80" height="40" rx="4.5" ry="4.5" fill="none" stroke="#5fb6ad" />
+                        <text id="flow-nonessential-power-svg" x="415" y="304" class="st14 st8" fill="#5fb6ad">--
+                            W</text>
+
+                        <!-- Consumption Label (Tải Tiêu Thụ) -->
+                        <text x="415" y="400" class="st3" fill="#5fb6ad">Tải Tiêu Thụ</text>
+
+                        <!-- Daily Consumption -->
+                        <text id="flow-daily-load-svg" x="415" y="430" class="st10" fill="#5fb6ad">-- kWh</text>
+
+                        <!-- Inverter -> Tải Tiêu Thụ Flow (teal line) -->
+                        <svg id="nonessential-flow-anim" xmlns:xlink="http://www.w3.org/1999/xlink" overflow="visible">
+                            <path id="flow-nonessential-line" d="M 215 240 L 405 240 Q 415 240 415 250 L 415 280"
+                                fill="none" stroke="#5fb6ad" stroke-width="2" />
+                            <!-- Dot 1 -->
+                            <circle id="nonessential-dot-1" r="4" fill="#5fb6ad" style="display: none;">
+                                <animateMotion dur="1.5s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1"
+                                    calcMode="linear">
+                                    <mpath href="#flow-nonessential-line" xlink:href="#flow-nonessential-line" />
+                                </animateMotion>
+                            </circle>
+                            <!-- Dot 2 -->
+                            <circle id="nonessential-dot-2" r="4" fill="#5fb6ad" style="display: none;">
+                                <animateMotion dur="1.5s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1"
+                                    calcMode="linear" begin="0.5s">
+                                    <mpath href="#flow-nonessential-line" xlink:href="#flow-nonessential-line" />
+                                </animateMotion>
+                            </circle>
+                            <!-- Dot 3 -->
+                            <circle id="nonessential-dot-3" r="4" fill="#5fb6ad" style="display: none;">
+                                <animateMotion dur="1.5s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1"
+                                    calcMode="linear" begin="1s">
+                                    <mpath href="#flow-nonessential-line" xlink:href="#flow-nonessential-line" />
+                                </animateMotion>
+                            </circle>
+                        </svg>
+                    </svg>
+
+
+                </svg>
+            </div>
+        </div>
+
+
         <!-- Battery Cell Section -->
         <div id="batteryCellSection" class="hidden mb-4">
             <div
@@ -3723,11 +4258,26 @@
                     </div>
                 </div>
 
-                <!-- Date Picker - Below power stats cards -->
-                <div class="flex justify-end mb-3">
+                <!-- Date Picker with Prev/Next Navigation - Below power stats cards -->
+                <div class="flex justify-center items-center gap-2 sm:gap-3 mb-3">
+                    <!-- Prev Day Button -->
+                    <button id="chartPrevDay" onclick="changeChartDate(-1)"
+                        class="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-700/80 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors border border-slate-200 dark:border-slate-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </button>
+                    <!-- Date Input -->
                     <input type="date" id="energy-chart-date-picker"
-                        class="text-[10px] sm:text-xs font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-md px-2 py-1 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        onchange="refreshAllDataForDate(this.value)" />
+                        class="text-sm font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700/80 border border-slate-200 dark:border-slate-600 rounded-xl px-4 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        style="height: 36px; min-width: 140px;" onchange="refreshAllDataForDate(this.value)" />
+                    <!-- Next Day Button -->
+                    <button id="chartNextDay" onclick="changeChartDate(1)"
+                        class="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-700/80 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors border border-slate-200 dark:border-slate-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
                 </div>
 
                 <!-- CHART 1: Line Chart (Default) -->
@@ -3803,7 +4353,7 @@
                                     KWh</span>
                                 <span
                                     class="block text-[9px] sm:text-[10px] text-amber-600 dark:text-amber-400 font-semibold mt-0.5">Mua
-                                    từ lưới</span>
+                                    điện EVN</span>
                             </div>
                         </div>
                         <!-- Điện Backup Card -->
@@ -5609,7 +6159,7 @@
     <div id="pwaInstallBanner"
         class="hidden fixed bottom-4 left-4 right-4 bg-gradient-to-r from-slate-800 to-slate-900 rounded-2xl p-4 shadow-2xl border border-teal-500/30 z-[9999] md:hidden">
         <div class="flex items-center gap-3">
-            <img src="/apple-touch-icon.png" alt="Lumentree" class="w-12 h-12 rounded-xl shadow-lg">
+            <img src="./icons/apple-touch-icon.png" alt="Lumentree" class="w-12 h-12 rounded-xl shadow-lg">
             <div class="flex-1">
                 <div class="text-white font-bold text-sm">Cài đặt Lumentree</div>
                 <div class="text-gray-400 text-xs">Thêm vào màn hình chính</div>

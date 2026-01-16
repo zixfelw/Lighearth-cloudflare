@@ -56,7 +56,7 @@ const CORS_HEADERS = {
 const LUMENTREE_DOMAIN = 'lumentree';
 
 // Telegram Bot Configuration
-const TELEGRAM_BOT_TOKEN = '8596250778:AAES7mzb1WZrNHGAIapXXpIn_g_iKCmRETc';
+const TELEGRAM_BOT_TOKEN = '8225131628:AAFbwEhJjuKYq94dYYErQHKXXq97ixEtNfA';
 const TELEGRAM_API = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}`;
 
 // In-memory storage for pending requests (in production, use KV or D1)
@@ -464,7 +464,12 @@ async function enableDefaultPVSensors(haUrl, haToken, deviceId) {
 
 /**
  * Store pending request in KV (or in-memory for testing)
+ * PENDING_TTL_SECONDS: 5 minutes - when web shows "expired, can retry"
+ * KV TTL: 1 hour - actual storage time (gives admin more time to respond)
  */
+const PENDING_TTL_SECONDS = 300; // 5 minutes for client-side expired check
+const KV_STORAGE_TTL = 3600; // 1 hour for actual KV storage
+
 async function storePendingRequest(env, deviceId, requestData) {
     const normalizedId = normalizeDeviceId(deviceId);
     const key = `pending_${normalizedId}`;
@@ -472,13 +477,14 @@ async function storePendingRequest(env, deviceId, requestData) {
         deviceId: normalizedId,
         status: 'pending',
         requestedAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + PENDING_TTL_SECONDS * 1000).toISOString(),
         ...requestData
     };
 
     if (env?.DEVICE_REQUESTS) {
-        // Use KV storage
+        // Use KV storage with 1 hour TTL (longer than client-side check)
         await env.DEVICE_REQUESTS.put(key, JSON.stringify(data), {
-            expirationTtl: 86400 // 24 hours
+            expirationTtl: KV_STORAGE_TTL
         });
     } else {
         // Fallback to in-memory (not persistent across workers)
@@ -490,17 +496,34 @@ async function storePendingRequest(env, deviceId, requestData) {
 
 /**
  * Get pending request from KV
+ * Also checks if request has expired (> 5 minutes)
  */
 async function getPendingRequest(env, deviceId) {
     const normalizedId = normalizeDeviceId(deviceId);
     const key = `pending_${normalizedId}`;
 
+    let data = null;
     if (env?.DEVICE_REQUESTS) {
-        const data = await env.DEVICE_REQUESTS.get(key);
-        return data ? JSON.parse(data) : null;
+        const raw = await env.DEVICE_REQUESTS.get(key);
+        data = raw ? JSON.parse(raw) : null;
     } else {
-        return pendingRequests.get(key) || null;
+        data = pendingRequests.get(key) || null;
     }
+
+    // Check if expired (for in-memory fallback or if KV hasn't auto-deleted yet)
+    if (data && data.requestedAt) {
+        const requestedTime = new Date(data.requestedAt).getTime();
+        const now = Date.now();
+        const elapsedSeconds = (now - requestedTime) / 1000;
+
+        if (elapsedSeconds > PENDING_TTL_SECONDS) {
+            // Mark as expired
+            data.status = 'expired';
+            data.expiredReason = 'Timeout after 5 minutes - admin did not respond';
+        }
+    }
+
+    return data;
 }
 
 /**
@@ -701,7 +724,7 @@ export default {
                     'POST /register-integration - Direct register',
                     'POST /remove-entry'
                 ],
-                telegramBot: 'https://t.me/lumentreeebot'
+                telegramBot: 'https://t.me/lumentreecall_bot'
             }), { headers: CORS_HEADERS });
         }
 
@@ -936,15 +959,23 @@ ${integrationCheck.exists ? `📊 State: ${integrationCheck.state}` : ''}
                     }
                 }
 
-                // Check if already pending
+                // Check if already pending (but allow retry if expired)
                 const existingRequest = await getPendingRequest(env, normalizedId);
-                if (existingRequest && existingRequest.status === 'pending') {
-                    return new Response(JSON.stringify({
-                        success: true,
-                        status: 'pending',
-                        message: `Device ${normalizedId} already pending approval`,
-                        requestedAt: existingRequest.requestedAt
-                    }), { headers: CORS_HEADERS });
+                if (existingRequest) {
+                    if (existingRequest.status === 'pending') {
+                        // Still pending - don't allow duplicate
+                        return new Response(JSON.stringify({
+                            success: true,
+                            status: 'pending',
+                            message: `Device ${normalizedId} already pending approval`,
+                            requestedAt: existingRequest.requestedAt,
+                            expiresAt: existingRequest.expiresAt
+                        }), { headers: CORS_HEADERS });
+                    } else if (existingRequest.status === 'expired') {
+                        // Expired - delete old request and allow retry
+                        await deletePendingRequest(env, normalizedId);
+                        console.log(`[Request] Deleted expired request for ${normalizedId}, allowing retry`);
+                    }
                 }
 
                 // Store pending request
@@ -1119,6 +1150,29 @@ ${integrationCheck.exists ? `📊 State: ${integrationCheck.state}` : ''}
             // Check approval history
             const approvalInfo = await getApprovalHistory(env, normalizedId);
 
+            // Calculate remaining time for pending requests
+            let remainingSeconds = null;
+            if (pendingRequest && pendingRequest.status === 'pending' && pendingRequest.requestedAt) {
+                const requestedTime = new Date(pendingRequest.requestedAt).getTime();
+                const elapsed = (Date.now() - requestedTime) / 1000;
+                remainingSeconds = Math.max(0, PENDING_TTL_SECONDS - elapsed);
+            }
+
+            // Determine recommendation based on status
+            let recommendation = 'Device not in HA - use /request-device to submit for approval';
+            if (integrationCheck.exists) {
+                recommendation = 'Device already in HA - OK';
+            } else if (approvalInfo?.status === 'rejected') {
+                // Check rejection first (from approvalHistory)
+                recommendation = 'Device was REJECTED by admin - you can retry after some time';
+            } else if (approvalInfo?.status === 'approved') {
+                recommendation = 'Device was approved - waiting for HA sync';
+            } else if (pendingRequest?.status === 'pending') {
+                recommendation = `Waiting for admin approval (${Math.round(remainingSeconds)}s remaining)`;
+            } else if (pendingRequest?.status === 'expired') {
+                recommendation = 'Request expired - you can retry now';
+            }
+
             return new Response(JSON.stringify({
                 deviceId: normalizedId,
                 formatValid: validateDeviceIdFormat(normalizedId),
@@ -1128,16 +1182,19 @@ ${integrationCheck.exists ? `📊 State: ${integrationCheck.state}` : ''}
                 entityCount: dataCheck.entityCount,
                 entitiesWithData: dataCheck.entitiesWithData,
                 pendingStatus: pendingRequest?.status || null,
-                // NEW: Approval info for web UI
+                // Timing info for web UI
+                requestedAt: pendingRequest?.requestedAt || null,
+                expiresAt: pendingRequest?.expiresAt || null,
+                remainingSeconds: remainingSeconds,
+                expiredReason: pendingRequest?.expiredReason || null,
+                canRetry: pendingRequest?.status === 'expired' || approvalInfo?.status === 'rejected' || (!pendingRequest && !approvalInfo),
+                // Approval info for web UI
+                approvalStatus: approvalInfo?.status || null,  // 'approved' | 'rejected' | null
                 approvalInfo: approvalInfo || null,
                 approvedBy: approvalInfo?.approvedBy || null,
                 approvedAt: approvalInfo?.timestamp || null,
                 rejectedBy: approvalInfo?.rejectedBy || null,
-                recommendation: integrationCheck.exists
-                    ? 'Device already in HA - OK'
-                    : pendingRequest?.status === 'pending'
-                        ? 'Waiting for admin approval'
-                        : 'Device not in HA - use /request-device to submit for approval'
+                recommendation
             }), { headers: CORS_HEADERS });
         }
 
